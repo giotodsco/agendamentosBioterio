@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Bioterio - FSA</title>
+</head>
+<style>
+    #inicio_div {
+    display: flex;
+    justify-content: center; /* This is already present and centers horizontally */
+    align-items: center;     /* This is already present and centers vertically */
+    flex-direction: column;  /* This is already present and stacks items vertically */
+    /* Add this to ensure content inside takes full available width for text alignment */
+    width: 100%;
+    /* Add text alignment for the text elements */
+    text-align: center;
+}
+
+#inicio_informacao {
+    /* No changes needed here, as it's a direct child of #inicio_div */
+    /* Ensure the text elements are aligned within this div */
+    text-align: center;
+}
+
+h1, h2, p {
+    /* Ensure text within these elements is centered */
+    text-align: center;
+    /* You might already have this inherited, but good to be explicit if needed */
+}
+
+#btn_agendar {
+    /* The button is already a block element and will center with text-align: center on its parent */
+    /* or by having auto margins if it has a defined width */
+    margin: 20px auto 0 auto; /* Adds top margin, and centers horizontally with auto margins */
+    display: block; /* Ensures it takes up its own line and auto margins work */
+}
+    * {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+#header_inicial {
+    background: rgb(173,199,205);
+    background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64,122,53,1) 85%);
+    height: 100px;
+}
+#header_login {
+    padding: 10px;
+}
+#header_login_um {
+    display: flex;
+    justify-content:center;
+}
+#header_login_um li {
+    margin: 16px;
+    list-style: none;
+}
+.btns_inicio {
+    padding: 8px;
+    background-color: rgb(225, 225, 228);
+    border: none;
+    border-radius: 10px;
+    width: 180px;
+    height: 40px;
+    box-shadow: 5px 5px 30px rgb(113, 113, 113);
+}
+.btns_inicio:hover {
+    background-color: rgb(200, 200, 200);
+    font-weight: 500;
+}
+button a {
+    color: rgb(60, 59, 59);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 15px;
+    text-decoration: none;
+}
+#header_secundario {
+    background-color: rgb(196, 195, 195);
+}
+
+#header_lista {
+    display: flex;
+    justify-content:space-between;
+    padding: 8px;
+}
+#header_lista_um {
+    display: flex;
+    margin-right: 4%;
+}
+#header_lista_img img {
+    width: 320px;
+    padding-top: 4px;
+    margin-left: 30%;
+}
+#header_lista_img li {
+    list-style: none;
+}
+#header_lista_um li {
+    list-style: none;
+    margin: 16px;
+}
+#header_lista_um a {
+    color: rgb(60, 59, 59);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 16px;
+    text-decoration: none;
+}
+#inicio {
+    width: 100%;
+    height: 100vh; /* 100% da altura da tela */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: 
+    radial-gradient(circle, rgba(121, 125, 125, 0.43) 0%, rgba(101, 113, 98, 0.626) 31%, rgba(64,122,53,0.36) 85%), 
+    url('https://www.fsa.br/wp-content/uploads/2019/02/d79abec1-2674-42b2-9873-431fbdaa9007.jpg');
+    background-size: cover; /* Garante que a imagem cubra todo o espaço */
+    background-position: center; /* Centraliza a imagem */
+    background-repeat: no-repeat; /* Evita repetição da imagem */
+}
+#inicio_div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+h1 {
+    font-size: 65px;
+    color: rgb(229, 229, 229);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    text-align: center;
+    padding: 2px;
+    font-weight: 600;
+}
+h2 {
+    font-size: 50px;
+    color: rgb(206, 206, 206);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    text-align: center;
+    padding: 15px;
+}
+
+#btn_agendar {
+    padding: 22px;
+    width: 270px;
+    border-radius: 30px;
+    background-color: rgb(225, 225, 228);
+    border: none;
+    border-radius: 10px;
+}
+#btn_agendar a {
+    text-align: center;
+    color: rgb(60, 59, 59);
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 28px;
+    text-decoration: none;
+
+}
+.bio {
+    color: rgb(178, 246, 162);
+    font-weight: 1000;
+}
+#btn_agendar:hover {
+    background-color:rgb(178, 246, 162);
+    font-weight: 600;
+}
+@media (max-width: 1024px) {
+    #header_lista {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #header_lista_um {
+        justify-content: center;
+    }
+
+    h1 {
+        font-size: 3rem;
+    }
+
+    h2 {
+        font-size: 2rem;
+    }
+
+    #btn_agendar {
+        width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2.5rem;
+    }
+
+    h2 {
+        font-size: 1.8rem;
+    }
+
+    #btn_agendar {
+        width: 180px;
+    }
+
+    #header_login_um li,
+    #header_lista_um li {
+        margin: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    #inicio {
+        height: auto;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    #btn_agendar {
+        width: 160px;
+    }
+}
+
+
+</style>
+<body>
+    <header id="header_inicial">
+        <div id="header_login">
+            <ul id="header_login_um">
+                <li><button class="btns_inicio"><a href="pag_adm.php"> <i class="fa-regular fa-circle-user"></i> Área do Funcionario</a></button></li>
+            </ul>
+        </div>
+    </header>
+    <header id="header_secundario">
+        <div id="header_lista">
+
+            <ul id="header_lista_img">
+                <li><img src="https://www.fsa.br/wp-content/uploads/2018/06/logo-fsa-p.png" alt=""></li>
+            </ul>
+
+            <ul id="header_lista_um">
+                <li><a href=""> Calendario  </a></li>
+                <li><a href="">Sobre nós</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <section id="inicio">
+       <div id="inicio_div">
+        <div id="inicio_informacao">
+            <h1 id="titulo_informacao">Bem-vindo ao <span class="bio">Biotério</span> da FSA!</h1>
+            <p id="sub_titulo">Seu acesso fácil e rápido para agendamentos de pesquisa e uso de instalações.</p>
+            <button id="btn_agendar"><a href="pag_agendar.html">Agende já!</a></button>
+        </div>
+       </div>
+    </section>
+</body>
+</html>
