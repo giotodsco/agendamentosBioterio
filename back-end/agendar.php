@@ -1,5 +1,6 @@
 <?php
 // acexx/back-end/agendar.php
+
 require_once 'functions.php'; // Inclui a função de conexão com o banco
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {

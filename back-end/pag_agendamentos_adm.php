@@ -11,8 +11,8 @@ if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
 
 try {
     $conexao = conectarBanco();
-    // Seleciona todos os agendamentos, ordenados por data e hora
-    $stmt = $conexao->query("SELECT id, nome, origem, e_aluno, data_agendamento, hora_agendamento, data_criacao FROM agendamentos ORDER BY data_agendamento DESC, hora_agendamento ASC");
+    // Seleciona todos os agendamentos, incluindo a coluna 'status', ordenados por data e hora
+    $stmt = $conexao->query("SELECT id, nome, origem, e_aluno, data_agendamento, hora_agendamento, data_criacao, status FROM agendamentos ORDER BY data_agendamento DESC, hora_agendamento ASC");
     $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
@@ -37,32 +37,40 @@ try {
         * {
             color: rgb(60, 59, 59);
             font-family: Georgia, 'Times New Roman', Times, serif;
+            box-sizing: border-box; /* Adicionado para melhor controle de layout */
         }
 
         body {
             overflow: hidden;
+            margin: 0; /* Garante que não haja margens extras */
+            padding: 0; /* Garante que não haja padding extras */
         }
 
         /* Estilos do layout geral */
         #div_geral_color {
             background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
             height: 100vh;
+            display: flex; /* Adicionado para centralizar div_geral_centro */
+            justify-content: center; /* Adicionado para centralizar div_geral_centro */
+            align-items: center; /* Adicionado para centralizar div_geral_centro */
         }
         #div_geral_centro {
             display: flex;
-            height: 100vh;
+            height: 100%; /* Ajustado para 100% da div_geral_color */
             justify-content: center;
             align-items: center;
+            width: 100%; /* Para preencher a largura */
         }
         #div_info_agendar {
             width: 60%;
             background-color: rgb(225, 225, 228);
-            height:80%;
+            height: 80%;
             border-radius: 20px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-            overflow-y: auto;
+            overflow-y: auto; /* Permite rolagem se o conteúdo for maior que a altura */
             padding: 20px;
             box-sizing: border-box;
+            max-width: 900px; /* Limite a largura para melhor leitura */
         }
 
         /* Estilos de título */
@@ -78,6 +86,8 @@ try {
         #agendamentos {
             margin-top: 20px;
             text-align: left;
+            width: 100%; /* Tabela ocupa 100% do container */
+            border-collapse: collapse;
         }
 
         #agendamentos h2 {
@@ -97,6 +107,7 @@ try {
             padding: 8px;
             text-align: left;
             font-size: 14px;
+            vertical-align: middle; /* Alinha o conteúdo verticalmente */
         }
 
         #agendamentos th {
@@ -115,8 +126,9 @@ try {
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
-            margin: 2px;
-            white-space: nowrap;
+            margin: 2px; /* Reduz margem para caber mais botões */
+            white-space: nowrap; /* Evita que o texto do botão quebre a linha */
+            display: inline-block; /* Permite que os botões fiquem lado a lado */
         }
         .btn-remover {
             background-color: #dc3545; /* Vermelho */
@@ -126,7 +138,39 @@ try {
             background-color: #c82333;
         }
 
-        /* Estilos para link "Voltar" e botão "Agendar" (se aplicável aqui) */
+        /* Novos estilos para os botões Confirmar e Negar */
+        .btn-confirmar {
+            background-color: #28a745; /* Verde */
+            color: white;
+        }
+        .btn-confirmar:hover {
+            background-color: #218838;
+        }
+
+        .btn-negar {
+            background-color: #ffc107; /* Amarelo/Laranja */
+            color: #333; /* Texto escuro para contraste */
+        }
+        .btn-negar:hover {
+            background-color: #e0a800;
+        }
+
+        /* Estilos para o texto do status */
+        .status-pendente {
+            color: #ffc107; /* Amarelo/Laranja */
+            font-weight: bold;
+        }
+        .status-confirmado {
+            color: #28a745; /* Verde */
+            font-weight: bold;
+        }
+        .status-negado {
+            color: #dc3545; /* Vermelho */
+            font-weight: bold;
+        }
+
+
+        /* Estilos para link "Voltar" */
         .agendar_voltar {
             display: block;
             width: 30%;
@@ -138,11 +182,12 @@ try {
             font-size: 20px;
             cursor:pointer;
             margin-top: 20px;
-            line-height: 40px;
+            line-height: 40px; /* Centraliza verticalmente o texto */
             margin-left: auto;
             margin-right: auto;
-            background-color: rgba(64, 122, 53, 0.819); /* Cor para o botão Voltar */
+            background-color: rgba(64, 122, 53, 0.819);
             color: white;
+            text-decoration: none; /* Remove sublinhado do link */
         }
         .agendar_voltar:hover {
             background-color: rgba(44, 81, 36, 0.819);
@@ -175,11 +220,22 @@ try {
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        .alerta.aviso { /* Adicionado para status 'aviso' do PHP */
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
 
         /* Media Queries para responsividade */
+        @media (max-width: 992px) { /* Adicionado para tablets */
+            #div_info_agendar {
+                width: 80%;
+                height: 85%;
+            }
+        }
         @media (max-width: 768px) {
             #div_info_agendar {
-                width: 90%;
+                width: 95%;
                 height: 90%;
                 padding: 10px;
             }
@@ -191,6 +247,29 @@ try {
                 width: 50%;
                 font-size: 16px;
             }
+            /* Ajuste para que os botões não quebrem o layout em telas menores */
+            #agendamentos td form {
+                display: block; /* Cada botão em uma nova linha */
+                margin-right: 0;
+                margin-bottom: 5px; /* Espaço entre botões empilhados */
+            }
+            .btn-acao {
+                width: 100%; /* Botões ocupam a largura total da célula */
+                box-sizing: border-box; /* Garante que padding não aumente a largura */
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 24px;
+            }
+            #agendamentos th, #agendamentos td {
+                font-size: 10px;
+                padding: 4px;
+            }
+            .agendar_voltar {
+                width: 70%;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -201,18 +280,19 @@ try {
                 <h1>Agendamentos Cadastrados</h1>
 
                 <?php
-                // Exibe mensagens de status (sucesso/erro)
+                // Exibe mensagens de status (sucesso/erro/aviso)
                 if (isset($_GET['status']) && isset($_GET['mensagem'])) {
                     $status = $_GET['status'];
                     $mensagem = htmlspecialchars(urldecode($_GET['mensagem']));
-                    $classe_alerta = ($status == 'sucesso') ? 'sucesso' : 'erro';
-                    echo "<p class='alerta {$classe_alerta}'>{$mensagem}</p>";
+                    $classe_alerta = 'alerta ' . htmlspecialchars($status); // Usa o status como classe
+                    echo "<p class='{$classe_alerta}'>{$mensagem}</p>";
                 }
                 ?>
                 <?php if (isset($erro_banco)): ?>
                     <p class="alerta erro">Ocorreu um erro ao carregar os agendamentos. Tente novamente mais tarde.</p>
                 <?php elseif (count($agendamentos) > 0): ?>
-                    <div style="overflow-x:auto;"> <table id="agendamentos">
+                    <div style="overflow-x:auto;">
+                        <table id="agendamentos">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -222,7 +302,8 @@ try {
                                     <th>Data</th>
                                     <th>Hora</th>
                                     <th>Registro</th>
-                                    <th>Ações</th> </tr>
+                                    <th>Status</th> <th>Ações</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($agendamentos as $agendamento): ?>
@@ -235,7 +316,30 @@ try {
                                         <td><?php echo htmlspecialchars(date('H:i', strtotime($agendamento['hora_agendamento']))); ?></td>
                                         <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($agendamento['data_criacao']))); ?></td>
                                         <td>
-                                            <form action="remover_agendamento.php" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja remover este agendamento? Esta ação é irreversível.');">
+                                            <?php
+                                            // Exibe o status atual do agendamento com estilo
+                                            $status_agendamento = htmlspecialchars($agendamento['status']);
+                                            echo "<span class='status-" . strtolower($status_agendamento) . "'>" . ucfirst($status_agendamento) . "</span>";
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($agendamento['status'] === 'pendente'): ?>
+                                                <form action="atualizar_status_agendamento.php" method="POST" style="display:inline-block;">
+                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
+                                                    <input type="hidden" name="status" value="confirmado">
+                                                    <button type="submit" class="btn-acao btn-confirmar">Confirmar</button>
+                                                </form>
+
+                                                <form action="atualizar_status_agendamento.php" method="POST" style="display:inline-block;">
+                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
+                                                    <input type="hidden" name="status" value="negado">
+                                                    <button type="submit" class="btn-acao btn-negar">Negar</button>
+                                                </form>
+                                            <?php else: ?>
+                                                N/A
+                                            <?php endif; ?>
+
+                                            <form action="remover_agendamento.php" method="POST" style="display:inline-block;" onsubmit="return confirm('Tem certeza que deseja remover este agendamento? Esta ação é irreversível.');">
                                                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
                                                 <button type="submit" class="btn-acao btn-remover">Remover</button>
                                             </form>
