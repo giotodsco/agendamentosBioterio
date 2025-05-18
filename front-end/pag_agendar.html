@@ -29,235 +29,167 @@
 }
 #btns {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
 }
-#btn1 {
-    width: 30%;
-    height: 50px;
-    border-radius: 20px 0px 0px 0px;
-    border: none;
-    border: 1px solid rgb(233, 233, 233);
-    cursor: pointer;
-    color: rgb(75, 75, 75);
+#titulo_principal {
+    text-align: center;
+    font-size: 30px;
+    padding-top: 30px;
+    padding-bottom: 20px;
+    color: rgb(75, 74, 74);
 }
-#btn2 {
-    width: 50%;
-    height: 50px;
-    border-radius: 0px 20px 0px 0px;
-    border: none;
-    border: 1px solid rgb(233, 233, 233);
-    cursor: pointer;
-    background-color: rgb(200, 200, 200);
-}
-#btn1:hover {
-    background-color: rgb(200, 200, 200);
-}
-#btn2:hover {
-    background-color: rgb(170, 170, 170);
-}
-#inputs {
+.voltar_inicio {
+    padding-top: 25px;
     text-align: center;
 }
-p {
-    font-size: 20px;
-    padding: 20px;
-    color: rgb(60, 59, 59);
-}
-input {
-    width: 70%;
-    height: 7%;
-    border: none;
-    background-color: rgb(215, 215, 215);
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 10px;
-}
-input[type="radio"] {
-    width: auto;
-    height: auto;
-    margin: 0 10px;
-}
-label {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    color: rgb(60, 59, 59);
-}
-h1 {
-    color: rgb(55, 75, 51);
-    font-size: 28px;
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    border-radius: 10px;
-}
-.agendar_voltar {
-    width: 30%;
-    height: 40px;
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    border-radius: 10px;
-    border: none;
-    font-size: 20px;
-    cursor:pointer;
-    margin: 10px;
-}
-#voltar {
-    background-color: rgba(64, 122, 53, 0.819);
-    color: white;
-}
-#voltar:hover {
-    background-color: rgba(44, 81, 36, 0.819);
-    color: white;
-}
-#voltar:active {
-    background-color: rgba(35, 65, 29, 0.819);
-    color: white;
-}
-#agendar {
-    background-color: rgb(200, 200, 200);
-    color: rgb(60, 59, 59);
-}
-#agendar:hover {
-    background-color: rgb(187, 187, 187);
-}
-#agendar:active {
-    background-color: rgb(158, 158, 158);
-}
-a {
+.voltar_inicio a {
     text-decoration: none;
+    color: rgb(55, 75, 51);
+    font-weight: 600;
 }
-.link:visited {
-    color: rgb(75, 75, 75);
+.txt_agendar {
+    margin-left: 20%;
+    padding-top: 15px;
+    padding-bottom: 5px;
+    font-size: 18px;
+    color: rgb(81, 81, 81);
 }
-@media (max-width: 768px) {
-    #div_info_agendar {
-        width: 90%;
-        height: 90%;
-        padding: 10px;
-    }
-    input {
-        width: 90%;
-    }
-    .agendar_voltar {
-        width: 45%;
-        font-size: 16px;
-    }
+#nome_input, #email_input, #data_input, #hora_input {
+    width: 60%;
+    height: 35px;
+    border: none;
+    border-radius: 10px;
+    margin-left: 20%;
+    padding-left: 10px;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+}
+#e_aluno_input {
+    margin-left: 20%;
+    margin-top: 10px;
+    width: 20px; /* Ajuste o tamanho do checkbox conforme necessário */
+    height: 20px;
+}
+#btn_agendar {
+    width: 200px;
+    height: 40px;
+    border: none;
+    border-radius: 20px;
+    background-color: rgb(55, 75, 51);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 50%; /* Centraliza o botão */
+    transform: translateX(-50%); /* Ajuste fino para centralização */
+    margin-top: 20px;
 }
 </style>
 <body>
     <div id="div_geral_color">
         <div id="div_geral_centro">
             <div id="div_info_agendar">
-               <div id="inputs">
-                <h1>Agendamento rápido</h1>
+                <p id="titulo_principal">Agende seu horário!</p>
+
                 <form action="/acexx/back-end/agendar.php" method="POST">
-                    <p>Digite seu nome:</p>
-                    <input type="text" name="nome" required>
-                    <p>Por onde conheceu o biotério?</p>
-                    <input type="text" name="origem">
+                    <p class="txt_agendar">Seu Nome Completo:</p>
+                    <input type="text" name="nome" id="nome_input" placeholder="Ex: João da Silva" required>
 
-                    <p>É aluno?</p>
-                    <label>
-                        <input type="radio" id="sim" name="e_aluno" value="sim" required> Sim
-                        <input type="radio" id="nao" name="e_aluno" value="nao"> Não
-                    </label>
+                    <p class="txt_agendar">Email:</p>
+                    <input type="email" name="email" id="email_input" placeholder="seu.email@example.com" required>
 
-                    <p>Escolha um dia:</p>
-                    <input type="date" name="data_agendamento" required>
-                    <p>Escolha a hora:</p>
-                    <input type="time" name="hora_agendamento" required>
-                    <br>
-                    <br>
-                    <button type="submit" class="agendar_voltar" id="agendar">Agendar</button>
+                    <p class="txt_agendar">Você é aluno da FSA?</p>
+                    <input type="checkbox" name="e_aluno" id="e_aluno_input" value="sim"> <label for="e_aluno_input">Sim</label>
+
+                    <p class="txt_agendar">Data do Agendamento:</p>
+                    <input type="date" name="data_agendamento" id="data_input" required>
+
+                    <p class="txt_agendar">Hora do Agendamento:</p>
+                    <input type="time" name="hora_agendamento" id="hora_input" min="08:00" max="17:00" required>
+
+                    <button type="submit" id="btn_agendar">Agendar</button>
                 </form>
-                <a href="pag_inicial.html"><button class="agendar_voltar" id="voltar">Voltar</button></a>
-               </div>
+
+                <div class="voltar_inicio">
+                    <a href="pag_inicial.html">Voltar para a Página Inicial</a>
+                </div>
             </div>
         </div>
     </div>
-</body>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.querySelector('input[name="data_agendamento"]');
-    const timeInput = document.querySelector('input[name="hora_agendamento"]');
 
-    // 1. Impedir seleção de datas passadas
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Mês é 0-indexado
-    const day = today.getDate().toString().padStart(2, '0');
-    const minDate = `${year}-${month}-${day}`;
-    dateInput.setAttribute('min', minDate);
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('data_input');
+            const timeInput = document.getElementById('hora_input');
 
-    // 2. Definir horário mínimo e máximo (ex: 8:00 às 17:00)
-    // Estes são os limites gerais de funcionamento do biotério.
-    const defaultMinTime = '08:00';
-    const defaultMaxTime = '17:00';
-    timeInput.setAttribute('min', defaultMinTime);
-    timeInput.setAttribute('max', defaultMaxTime);
+            // Definir data mínima como hoje
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+            const minDate = `${year}-${month}-${day}`;
+            dateInput.setAttribute('min', minDate);
 
-    // Opcional: Adicionar validação para garantir que a hora não seja passada no dia atual
-    dateInput.addEventListener('change', function() {
-        const selectedDateStr = this.value; // e.g., "2025-05-17"
-        const now = new Date();
+            // Definir horários padrão de funcionamento
+            const defaultMinTime = "08:00";
+            const defaultMaxTime = "17:00";
 
-        // Get today's date in "YYYY-MM-DD" format for comparison
-        const todayStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+            // Atualiza o min do input de tempo baseado na data selecionada
+            dateInput.addEventListener('change', function() {
+                const selectedDate = this.value;
+                const currentDate = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 
-        if (selectedDateStr === todayStr) { // Se a data selecionada é hoje
-            let currentHour = now.getHours();
-            let currentMinute = now.getMinutes();
+                if (selectedDate === currentDate) {
+                    // Se a data selecionada for hoje, ajusta o min-time para a hora atual + 30 minutos
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() + 30); // Adiciona 30 minutos
 
-            // Option 1: Round up to the next minute
-            currentMinute++; // Go to the next minute
-            if (currentMinute >= 60) {
-                currentMinute = 0;
-                currentHour++;
-                if (currentHour >= 24) { // Handle going into next day if hour exceeds 23
-                    currentHour = 23; // Cap at end of day, if it wraps, it's a date validation issue
-                    currentMinute = 59;
+                    let currentHour = now.getHours();
+                    let currentMinute = now.getMinutes();
+
+                    // Arredonda para o próximo incremento de 30 minutos, se necessário
+                    if (currentMinute > 0 && currentMinute <= 30) {
+                        currentMinute = 30;
+                    } else if (currentMinute > 30) {
+                        currentMinute = 0;
+                        currentHour++;
+                    }
+
+                    // Formata a hora para HH:MM
+                    const newMinTime = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+
+                    // Ensures the min time for today does not exceed the max allowed time
+                    if (newMinTime > defaultMaxTime) {
+                        timeInput.setAttribute('min', defaultMaxTime); // If current time is after max, set min to max to prevent selection
+                    } else {
+                        timeInput.setAttribute('min', newMinTime);
+                    }
+
+                    // Also, reset the value if the current value is now invalid
+                    if (timeInput.value && timeInput.value < newMinTime) {
+                        timeInput.value = ''; // Clear the invalid time
+                    }
+
+                } else {
+                    // Se não é hoje, reseta para o mínimo padrão e limpa a hora se ela for menor que o padrão
+                    timeInput.setAttribute('min', defaultMinTime);
+                    if (timeInput.value && timeInput.value < defaultMinTime) {
+                        timeInput.value = '';
+                    }
                 }
+                // Always reset max to default max, as it only depends on working hours, not current time
+                timeInput.setAttribute('max', defaultMaxTime);
+            });
+
+            // Adiciona um listener para a mensagem de status (se houver)
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+            const mensagem = urlParams.get('mensagem');
+
+            if (status && mensagem) {
+                alert(decodeURIComponent(mensagem));
+                // Opcional: remover os parâmetros da URL após exibir a mensagem
+                history.replaceState({}, document.title, window.location.pathname);
             }
-
-            const formattedCurrentHour = currentHour.toString().padStart(2, '0');
-            const formattedCurrentMinute = currentMinute.toString().padStart(2, '0');
-            const newMinTime = `${formattedCurrentHour}:${formattedCurrentMinute}`;
-
-            // Ensure the calculated min time doesn't exceed the max allowed time
-            if (newMinTime > defaultMaxTime) {
-                timeInput.setAttribute('min', defaultMaxTime); // If current time is after max, set min to max to prevent selection
-            } else {
-                timeInput.setAttribute('min', newMinTime);
-            }
-
-            // Also, reset the value if the current value is now invalid
-            if (timeInput.value && timeInput.value < newMinTime) {
-                timeInput.value = ''; // Clear the invalid time
-            }
-
-        } else {
-            // Se não é hoje, reseta para o mínimo padrão e limpa a hora se ela for menor que o padrão
-            timeInput.setAttribute('min', defaultMinTime);
-            if (timeInput.value && timeInput.value < defaultMinTime) {
-                timeInput.value = '';
-            }
-        }
-        // Always reset max to default max, as it only depends on working hours, not current time
-        timeInput.setAttribute('max', defaultMaxTime);
-    });
-
-    // Adiciona um listener para a mensagem de status (se houver)
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-    const mensagem = urlParams.get('mensagem');
-
-    if (status && mensagem) {
-        alert(decodeURIComponent(mensagem));
-        // Opcional: remover os parâmetros da URL após exibir a mensagem
-        history.replaceState({}, document.title, window.location.pathname);
-    }
-});
-</script>
+        });
+    </script>
+</body>
 </html>

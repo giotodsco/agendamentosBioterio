@@ -5,7 +5,7 @@ require_once 'functions.php'; // Inclui a função de conexão com o banco
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = $_POST['nome'] ?? '';
-    $origem = $_POST['origem'] ?? '';
+    $email = $_POST['email'] ?? ''; // Nova linha para capturar o email
     // Garante que 'e_aluno' seja 1 (true) ou 0 (false) para o banco de dados BOOLEAN/TINYINT
     $e_aluno = (isset($_POST['e_aluno']) && $_POST['e_aluno'] == 'sim') ? 1 : 0;
     $data_agendamento = $_POST['data_agendamento'] ?? '';
@@ -14,7 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // --- Início das Validações ---
 
     // Validação básica de campos obrigatórios
-    if (empty($nome) || empty($data_agendamento) || empty($hora_agendamento)) {
+    if (empty($nome) || empty($email) || empty($data_agendamento) || empty($hora_agendamento)) { // Adicionado $email
         header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Preencha todos os campos obrigatórios."));
         exit();
     }
@@ -26,32 +26,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Validação de hora: Horário de funcionamento (ex: 08:00 às 17:00)
-    $hora_minima = '08:00';
-    $hora_maxima = '17:00';
-
+    // Validação de hora: Verificar se a hora está dentro do intervalo permitido (08:00 - 17:00)
+    $hora_minima = "08:00";
+    $hora_maxima = "17:00";
     if ($hora_agendamento < $hora_minima || $hora_agendamento > $hora_maxima) {
-        header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("O horário de agendamento deve ser entre {$hora_minima} e {$hora_maxima}."));
+        header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Horário de agendamento fora do expediente (08:00 - 17:00)."));
         exit();
     }
 
-    // Opcional: Validação para impedir agendamento no mesmo dia em horário já passado
-    $datetime_agendamento = new DateTime("{$data_agendamento} {$hora_agendamento}");
-    $datetime_atual = new DateTime();
-
-    if ($datetime_agendamento < $datetime_atual) {
-        header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Não é possível agendar para um horário já passado."));
-        exit();
+    // Validação de data e hora para agendamentos no mesmo dia:
+    // Se a data selecionada for hoje, a hora do agendamento não pode ser no passado.
+    if ($data_agendamento == $data_atual) {
+        $hora_atual = date('H:i');
+        // Adiciona uma margem de 30 minutos para evitar agendamentos muito próximos
+        $hora_limite_minima_hoje = date('H:i', strtotime('+30 minutes'));
+        if ($hora_agendamento < $hora_limite_minima_hoje) {
+            header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Para hoje, o agendamento deve ser pelo menos 30 minutos após a hora atual."));
+            exit();
+        }
     }
 
-    // Validação de conflito de agendamento (mais importante!)
+    // --- Fim das Validações ---
+
     try {
         $conexao = conectarBanco();
 
-        // Verifica se já existe um agendamento para a mesma data e hora
-        $stmt_check = $conexao->prepare("SELECT COUNT(*) FROM agendamentos WHERE data_agendamento = :data AND hora_agendamento = :hora");
-        $stmt_check->bindParam(':data', $data_agendamento);
-        $stmt_check->bindParam(':hora', $hora_agendamento);
+        // Verifica se já existe um agendamento para a mesma data e hora (conflito)
+        $stmt_check = $conexao->prepare("SELECT COUNT(*) FROM agendamentos WHERE data_agendamento = :data_agendamento AND hora_agendamento = :hora_agendamento AND status != 'negado'");
+        $stmt_check->bindParam(':data_agendamento', $data_agendamento);
+        $stmt_check->bindParam(':hora_agendamento', $hora_agendamento);
         $stmt_check->execute();
         $conflito = $stmt_check->fetchColumn();
 
@@ -61,9 +64,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         // Se não há conflito, procede com a inserção
-        $stmt = $conexao->prepare("INSERT INTO agendamentos (nome, origem, e_aluno, data_agendamento, hora_agendamento, status) VALUES (:nome, :origem, :e_aluno, :data_agendamento, :hora_agendamento, 'pendente')");
+        $stmt = $conexao->prepare("INSERT INTO agendamentos (nome, email, e_aluno, data_agendamento, hora_agendamento, status) VALUES (:nome, :email, :e_aluno, :data_agendamento, :hora_agendamento, 'pendente')");
         $stmt->bindParam(':nome', $nome);
-        $stmt->bindParam(':origem', $origem);
+        $stmt->bindParam(':email', $email); // Novo bind para o email
         $stmt->bindParam(':e_aluno', $e_aluno, PDO::PARAM_INT);
         $stmt->bindParam(':data_agendamento', $data_agendamento);
         $stmt->bindParam(':hora_agendamento', $hora_agendamento);
@@ -73,11 +76,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     } catch (PDOException $e) {
         error_log("Erro ao agendar: " . $e->getMessage()); // Para depuração, armazena o erro no log
-        header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Erro ao agendar. Tente novamente mais tarde."));
+        header("Location: ../front-end/pag_agendar.html?status=erro&mensagem=" . urlencode("Ocorreu um erro ao agendar. Tente novamente mais tarde."));
         exit();
     }
 } else {
-    // Redireciona se a requisição não for POST
+    // Se a requisição não for POST, redireciona para a página de agendamento
     header("Location: ../front-end/pag_agendar.html");
     exit();
 }

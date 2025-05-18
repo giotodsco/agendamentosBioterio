@@ -12,7 +12,7 @@ if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
 try {
     $conexao = conectarBanco();
     // Seleciona todos os agendamentos, incluindo a coluna 'status', ordenados por data e hora
-    $stmt = $conexao->query("SELECT id, nome, origem, e_aluno, data_agendamento, hora_agendamento, data_criacao, status FROM agendamentos ORDER BY data_agendamento DESC, hora_agendamento ASC");
+    $stmt = $conexao->query("SELECT id, nome, email, e_aluno, data_agendamento, hora_agendamento, data_criacao, status FROM agendamentos ORDER BY data_agendamento DESC, hora_agendamento ASC");
     $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
@@ -29,7 +29,6 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotério - Agendamentos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    
     <style>
         /* acexx/front-end/Estilos/style_adm_agendamentos.css - Conteúdo consolidado */
 
@@ -61,7 +60,7 @@ try {
             align-items: center;
             width: 100%; /* Para preencher a largura */
         }
-        #div_info_agendar {
+        #div_info_agendamentos { /* Alterado de #div_info_agendar para refletir o uso */
             width: 60%;
             background-color: rgb(225, 225, 228);
             height: 80%;
@@ -74,7 +73,7 @@ try {
         }
 
         /* Estilos de título */
-        h1 {
+        #titulo_principal { /* Adicionado ID para corresponder ao HTML */
             color: rgb(55, 75, 51);
             font-size: 32px;
             padding: 24px;
@@ -83,26 +82,31 @@ try {
         }
 
         /* Estilos da tabela de agendamentos */
-        #agendamentos {
+        .tabela-container { /* Adicionado para envolver a tabela e gerenciar o overflow */
+            overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
             margin-top: 20px;
+        }
+
+        table { /* Removido #agendamentos, apliquei direto em table */
+            margin-top: 0; /* Ajustado para não ter margem duplicada */
             text-align: left;
             width: 100%; /* Tabela ocupa 100% do container */
             border-collapse: collapse;
         }
 
-        #agendamentos h2 {
+        table h2 { /* Removido #agendamentos, apliquei direto em table */
             color: rgb(55, 75, 51);
             font-size: 24px;
             margin-bottom: 15px;
         }
 
-        #agendamentos table {
+        table { /* Removido #agendamentos, apliquei direto em table */
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
 
-        #agendamentos th, #agendamentos td {
+        th, td { /* Removido #agendamentos, apliquei direto em th, td */
             border: 1px solid #ccc;
             padding: 8px;
             text-align: left;
@@ -110,12 +114,12 @@ try {
             vertical-align: middle; /* Alinha o conteúdo verticalmente */
         }
 
-        #agendamentos th {
+        th { /* Removido #agendamentos, apliquei direto em th */
             background-color: rgba(64, 122, 53, 0.819);
             color: white;
         }
 
-        #agendamentos tr:nth-child(even) {
+        tr:nth-child(even) { /* Removido #agendamentos, apliquei direto em tr */
             background-color: #f2f2f2;
         }
 
@@ -203,24 +207,24 @@ try {
         }
 
         /* Estilos para mensagens de alerta */
-        .alerta {
+        .mensagem-status { /* Alterado de .alerta para .mensagem-status para consistência com o PHP */
             padding: 10px;
             margin-bottom: 15px;
             border-radius: 5px;
             font-weight: bold;
             text-align: center;
         }
-        .alerta.sucesso {
+        .mensagem-status.sucesso { /* Alterado de .alerta.sucesso */
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
-        .alerta.erro {
+        .mensagem-status.erro { /* Alterado de .alerta.erro */
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
-        .alerta.aviso { /* Adicionado para status 'aviso' do PHP */
+        .mensagem-status.aviso { /* Adicionado para status 'aviso' do PHP */
             background-color: #fff3cd;
             color: #856404;
             border: 1px solid #ffeeba;
@@ -228,18 +232,18 @@ try {
 
         /* Media Queries para responsividade */
         @media (max-width: 992px) { /* Adicionado para tablets */
-            #div_info_agendar {
+            #div_info_agendamentos {
                 width: 80%;
                 height: 85%;
             }
         }
         @media (max-width: 768px) {
-            #div_info_agendar {
+            #div_info_agendamentos {
                 width: 95%;
                 height: 90%;
                 padding: 10px;
             }
-            #agendamentos th, #agendamentos td {
+            th, td {
                 font-size: 12px;
                 padding: 5px;
             }
@@ -248,7 +252,7 @@ try {
                 font-size: 16px;
             }
             /* Ajuste para que os botões não quebrem o layout em telas menores */
-            #agendamentos td form {
+            td form { /* Alvo direto o form dentro da célula */
                 display: block; /* Cada botão em uma nova linha */
                 margin-right: 0;
                 margin-bottom: 5px; /* Espaço entre botões empilhados */
@@ -259,10 +263,10 @@ try {
             }
         }
         @media (max-width: 480px) {
-            h1 {
+            #titulo_principal { /* Ajuste para o título principal */
                 font-size: 24px;
             }
-            #agendamentos th, #agendamentos td {
+            th, td {
                 font-size: 10px;
                 padding: 4px;
             }
@@ -276,70 +280,70 @@ try {
 <body>
     <div id="div_geral_color">
         <div id="div_geral_centro">
-            <div id="div_info_agendar">
-                <h1>Agendamentos Cadastrados</h1>
+            <div id="div_info_agendamentos">
+                <p id="titulo_principal">Gerenciar Agendamentos</p>
 
-                <?php
-                // Exibe mensagens de status (sucesso/erro/aviso)
-                if (isset($_GET['status']) && isset($_GET['mensagem'])) {
-                    $status = $_GET['status'];
-                    $mensagem = htmlspecialchars(urldecode($_GET['mensagem']));
-                    $classe_alerta = 'alerta ' . htmlspecialchars($status); // Usa o status como classe
-                    echo "<p class='{$classe_alerta}'>{$mensagem}</p>";
-                }
-                ?>
                 <?php if (isset($erro_banco)): ?>
-                    <p class="alerta erro">Ocorreu um erro ao carregar os agendamentos. Tente novamente mais tarde.</p>
-                <?php elseif (count($agendamentos) > 0): ?>
-                    <div style="overflow-x:auto;">
-                        <table id="agendamentos">
+                    <p class="mensagem-status erro">Erro ao carregar agendamentos. Por favor, tente novamente mais tarde.</p>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['status']) && isset($_GET['mensagem'])): ?>
+                    <div class="mensagem-status <?php echo htmlspecialchars($_GET['status']); ?>">
+                        <?php echo htmlspecialchars(urldecode($_GET['mensagem'])); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (count($agendamentos) > 0): ?>
+                    <div class="tabela-container">
+                        <table>
                             <thead>
                                 <tr>
                                     <th>ID</th>
                                     <th>Nome</th>
-                                    <th>Origem</th>
-                                    <th>É Aluno?</th>
+                                    <th>Email</th> <th>É Aluno?</th>
                                     <th>Data</th>
                                     <th>Hora</th>
                                     <th>Registro</th>
-                                    <th>Status</th> <th>Ações</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($agendamentos as $agendamento): ?>
+                                    <?php
+                                        $e_aluno_texto = $agendamento['e_aluno'] ? 'Sim' : 'Não';
+                                        $status_classe = '';
+                                        if ($agendamento['status'] == 'confirmado') {
+                                            $status_classe = 'status-confirmado';
+                                        } elseif ($agendamento['status'] == 'negado') {
+                                            $status_classe = 'status-negado';
+                                        } elseif ($agendamento['status'] == 'pendente') {
+                                            $status_classe = 'status-pendente';
+                                        }
+                                    ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($agendamento['id']); ?></td>
                                         <td><?php echo htmlspecialchars($agendamento['nome']); ?></td>
-                                        <td><?php echo htmlspecialchars($agendamento['origem']); ?></td>
-                                        <td><?php echo htmlspecialchars($agendamento['e_aluno'] ? 'Sim' : 'Não'); ?></td>
+                                        <td><?php echo htmlspecialchars($agendamento['email']); ?></td> <td><?php echo htmlspecialchars($e_aluno_texto); ?></td>
                                         <td><?php echo htmlspecialchars(date('d/m/Y', strtotime($agendamento['data_agendamento']))); ?></td>
                                         <td><?php echo htmlspecialchars(date('H:i', strtotime($agendamento['hora_agendamento']))); ?></td>
                                         <td><?php echo htmlspecialchars(date('d/m/Y H:i', strtotime($agendamento['data_criacao']))); ?></td>
-                                        <td>
-                                            <?php
-                                            // Exibe o status atual do agendamento com estilo
-                                            $status_agendamento = htmlspecialchars($agendamento['status']);
-                                            echo "<span class='status-" . strtolower($status_agendamento) . "'>" . ucfirst($status_agendamento) . "</span>";
-                                            ?>
+                                        <td class="<?php echo $status_classe; ?>">
+                                            <?php echo ucfirst(htmlspecialchars($agendamento['status'])); ?>
                                         </td>
-                                        <td>
-                                            <?php if ($agendamento['status'] === 'pendente'): ?>
-                                                <form action="atualizar_status_agendamento.php" method="POST" style="display:inline-block;">
-                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
+                                        <td class="acoes">
+                                            <form action="atualizar_status_agendamento.php" method="POST" style="display:inline;">
+                                                <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
+                                                <?php if ($agendamento['status'] == 'pendente' || $agendamento['status'] == 'negado'): ?>
                                                     <input type="hidden" name="status" value="confirmado">
                                                     <button type="submit" class="btn-acao btn-confirmar">Confirmar</button>
-                                                </form>
-
-                                                <form action="atualizar_status_agendamento.php" method="POST" style="display:inline-block;">
-                                                    <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
+                                                <?php endif; ?>
+                                                <?php if ($agendamento['status'] == 'pendente' || $agendamento['status'] == 'confirmado'): ?>
                                                     <input type="hidden" name="status" value="negado">
                                                     <button type="submit" class="btn-acao btn-negar">Negar</button>
-                                                </form>
-                                            <?php else: ?>
-                                                N/A
-                                            <?php endif; ?>
-
-                                            <form action="remover_agendamento.php" method="POST" style="display:inline-block;" onsubmit="return confirm('Tem certeza que deseja remover este agendamento? Esta ação é irreversível.');">
+                                                <?php endif; ?>
+                                            </form>
+                                            <form action="remover_agendamento.php" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja remover este agendamento? Esta ação é irreversível.');">
                                                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($agendamento['id']); ?>">
                                                 <button type="submit" class="btn-acao btn-remover">Remover</button>
                                             </form>
