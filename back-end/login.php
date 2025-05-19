@@ -7,8 +7,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $senha = $_POST['senha'] ?? '';
 
 
-    $usuario_valido = "admin";
-    $senha_valida = "12345";
+    $usuario_valido = "760691";
+    $senha_valida = "gwW5jKsX1";
 
     if ($ra === $usuario_valido && $senha === $senha_valida) {
         $_SESSION['logado'] = true;
