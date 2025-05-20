@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento Concluído</title>
+    <link rel="stylesheet" href="/acexx/front-end/Estilos/style_agendar.css">
+    <style>
+        body {
+            overflow: hidden;
+        }
+        #div_geral_color {
+        background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
+        height: 100vh;
+        }
+        #div_geral_centro {
+        display: flex;
+        height: 100vh;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 30px
+    }
+    #div_info_agendar {
+        width: 55%;
+        background-color: rgb(225, 225, 228);
+        height:80%;
+        border-radius: 20px;
+        box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        flex-direction: column;
+    }
+        #botoes {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .botao {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #voltarInicio {
+            background-color: rgb(200, 200, 200);
+    color: rgb(60, 59, 59);
+        }
+
+        #verAgendamentos {
+            background-color: rgba(64, 122, 53, 0.819);
+    color: white;
+        }
+        h1 {
+            color: rgb(78, 106, 73);
+            font-size: 28px;
+            text-align: center;
+            padding: 8px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            border-radius: 10px;
+        }
+        #span_email{
+            color: rgba(64, 122, 53, 0.819);
+            font-weight: 700;
+        }
+
+        #voltarInicio:hover{
+            background-color: rgb(152, 152, 152);
+            color: rgb(60, 59, 59);
+        }
+        #verAgendamentos:hover {
+            background-color: rgba(45, 85, 37, 0.819);
+    color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="div_geral_color">
+        <div id="div_geral_centro">
+            <div id="div_info_agendar">
+                <h1>Agendamento Concluído</h1>
+                <p style="font-size: 20px; text-align: center;">Agendamento realizado com sucesso! Veja o status aqui <br>
+                    Utilize o <span id="span_email">EMAIL</span> do agendamento!</p>
+                <div id="botoes">
+                    <a href="pag_buscar_agendamentos.php"><button id="verAgendamentos" class="botao">Ver Meus Agendamentos</button></a>
+                    <a href="pag_inicial.html"><button id="voltarInicio" class="botao">Voltar ao Início</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

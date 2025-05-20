@@ -19,12 +19,12 @@ try {
     error_log("Erro ao buscar agendamentos: " . $e->getMessage()); // Loga o erro no servidor
     $agendamentos = []; // Garante que $agendamentos seja um array vazio em caso de erro
     $erro_banco = true; // Flag para exibir mensagem de erro
-}
-
-?>
+}?>
 <!DOCTYPE html>
 <html lang="en">
+    
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotério - Agendamentos</title>

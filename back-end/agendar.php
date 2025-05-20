@@ -69,7 +69,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->bindParam(':hora_agendamento', $hora_agendamento);
         $stmt->execute();
 
-        header("Location: ../front-end/pag_inicial.html?status=sucesso&mensagem=" . urlencode("Agendamento realizado com sucesso!"));
+        // Redireciona para a página de sucesso com os botões
+        header("Location: ../front-end/agendamento_sucesso.html");
         exit();
     } catch (PDOException $e) {
         error_log("Erro ao agendar: " . $e->getMessage()); // Para depuração, armazena o erro no log
