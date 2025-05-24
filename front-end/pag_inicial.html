@@ -1,267 +1,1034 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>Bioterio - FSA</title>
+    <title>Biotério - FSA</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        #header_inicial {
+            background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64,122,53,1) 85%);
+            height: 100px;
+        }
+
+        #header_login {
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #header_login_um {
+            display: flex;
+        }
+
+        #header_login_um li {
+            margin: 16px;
+            list-style: none;
+        }
+
+        /* Área do usuário - ATUALIZADA COM NOVAS REGRAS */
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-indicator {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.5s ease-out;
+            border: 2px solid rgba(64, 122, 53, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-indicator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        .user-indicator.show {
+            display: flex;
+        }
+
+        /* CORRIGIDO: Hover cinza claro para visitantes */
+        .user-indicator.guest {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(64, 122, 53, 0.4);
+        }
+
+        .user-indicator.guest:hover {
+            background-color: rgba(220, 220, 220, 0.9) !important; /* CINZA CLARO */
+            border-color: rgba(64, 122, 53, 0.6);
+        }
+
+        /* NOVO: Estilo específico para empresas */
+        .user-indicator.empresa {
+            background-color: rgba(255, 235, 59, 0.2);
+            border-color: #ffc107;
+        }
+
+        .user-indicator.empresa:hover {
+            background-color: rgba(255, 235, 59, 0.3);
+            border-color: #ff9800;
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .user-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #28a745;
+            position: relative;
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(64, 122, 53, 0.5);
+        }
+
+        .user-avatar.guest {
+            background-color: rgba(64, 122, 53, 0.6);
+            animation: none;
+        }
+
+        /* NOVO: Avatar amarelo para empresas */
+        .user-avatar.empresa {
+            background-color: #ffc107;
+            animation: pulse-yellow 2s infinite;
+        }
+
+        @keyframes pulse-yellow {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            50% { transform: scale(1.3); opacity: 0.7; box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .user-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: rgb(60, 59, 59);
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            line-height: 1;
+        }
+
+        .user-type {
+            font-size: 12px;
+            background-color: rgba(64, 122, 53, 0.15);
+            color: rgba(64, 122, 53, 0.819);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            align-self: flex-start;
+        }
+
+        .user-type.guest {
+            background-color: rgba(64, 122, 53, 0.2);
+            color: rgba(64, 122, 53, 0.8);
+        }
+
+        /* NOVO: Tipo de usuário empresa */
+        .user-type.empresa {
+            background-color: rgba(255, 193, 7, 0.3);
+            color: #f57c00;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout-small {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            padding: 6px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-logout-small:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .btns_inicio {
+            padding: 8px;
+            background-color: rgb(225, 225, 228);
+            border: none;
+            border-radius: 10px;
+            width: 180px;
+            height: 40px;
+            box-shadow: 5px 5px 30px rgb(113, 113, 113);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btns_inicio:hover {
+            background-color: rgb(200, 200, 200);
+            font-weight: 500;
+            transform: translateY(-2px);
+        }
+
+        .btns_inicio a {
+            color: rgb(60, 59, 59);
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        #header_secundario {
+            background-color: rgb(196, 195, 195);
+        }
+
+        #header_lista {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+        }
+
+        #header_lista_um {
+            display: flex;
+            margin-right: 4%;
+        }
+
+        #header_lista_img img {
+            width: 320px;
+            padding-top: 4px;
+            margin-left: 30%;
+        }
+
+        #header_lista_img li {
+            list-style: none;
+        }
+
+        #header_lista_um li {
+            list-style: none;
+            margin: 16px;
+        }
+
+        #header_lista_um a {
+            color: rgb(60, 59, 59);
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        #header_lista_um a:hover {
+            text-decoration: underline;
+            color: rgba(64, 122, 53, 0.819);
+        }
+
+        #header_lista_um a#link-meus-agendamentos {
+            background-color: rgba(64, 122, 53, 0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid rgba(64, 122, 53, 0.3);
+            font-weight: bold;
+        }
+
+        #header_lista_um a#link-meus-agendamentos:hover {
+            background-color: rgba(64, 122, 53, 0.819);
+            color: white;
+            text-decoration: none;
+        }
+
+        #inicio {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle, rgba(121, 125, 125, 0.43) 0%, rgba(101, 113, 98, 0.626) 31%, rgba(64,122,53,0.36) 85%), 
+                url('https://www.fsa.br/wp-content/uploads/2019/02/d79abec1-2674-42b2-9873-431fbdaa9007.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        #inicio_div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            width: 100%;
+            text-align: center;
+        }
+
+        #inicio_informacao {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 65px;
+            color: rgb(229, 229, 229);
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            text-align: center;
+            padding: 2px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #sub_titulo {
+            color: white;
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .botoes_principais {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn_principal {
+            padding: 22px 35px;
+            background-color: rgb(225, 225, 228);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            color: rgb(60, 59, 59);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn_principal:hover {
+            background-color: rgb(178, 246, 162);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn_principal.primary {
+            background-color: rgba(64, 122, 53, 0.9);
+            color: white;
+        }
+
+        .btn_principal.primary:hover {
+            background-color: rgba(44, 81, 36, 0.9);
+            color: white;
+        }
+
+        .bio {
+            color: rgb(178, 246, 162);
+            font-weight: 1000;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .info_acesso {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 40px auto 0 auto;
+            max-width: 600px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .info_acesso h3 {
+            color: rgba(64, 122, 53, 0.819);
+            margin-bottom: 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        .info_acesso p {
+            color: rgb(60, 59, 59);
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .info_acesso .destaque {
+            font-weight: bold;
+            color: rgba(64, 122, 53, 0.819);
+        }
+
+        /* Pop-up personalizado */
+        .custom-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .custom-popup {
+            background-color: rgb(225, 225, 228);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: popupSlideIn 0.3s ease-out;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .popup-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+
+        .popup-icon.info {
+            color: #17a2b8;
+        }
+
+        .popup-icon.success {
+            color: #28a745;
+        }
+
+        .popup-icon.error {
+            color: #dc3545;
+        }
+
+        .popup-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: rgb(55, 75, 51);
+            margin-bottom: 15px;
+        }
+
+        .popup-message {
+            font-size: 16px;
+            color: rgb(60, 59, 59);
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .popup-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+
+        .popup-btn-primary {
+            background-color: rgba(64, 122, 53, 0.819);
+            color: white;
+        }
+
+        .popup-btn-primary:hover {
+            background-color: rgba(44, 81, 36, 0.819);
+        }
+
+        .popup-btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .popup-btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .popup-btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .popup-btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        @media (max-width: 1024px) {
+            #header_lista {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            #header_lista_um {
+                justify-content: center;
+            }
+
+            h1 {
+                font-size: 3rem;
+            }
+
+            .botoes_principais {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn_principal {
+                width: 280px;
+                justify-content: center;
+            }
+
+            .user-indicator {
+                order: -1;
+                margin-bottom: 10px;
+            }
+
+            .popup-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .btn_principal {
+                width: 250px;
+                font-size: 16px;
+                padding: 18px 30px;
+            }
+
+            #header_login_um li,
+            #header_lista_um li {
+                margin: 8px;
+            }
+
+            .info_acesso {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            #header_login {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .user-status {
+                order: -1;
+            }
+
+            .user-indicator {
+                padding: 8px 15px;
+            }
+
+            .user-name {
+                font-size: 13px;
+            }
+
+            .user-type {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #inicio {
+                height: auto;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .btn_principal {
+                width: 220px;
+                font-size: 14px;
+                padding: 15px 25px;
+            }
+
+            .info_acesso {
+                margin: 15px;
+                padding: 15px;
+            }
+
+            .user-indicator {
+                padding: 6px 12px;
+                gap: 8px;
+            }
+
+            .user-avatar {
+                width: 12px;
+                height: 12px;
+            }
+        }
+    </style>
 </head>
-<style>
-    #inicio_div {
-    display: flex;
-    justify-content: center; /* This is already present and centers horizontally */
-    align-items: center;     /* This is already present and centers vertically */
-    flex-direction: column;  /* This is already present and stacks items vertically */
-    /* Add this to ensure content inside takes full available width for text alignment */
-    width: 100%;
-    /* Add text alignment for the text elements */
-    text-align: center;
-}
-
-#inicio_informacao {
-    /* No changes needed here, as it's a direct child of #inicio_div */
-    /* Ensure the text elements are aligned within this div */
-    text-align: center;
-}
-
-h1, h2, p {
-    /* Ensure text within these elements is centered */
-    text-align: center;
-    /* You might already have this inherited, but good to be explicit if needed */
-}
-
-#btn_agendar {
-    /* The button is already a block element and will center with text-align: center on its parent */
-    /* or by having auto margins if it has a defined width */
-    margin: 20px auto 0 auto; /* Adds top margin, and centers horizontally with auto margins */
-    display: block; /* Ensures it takes up its own line and auto margins work */
-}
-    * {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-}
-#header_inicial {
-    background: rgb(173,199,205);
-    background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64,122,53,1) 85%);
-    height: 100px;
-}
-#header_login {
-    padding: 10px;
-}
-#header_login_um {
-    display: flex;
-    justify-content:center;
-}
-#header_login_um li {
-    margin: 16px;
-    list-style: none;
-}
-.btns_inicio {
-    padding: 8px;
-    background-color: rgb(225, 225, 228);
-    border: none;
-    border-radius: 10px;
-    width: 180px;
-    height: 40px;
-    box-shadow: 5px 5px 30px rgb(113, 113, 113);
-}
-.btns_inicio:hover {
-    background-color: rgb(200, 200, 200);
-    font-weight: 500;
-}
-button a {
-    color: rgb(60, 59, 59);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: 15px;
-    text-decoration: none;
-}
-#header_secundario {
-    background-color: rgb(196, 195, 195);
-}
-
-#header_lista {
-    display: flex;
-    justify-content:space-between;
-    padding: 8px;
-}
-#header_lista_um {
-    display: flex;
-    margin-right: 4%;
-}
-#header_lista_img img {
-    width: 320px;
-    padding-top: 4px;
-    margin-left: 30%;
-}
-#header_lista_img li {
-    list-style: none;
-}
-#header_lista_um li {
-    list-style: none;
-    margin: 16px;
-}
-#header_lista_um a {
-    color: rgb(60, 59, 59);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: 16px;
-    text-decoration: none;
-}
-#sub_titulo{
-    color: white;
-}
-#inicio {
-    width: 100%;
-    height: 100vh; /* 100% da altura da tela */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: 
-    radial-gradient(circle, rgba(121, 125, 125, 0.43) 0%, rgba(101, 113, 98, 0.626) 31%, rgba(64,122,53,0.36) 85%), 
-    url('https://www.fsa.br/wp-content/uploads/2019/02/d79abec1-2674-42b2-9873-431fbdaa9007.jpg');
-    background-size: cover; /* Garante que a imagem cubra todo o espaço */
-    background-position: center; /* Centraliza a imagem */
-    background-repeat: no-repeat; /* Evita repetição da imagem */
-}
-#inicio_div {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-h1 {
-    font-size: 65px;
-    color: rgb(229, 229, 229);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    text-align: center;
-    padding: 2px;
-    font-weight: 600;
-}
-h2 {
-    font-size: 50px;
-    color: rgb(206, 206, 206);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    text-align: center;
-    padding: 15px;
-}
-
-#btn_agendar {
-    padding: 22px;
-    width: 270px;
-    border-radius: 30px;
-    background-color: rgb(225, 225, 228);
-    border: none;
-    border-radius: 10px;
-}
-#btn_agendar a {
-    text-align: center;
-    color: rgb(60, 59, 59);
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    font-size: 28px;
-    text-decoration: none;
-
-}
-.bio {
-    color: rgb(178, 246, 162);
-    font-weight: 1000;
-}
-#btn_agendar:hover {
-    background-color:rgb(178, 246, 162);
-    font-weight: 600;
-}
-@media (max-width: 1024px) {
-    #header_lista {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    #header_lista_um {
-        justify-content: center;
-    }
-
-    h1 {
-        font-size: 3rem;
-    }
-
-    h2 {
-        font-size: 2rem;
-    }
-
-    #btn_agendar {
-        width: 200px;
-    }
-}
-
-@media (max-width: 768px) {
-    h1 {
-        font-size: 2.5rem;
-    }
-
-    h2 {
-        font-size: 1.8rem;
-    }
-
-    #btn_agendar {
-        width: 180px;
-    }
-
-    #header_login_um li,
-    #header_lista_um li {
-        margin: 8px;
-    }
-}
-
-@media (max-width: 480px) {
-    #inicio {
-        height: auto;
-        padding: 20px;
-    }
-
-    h1 {
-        font-size: 2rem;
-    }
-
-    h2 {
-        font-size: 1.5rem;
-    }
-
-    #btn_agendar {
-        width: 160px;
-    }
-}
-
-
-</style>
 <body>
+    <!-- Pop-up personalizado -->
+    <div class="custom-popup-overlay" id="popup-overlay">
+        <div class="custom-popup">
+            <div class="popup-icon" id="popup-icon">
+                <i class="fa-solid fa-info-circle"></i>
+            </div>
+            <div class="popup-title" id="popup-title">Informação</div>
+            <div class="popup-message" id="popup-message">Mensagem do sistema</div>
+            <div class="popup-buttons" id="popup-buttons">
+                <button class="popup-btn popup-btn-primary" onclick="closePopup()">OK</button>
+            </div>
+        </div>
+    </div>
+
     <header id="header_inicial">
         <div id="header_login">
+            <!-- REMOVIDO: Botões de login/cadastro -->
             <ul id="header_login_um">
-                <li><button class="btns_inicio"><a href="pag_adm.php"> <i class="fa-regular fa-circle-user"></i> Área do Funcionario</a></button></li>
+                <li><button class="btns_inicio"><a href="../back-end/pag_adm.php"> <i class="fa-regular fa-circle-user"></i> Área do Funcionário</a></button></li>
             </ul>
+            
+            <!-- ATUALIZADO: Área do usuário agora é clicável e redireciona -->
+            <div class="user-status">
+                <div class="user-indicator" id="user-indicator" onclick="handleUserClick()">
+                    <div class="user-avatar" id="user-avatar"></div>
+                    <div class="user-info">
+                        <div class="user-name" id="user-name"></div>
+                        <div class="user-type" id="user-type"></div>
+                    </div>
+                    <div class="user-actions" id="user-actions">
+                        <!-- Botão de sair aparece apenas para usuários logados -->
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
+    
     <header id="header_secundario">
         <div id="header_lista">
-
             <ul id="header_lista_img">
-                <li><img src="https://www.fsa.br/wp-content/uploads/2018/06/logo-fsa-p.png" alt=""></li>
+                <li><img src="https://www.fsa.br/wp-content/uploads/2018/06/logo-fsa-p.png" alt="Logo FSA"></li>
             </ul>
-
             <ul id="header_lista_um">
-                <li><a href="pag_buscar_agendamentos.php"> Agendamentos </a></li>
-                
+                <li><a href="#" id="link-meus-agendamentos" onclick="verificarLoginEAcessar(event)">
+                    <i class="fa-solid fa-calendar-check"></i> Ver Meus Agendamentos
+                </a></li>
             </ul>
         </div>
     </header>
 
     <section id="inicio">
-       <div id="inicio_div">
-        <div id="inicio_informacao">
-            <h1 id="titulo_informacao">Bem-vindo ao <span class="bio">Biotério</span> da FSA!</h1>
-            <p id="sub_titulo">Seu acesso fácil e rápido para agendamentos</p>
-            <button id="btn_agendar"><a href="pag_agendar.html">Agende já!</a></button>
+        <div id="inicio_div">
+            <div id="inicio_informacao">
+                <h1 id="titulo_informacao">Bem-vindo ao <span class="bio">Biotério</span> da FSA!</h1>
+                <p id="sub_titulo">Seu acesso fácil e rápido para agendamentos</p>
+                
+                <div class="botoes_principais">
+                    <a href="#" class="btn_principal primary" onclick="verificarLoginEIrPara(event, 'agendamento')">
+                        <i class="fa-solid fa-calendar-plus"></i>
+                        Fazer Agendamento
+                    </a>
+                </div>
+
+                <div class="info_acesso">
+                    <h3><i class="fa-solid fa-info-circle"></i> Informação Importante</h3>
+                    <p>A partir de agora, <span class="destaque">todos os agendamentos requerem cadastro no sistema</span>.</p>
+                    <p>Isso garante maior <span class="destaque">segurança</span>, <span class="destaque">organização</span> e permite que você gerencie seus agendamentos facilmente.</p>
+                    <p>🔒 Seus dados estão protegidos | 📋 Controle total dos seus agendamentos | ⚡ Processo mais rápido</p>
+                </div>
+            </div>
         </div>
-       </div>
     </section>
+
+    <script>
+        let isUserLoggedIn = false;
+        let currentUserName = '';
+        let tipoConta = '';
+
+        // ATUALIZADO: Nova função para clique na área do usuário
+        function handleUserClick() {
+            if (isUserLoggedIn) {
+                // Se logado, verificar tipo de conta
+                if (tipoConta === 'empresa') {
+                    // Empresa logada - ir para página de agendamento de empresa
+                    window.location.href = 'pag_agendar_empresa.php';
+                } else {
+                    // Usuário comum logado - ir para página de dados do usuário
+                    window.location.href = 'pag_dados_usuario.php';
+                }
+            } else {
+                // Se não logado, ir para login/cadastro
+                window.location.href = 'pag_login_usuario.php';
+            }
+        }
+
+        // Sistema atualizado - usuários comuns + empresas + visitantes
+        function verificarStatusUsuario() {
+            fetch('../back-end/verificar_login_ajax.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logado) {
+                        isUserLoggedIn = true;
+                        currentUserName = data.usuario_nome;
+                        tipoConta = data.tipo_conta;
+                        
+                        if (data.tipo_conta === 'empresa') {
+                            mostrarEmpresaLogada(data.usuario_nome);
+                        } else {
+                            mostrarUsuarioLogado(data.usuario_nome);
+                        }
+                    } else {
+                        isUserLoggedIn = false;
+                        mostrarVisitante();
+                    }
+                })
+                .catch(error => {
+                    console.log('Erro ao verificar login, mostrando visitante');
+                    isUserLoggedIn = false;
+                    mostrarVisitante();
+                });
+        }
+
+        function mostrarUsuarioLogado(nome) {
+            const indicator = document.getElementById('user-indicator');
+            const avatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const userType = document.getElementById('user-type');
+            const userActions = document.getElementById('user-actions');
+            
+            // Configurar avatar
+            avatar.className = 'user-avatar';
+            avatar.title = 'Clique para ver seus dados';
+            
+            // Configurar informações
+            userName.textContent = nome;
+            userType.textContent = 'Usuário';
+            userType.className = 'user-type';
+            
+            // Adicionar botão de sair
+            userActions.innerHTML = `
+                <form method="POST" action="../back-end/auth_unificado.php" style="margin: 0;" id="logout-form">
+                    <input type="hidden" name="acao" value="logout">
+                    <button type="button" class="btn-logout-small" onclick="showLogoutConfirm()">
+                        <i class="fa-solid fa-sign-out-alt"></i> Sair
+                    </button>
+                </form>
+            `;
+            
+            // Remover classes de visitante e empresa
+            indicator.classList.remove('guest', 'empresa');
+            
+            // Mostrar indicador
+            indicator.classList.add('show');
+        }
+
+        // NOVO: Função para mostrar empresa logada
+        function mostrarEmpresaLogada(nome) {
+            const indicator = document.getElementById('user-indicator');
+            const avatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const userType = document.getElementById('user-type');
+            const userActions = document.getElementById('user-actions');
+            
+            // Configurar avatar amarelo para empresa
+            avatar.className = 'user-avatar empresa';
+            avatar.title = 'Empresa - Clique para agendar';
+            
+            // Configurar informações
+            userName.textContent = nome;
+            userType.textContent = 'Empresa';
+            userType.className = 'user-type empresa';
+            
+            // Adicionar botão de sair
+            userActions.innerHTML = `
+                <form method="POST" action="../back-end/auth_unificado.php" style="margin: 0;" id="logout-form">
+                    <input type="hidden" name="acao" value="logout_empresa">
+                    <button type="button" class="btn-logout-small" onclick="showLogoutConfirm()">
+                        <i class="fa-solid fa-sign-out-alt"></i> Sair
+                    </button>
+                </form>
+            `;
+            
+            // Remover classe de visitante e adicionar classe empresa
+            indicator.classList.remove('guest');
+            indicator.classList.add('empresa');
+            
+            // Mostrar indicador
+            indicator.classList.add('show');
+        }
+
+        function mostrarVisitante() {
+            const indicator = document.getElementById('user-indicator');
+            const avatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const userType = document.getElementById('user-type');
+            const userActions = document.getElementById('user-actions');
+            
+            // Configurar avatar de visitante
+            avatar.className = 'user-avatar guest';
+            avatar.title = 'Clique para fazer login';
+            
+            // ATUALIZADO: Nova mensagem conforme solicitado
+            userName.textContent = 'Entre aqui';
+            userType.textContent = 'Clique para acessar';
+            userType.className = 'user-type guest';
+            
+            // Limpar ações
+            userActions.innerHTML = '';
+            
+            // Adicionar classe de visitante
+            indicator.classList.add('guest');
+            
+            // Mostrar indicador
+            indicator.classList.add('show');
+        }
+
+        function verificarLoginEIrPara(event, destino) {
+            event.preventDefault();
+            
+            fetch('../back-end/verificar_login_ajax.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logado) {
+                        // Usuário/Empresa logado - redirecionar conforme tipo e destino
+                        if (destino === 'agendamento') {
+                            if (data.tipo_conta === 'empresa') {
+                                window.location.href = 'pag_agendar_empresa.php';
+                            } else {
+                                window.location.href = 'pag_agendar_logado.php';
+                            }
+                        } else {
+                            if (data.tipo_conta === 'empresa') {
+                                window.location.href = 'pag_agendar_empresa.php';
+                            } else {
+                                window.location.href = 'pag_dados_usuario.php';
+                            }
+                        }
+                    } else {
+                        // Usuário não logado - ir para login com parâmetro
+                        if (destino === 'agendamento') {
+                            window.location.href = 'pag_login_usuario.php?redirect_to=agendamento';
+                        } else {
+                            window.location.href = 'pag_login_usuario.php';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar login:', error);
+                    window.location.href = 'pag_login_usuario.php';
+                });
+        }
+
+        function verificarLoginEAcessar(event) {
+            event.preventDefault();
+            
+            fetch('../back-end/verificar_login_ajax.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.logado) {
+                        if (data.tipo_conta === 'empresa') {
+                            // Empresas vão para sua própria página
+                            showPopup(
+                                'Área Empresarial', 
+                                'Como empresa, você deve usar a área de agendamento empresarial.', 
+                                'info',
+                                [
+                                    {
+                                        text: 'Ir para Agendamentos',
+                                        class: 'popup-btn-primary',
+                                        action: function() {
+                                            closePopup();
+                                            window.location.href = 'pag_agendar_empresa.php';
+                                        }
+                                    },
+                                    {
+                                        text: 'Cancelar',
+                                        class: 'popup-btn-secondary',
+                                        action: closePopup
+                                    }
+                                ]
+                            );
+                        } else {
+                            window.location.href = 'pag_meus_agendamentos.php';
+                        }
+                    } else {
+                        showPopup(
+                            'Login Necessário', 
+                            'Você precisa fazer login para acessar seus agendamentos.', 
+                            'info',
+                            [
+                                {
+                                    text: 'Fazer Login',
+                                    class: 'popup-btn-primary',
+                                    action: function() {
+                                        closePopup();
+                                        window.location.href = 'pag_login_usuario.php?login_required=true&redirect=meus_agendamentos';
+                                    }
+                                },
+                                {
+                                    text: 'Cancelar',
+                                    class: 'popup-btn-secondary',
+                                    action: closePopup
+                                }
+                            ]
+                        );
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar login:', error);
+                    showPopup(
+                        'Erro', 
+                        'Erro ao verificar login. Tente novamente.', 
+                        'error'
+                    );
+                });
+        }
+
+        // Sistema de pop-up personalizado
+        function showPopup(title, message, type = 'info', buttons = null) {
+            const overlay = document.getElementById('popup-overlay');
+            const titleElement = document.getElementById('popup-title');
+            const messageElement = document.getElementById('popup-message');
+            const iconElement = document.getElementById('popup-icon');
+            const buttonsContainer = document.getElementById('popup-buttons');
+            
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            
+            // Configurar ícone baseado no tipo
+            let iconClass = 'fa-info-circle';
+            let iconColorClass = 'info';
+            
+            switch(type) {
+                case 'error':
+                    iconClass = 'fa-exclamation-triangle';
+                    iconColorClass = 'error';
+                    break;
+                case 'success':
+                    iconClass = 'fa-check-circle';
+                    iconColorClass = 'success';
+                    break;
+                case 'warning':
+                    iconClass = 'fa-exclamation-triangle';
+                    iconColorClass = '';
+                    break;
+                default:
+                    iconClass = 'fa-info-circle';
+                    iconColorClass = 'info';
+            }
+            
+            iconElement.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
+            iconElement.className = `popup-icon ${iconColorClass}`;
+            
+            // Configurar botões
+            if (buttons) {
+                buttonsContainer.innerHTML = '';
+                buttons.forEach(button => {
+                    const btn = document.createElement('button');
+                    btn.className = `popup-btn ${button.class || 'popup-btn-primary'}`;
+                    btn.textContent = button.text;
+                    btn.onclick = button.action;
+                    buttonsContainer.appendChild(btn);
+                });
+            } else {
+                buttonsContainer.innerHTML = '<button class="popup-btn popup-btn-primary" onclick="closePopup()">OK</button>';
+            }
+            
+            overlay.style.display = 'flex';
+        }
+
+        function closePopup() {
+            document.getElementById('popup-overlay').style.display = 'none';
+        }
+
+        // Função para confirmar logout
+        function showLogoutConfirm() {
+            showPopup(
+                'Confirmar Saída', 
+                'Tem certeza que deseja sair?', 
+                'warning',
+                [
+                    {
+                        text: 'Sim, Sair',
+                        class: 'popup-btn-danger',
+                        action: function() {
+                            closePopup();
+                            document.getElementById('logout-form').submit();
+                        }
+                    },
+                    {
+                        text: 'Cancelar',
+                        class: 'popup-btn-secondary',
+                        action: closePopup
+                    }
+                ]
+            );
+        }
+
+        // Executar verificação quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            verificarStatusUsuario();
+        });
+    </script>
 </body>
 </html>

@@ -1,264 +1,238 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/acexx/front-end/Estilos/style_agendar.css">
-    <title>Biotério - Agendar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <title>Biotério - Acesso Restrito</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: rgb(225, 225, 228);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 20px;
+            box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .header {
+            background-color: rgba(64, 122, 53, 0.819);
+            color: white;
+            padding: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .lock-icon {
+            font-size: 80px;
+            color: rgba(64, 122, 53, 0.819);
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 20px;
+            color: rgb(60, 59, 59);
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .submessage {
+            font-size: 16px;
+            color: rgb(100, 100, 100);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .info-box {
+            background-color: rgba(64, 122, 53, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            text-align: left;
+        }
+
+        .info-box h3 {
+            color: rgba(64, 122, 53, 0.819);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: rgb(60, 59, 59);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background-color: rgba(64, 122, 53, 0.819);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: rgba(44, 81, 36, 0.819);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: rgb(200, 200, 200);
+            color: rgb(60, 59, 59);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgb(180, 180, 180);
+            color: rgb(60, 59, 59);
+            transform: translateY(-2px);
+        }
+
+        .countdown {
+            font-size: 14px;
+            color: rgb(100, 100, 100);
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
-<style>
-    body {
-        overflow: hidden;
-    }
-    #div_geral_color {
-    background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
-    height: 100vh;
-}
-#div_geral_centro {
-    display: flex;
-    height: 100vh;
-    justify-content: center;
-    align-items: center;
-}
-#div_info_agendar {
-    width: 60%;
-    background-color: rgb(225, 225, 228);
-    height:95%;
-    border-radius: 20px;
-    box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-}
-#btns {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-#btn1 {
-    width: 30%;
-    height: 50px;
-    border-radius: 20px 0px 0px 0px;
-    border: none;
-    border: 1px solid rgb(233, 233, 233);
-    cursor: pointer;
-    color: rgb(75, 75, 75);
-}
-#btn2 {
-    width: 50%;
-    height: 50px;
-    border-radius: 0px 20px 0px 0px;
-    border: none;
-    border: 1px solid rgb(233, 233, 233);
-    cursor: pointer;
-    background-color: rgb(200, 200, 200);
-}
-#btn1:hover {
-    background-color: rgb(200, 200, 200);
-}
-#btn2:hover {
-    background-color: rgb(170, 170, 170);
-}
-#inputs {
-    text-align: center;
-}
-p {
-    font-size: 20px;
-    padding: 20px;
-    color: rgb(60, 59, 59);
-}
-input {
-    width: 70%;
-    height: 7%;
-    border: none;
-    background-color: rgb(215, 215, 215);
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 10px;
-}
-input[type="radio"] {
-    width: auto;
-    height: auto;
-    margin: 0 10px;
-}
-label {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 18px;
-    color: rgb(60, 59, 59);
-}
-h1 {
-    color: rgb(55, 75, 51);
-    font-size: 28px;
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    border-radius: 10px;
-}
-.agendar_voltar {
-    width: 30%;
-    height: 40px;
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    border-radius: 10px;
-    border: none;
-    font-size: 20px;
-    cursor:pointer;
-    margin: 10px;
-}
-#voltar {
-    background-color: rgb(200, 200, 200);
-    color: rgb(60, 59, 59);
-}
-#voltar:hover {
-    background-color: rgb(152, 152, 152);
-    color: rgb(60, 59, 59);
-}
-#voltar:active {
-    background-color: rgba(35, 65, 29, 0.819);
-    color: white;
-}
-#agendar {
-    background-color: rgba(64, 122, 53, 0.819);
-    color: white;
-}
-#agendar:hover {
-    background-color: rgba(51, 95, 42, 0.819);
-    
-}
-#agendar:active {
-    background-color: rgb(158, 158, 158);
-}
-a {
-    text-decoration: none;
-}
-.link:visited {
-    color: rgb(75, 75, 75);
-}
-@media (max-width: 768px) {
-    #div_info_agendar {
-        width: 90%;
-        height: 90%;
-        padding: 10px;
-    }
-    input {
-        width: 90%;
-    }
-    .agendar_voltar {
-        width: 45%;
-        font-size: 16px;
-    }
-}
-</style>
 <body>
-    <div id="div_geral_color">
-        <div id="div_geral_centro">
-            <div id="div_info_agendar">
-               <div id="inputs">
-                <h1>Agendamento rápido</h1>
-                <form action="/acexx/back-end/agendar.php" method="POST">
-                    <p>Digite seu nome:</p>
-                    <input type="text" name="nome" autocomplete="off" required>
-                    <p class="name">Seu Email:</p>
-                    <input class="input" type="email" name="email" placeholder="nome@exemplo.com" autocomplete="off" required>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fa-solid fa-shield-alt"></i> Acesso Restrito</h1>
+            <p>Sistema de Agendamento do Biotério FSA</p>
+        </div>
+        
+        <div class="content">
+            <div class="lock-icon">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            
+            <div class="message">Login Obrigatório</div>
+            <div class="submessage">
+                Para fazer agendamentos, você precisa estar cadastrado e logado no sistema.
+            </div>
 
-                    <p>É aluno?</p>
-                    <label>
-                        <input type="radio" id="sim" name="e_aluno" value="sim" required> Sim
-                        <input type="radio" id="nao" name="e_aluno" value="nao"> Não
-                    </label>
+            <div class="info-box">
+                <h3><i class="fa-solid fa-info-circle"></i> Por que preciso me cadastrar?</h3>
+                <p><strong>🔒 Segurança:</strong> Seus dados ficam protegidos e organizados</p>
+                <p><strong>📋 Controle:</strong> Você pode gerenciar todos os seus agendamentos</p>
+                <p><strong>⚡ Agilidade:</strong> Agendamentos futuros serão mais rápidos</p>
+                <p><strong>📧 Notificações:</strong> Receba confirmações por email</p>
+                <p><strong>🗓️ Histórico:</strong> Visualize seu histórico completo</p>
+            </div>
 
-                    <p>Escolha um dia:</p>
-                    <input type="date" name="data_agendamento" required>
-                    <p>Escolha a hora:</p>
-                    <input type="time" name="hora_agendamento" required>
-                    <br>
-                    <br>
-                    <button type="submit" class="agendar_voltar" id="agendar">Agendar</button>
-                </form>
-                <a href="pag_inicial.html"><button class="agendar_voltar" id="voltar">Voltar</button></a>
-               </div>
+            <div class="buttons">
+                <!-- ATUALIZADO: Agora passa o parâmetro redirect_to=agendamento -->
+                <a href="pag_login_usuario.php?redirect_to=agendamento" class="btn btn-primary">
+                    <i class="fa-solid fa-user-plus"></i>
+                    Fazer Login / Cadastro
+                </a>
+                <a href="pag_inicial.html" class="btn btn-secondary">
+                    <i class="fa-solid fa-home"></i>
+                    Voltar ao Início
+                </a>
+            </div>
+
+            <div class="countdown" id="countdown">
+                Redirecionando automaticamente em <span id="timer">10</span> segundos...
             </div>
         </div>
     </div>
+
+    <script>
+        // Redirecionamento automático após 10 segundos
+        let timeLeft = 10;
+        const timer = document.getElementById('timer');
+        const countdown = document.getElementById('countdown');
+
+        const countdownInterval = setInterval(() => {
+            timeLeft--;
+            timer.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                // ATUALIZADO: Redirecionamento com parâmetro
+                window.location.href = 'pag_login_usuario.php?redirect_to=agendamento';
+            }
+        }, 1000);
+
+        // Parar countdown se usuário interagir
+        document.addEventListener('click', () => {
+            clearInterval(countdownInterval);
+            countdown.style.display = 'none';
+        });
+    </script>
 </body>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.querySelector('input[name="data_agendamento"]');
-    const timeInput = document.querySelector('input[name="hora_agendamento"]');
-
-    // 1. Impedir seleção de datas passadas
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Mês é 0-indexado
-    const day = today.getDate().toString().padStart(2, '0');
-    const minDate = `${year}-${month}-${day}`;
-    dateInput.setAttribute('min', minDate);
-
-    // 2. Definir horário mínimo e máximo (ex: 8:00 às 17:00)
-    // Estes são os limites gerais de funcionamento do biotério.
-    const defaultMinTime = '08:00';
-    const defaultMaxTime = '17:00';
-    timeInput.setAttribute('min', defaultMinTime);
-    timeInput.setAttribute('max', defaultMaxTime);
-
-    // Opcional: Adicionar validação para garantir que a hora não seja passada no dia atual
-    dateInput.addEventListener('change', function() {
-        const selectedDateStr = this.value; // e.g., "2025-05-17"
-        const now = new Date();
-
-        // Get today's date in "YYYY-MM-DD" format for comparison
-        const todayStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-
-        if (selectedDateStr === todayStr) { // Se a data selecionada é hoje
-            let currentHour = now.getHours();
-            let currentMinute = now.getMinutes();
-
-            // Option 1: Round up to the next minute
-            currentMinute++; // Go to the next minute
-            if (currentMinute >= 60) {
-                currentMinute = 0;
-                currentHour++;
-                if (currentHour >= 24) { // Handle going into next day if hour exceeds 23
-                    currentHour = 23; // Cap at end of day, if it wraps, it's a date validation issue
-                    currentMinute = 59;
-                }
-            }
-
-            const formattedCurrentHour = currentHour.toString().padStart(2, '0');
-            const formattedCurrentMinute = currentMinute.toString().padStart(2, '0');
-            const newMinTime = `${formattedCurrentHour}:${formattedCurrentMinute}`;
-
-            // Ensure the calculated min time doesn't exceed the max allowed time
-            if (newMinTime > defaultMaxTime) {
-                timeInput.setAttribute('min', defaultMaxTime); // If current time is after max, set min to max to prevent selection
-            } else {
-                timeInput.setAttribute('min', newMinTime);
-            }
-
-            // Also, reset the value if the current value is now invalid
-            if (timeInput.value && timeInput.value < newMinTime) {
-                timeInput.value = ''; // Clear the invalid time
-            }
-
-        } else {
-            // Se não é hoje, reseta para o mínimo padrão e limpa a hora se ela for menor que o padrão
-            timeInput.setAttribute('min', defaultMinTime);
-            if (timeInput.value && timeInput.value < defaultMinTime) {
-                timeInput.value = '';
-            }
-        }
-        // Always reset max to default max, as it only depends on working hours, not current time
-        timeInput.setAttribute('max', defaultMaxTime);
-    });
-
-    // Adiciona um listener para a mensagem de status (se houver)
-    const urlParams = new URLSearchParams(window.location.search);
-    const status = urlParams.get('status');
-    const mensagem = urlParams.get('mensagem');
-
-    if (status && mensagem) {
-        alert(decodeURIComponent(mensagem));
-        // Opcional: remover os parâmetros da URL após exibir a mensagem
-        history.replaceState({}, document.title, window.location.pathname);
-    }
-});
-</script>
 </html>
