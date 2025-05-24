@@ -1,5 +1,5 @@
 <?php
-// acexx/back-end/agendar_logado.php
+// acexx/back-end/agendar_logado.php - VERSÃO SEMPRE AUTOMÁTICA
 session_start();
 require_once 'functions.php';
 
@@ -7,19 +7,6 @@ require_once 'functions.php';
 if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true) {
     header("Location: ../front-end/pag_login_usuario.php?login_required=true");
     exit();
-}
-
-// Função para verificar se agendamento deve ser automático
-function isAgendamentoAutomatico() {
-    try {
-        $conexao = conectarBanco();
-        $stmt = $conexao->prepare("SELECT valor FROM configuracoes WHERE chave = 'agendamento_automatico'");
-        $stmt->execute();
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $resultado ? ($resultado['valor'] === '1') : true; // Default: automático
-    } catch (PDOException $e) {
-        return true; // Default: automático se erro
-    }
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -75,98 +62,92 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Verificar se o email do usuário já tem agendamento confirmado
+        // Verificar se o email do usuário já tem agendamento confirmado ou pendente
         $stmt_check_email = $conexao->prepare("
             SELECT COUNT(*) FROM agendamentos 
-            WHERE email = ? AND status = 'confirmado'
+            WHERE email = ? AND status IN ('confirmado', 'pendente')
         ");
         $stmt_check_email->execute([$usuario['email']]);
         $email_exists = $stmt_check_email->fetchColumn();
 
         if ($email_exists > 0) {
-            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Você já possui um agendamento confirmado ativo. Cancele o agendamento anterior para fazer um novo."));
+            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Você já possui um agendamento ativo ou pendente. Cancele o agendamento anterior para fazer um novo."));
             exit();
         }
 
-        // Verificar se o CPF do usuário já tem agendamento confirmado
+        // Verificar se o CPF do usuário já tem agendamento confirmado ou pendente
         $stmt_check_cpf_geral = $conexao->prepare("
             SELECT COUNT(*) FROM agendamentos 
-            WHERE cpf = ? AND status = 'confirmado'
+            WHERE cpf = ? AND status IN ('confirmado', 'pendente')
         ");
         $stmt_check_cpf_geral->execute([$usuario['cpf']]);
         $cpf_exists = $stmt_check_cpf_geral->fetchColumn();
 
         if ($cpf_exists > 0) {
-            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Seu CPF já possui um agendamento confirmado ativo. Cancele o agendamento anterior para fazer um novo."));
+            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Seu CPF já possui um agendamento ativo ou pendente. Cancele o agendamento anterior para fazer um novo."));
             exit();
         }
 
-        // Verificar se a data ainda está disponível (não bloqueada por atingir limite de 10)
+        // Verificar disponibilidade da data (limite de 10 agendamentos)
         if (!dataDisponivel($data_agendamento)) {
             header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Esta data não está mais disponível para agendamentos (limite de 10 visitas atingido)."));
             exit();
         }
 
-        // Verifica se o usuário já tem um agendamento confirmado para a mesma data
+        // Verifica se o usuário já tem um agendamento confirmado/pendente para a mesma data
         $stmt_check_user = $conexao->prepare("
             SELECT COUNT(*) FROM agendamentos 
-            WHERE usuario_id = ? AND data_agendamento = ? AND status = 'confirmado'
+            WHERE usuario_id = ? AND data_agendamento = ? AND status IN ('confirmado', 'pendente')
         ");
         $stmt_check_user->execute([$usuario_id, $data_agendamento]);
         $conflito_user = $stmt_check_user->fetchColumn();
 
         if ($conflito_user > 0) {
-            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Você já possui um agendamento confirmado para esta data."));
+            header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Você já possui um agendamento para esta data."));
             exit();
         }
 
-        // NOVO: Verificar se agendamento deve ser automático ou manual
-        $agendamento_automatico = isAgendamentoAutomatico();
-        $status_inicial = $agendamento_automatico ? 'confirmado' : 'pendente';
-
-        // Insere o agendamento
+        // NOVO: Agendamentos de usuários são SEMPRE confirmados automaticamente
         $stmt = $conexao->prepare("
-            INSERT INTO agendamentos (nome, email, cpf, data_agendamento, hora_agendamento, status, usuario_id, tipo_agendamento, quantidade_pessoas) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'individual', 1)
+            INSERT INTO agendamentos (nome, email, cpf, data_agendamento, hora_agendamento, status, usuario_id, tipo_agendamento, quantidade_pessoas, data_criacao) 
+            VALUES (?, ?, ?, ?, ?, 'confirmado', ?, 'individual', 1, NOW())
         ");
-        $stmt->execute([
+        $resultado = $stmt->execute([
             $usuario['nome'], 
             $usuario['email'], 
             $usuario['cpf'], 
             $data_agendamento, 
             $hora_agendamento, 
-            $status_inicial,
             $usuario_id
         ]);
 
-        // Se for automático, verificar limite de 10 agendamentos
-        if ($agendamento_automatico) {
-            $total_agendamentos = contarAgendamentosData($data_agendamento);
-            if ($total_agendamentos >= 10) {
-                $stmt_update = $conexao->prepare("
-                    INSERT INTO controle_diario (data_agendamento, total_agendamentos, bloqueado) 
-                    VALUES (?, ?, 1)
-                    ON DUPLICATE KEY UPDATE 
-                    total_agendamentos = ?, bloqueado = 1
-                ");
-                $stmt_update->execute([$data_agendamento, $total_agendamentos, $total_agendamentos]);
-            }
+        if (!$resultado) {
+            throw new PDOException("Erro ao inserir agendamento");
         }
 
-        // Redireciona para página de sucesso com parâmetro do status
-        if ($agendamento_automatico) {
-            header("Location: ../front-end/pag_sucesso_agendamento.php");
-        } else {
-            header("Location: ../front-end/pag_sucesso_agendamento.php?pendente=true");
+        // Verificar se atingiu limite de 10 agendamentos e bloquear data se necessário
+        $total_agendamentos = contarAgendamentosData($data_agendamento);
+        if ($total_agendamentos >= 10) {
+            $stmt_update = $conexao->prepare("
+                INSERT INTO controle_diario (data_agendamento, total_agendamentos, bloqueado) 
+                VALUES (?, ?, 1)
+                ON DUPLICATE KEY UPDATE 
+                total_agendamentos = ?, bloqueado = 1
+            ");
+            $stmt_update->execute([$data_agendamento, $total_agendamentos, $total_agendamentos]);
         }
+
+        // Sempre redireciona como confirmado para usuários
+        header("Location: ../front-end/pag_sucesso_agendamento.php?status=confirmado");
         exit();
 
     } catch (PDOException $e) {
         error_log("Erro ao agendar: " . $e->getMessage());
-        header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Erro ao agendar. Tente novamente."));
+        header("Location: ../front-end/pag_agendar_logado.php?erro=" . urlencode("Erro ao processar agendamento. Tente novamente."));
         exit();
     }
 } else {
     header("Location: ../front-end/pag_agendar_logado.php");
     exit();
 }
+?>

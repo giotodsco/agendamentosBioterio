@@ -1,5 +1,5 @@
 <?php
-// acexx/back-end/agendar_empresa.php
+// acexx/back-end/agendar_empresa.php - SEMPRE PENDENTE
 session_start();
 require_once 'functions.php';
 
@@ -40,7 +40,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // ATUALIZADO: Validação da hora para empresas (08:00 às 16:00, intervalos de 30 min)
+    // Validação da hora para empresas (08:00 às 16:00, intervalos de 30 min)
     $horariosValidosEmpresa = gerarHorariosDisponiveis(true); // true = empresa
     if (!in_array($hora_agendamento, $horariosValidosEmpresa)) {
         header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("Horário inválido. Escolha um horário entre 08:00 e 16:00."));
@@ -95,10 +95,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Inserir agendamento (SEMPRE com status pendente para empresas)
+        // NOVO: Inserir agendamento SEMPRE com status pendente para empresas
         $stmt = $conexao->prepare("
-            INSERT INTO agendamentos (nome, email, cpf, data_agendamento, hora_agendamento, status, tipo_agendamento, empresa_id, quantidade_pessoas) 
-            VALUES (?, ?, ?, ?, ?, 'pendente', 'empresa', ?, ?)
+            INSERT INTO agendamentos (nome, email, cpf, data_agendamento, hora_agendamento, status, tipo_agendamento, empresa_id, quantidade_pessoas, data_criacao) 
+            VALUES (?, ?, ?, ?, ?, 'pendente', 'empresa', ?, ?, NOW())
         ");
         $stmt->execute([
             $empresa['nome_instituicao'], 
@@ -123,3 +123,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: ../front-end/pag_agendar_empresa.php");
     exit();
 }
+?>

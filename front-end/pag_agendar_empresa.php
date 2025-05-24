@@ -597,9 +597,13 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     </div>
                 </form>
 
+                <!-- NOVO: Botões de navegação incluindo "Meus Agendamentos" -->
                 <div class="action-buttons">
                     <a href="pag_inicial.html" class="btn btn-secondary">
                         <i class="fa-solid fa-home"></i> Página Inicial
+                    </a>
+                    <a href="pag_meus_agendamentos_empresa.php" class="btn btn-secondary">
+                        <i class="fa-solid fa-list"></i> Meus Agendamentos
                     </a>
                 </div>
             </div>

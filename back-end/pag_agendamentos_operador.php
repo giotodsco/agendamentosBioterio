@@ -31,6 +31,20 @@ try {
         'status' => $filtro_status
     ];
     
+    // CORREÇÃO: Operador NÃO deve ver agendamentos pendentes
+    // Se não há filtro específico de status, excluir pendentes automaticamente
+    if (empty($filtro_status)) {
+        $filtros['status_excluir'] = 'pendente';
+    } elseif ($filtro_status === 'pendente') {
+        // Se operador tentar filtrar por pendente, redirecionar sem esse filtro
+        $url_redirect = $_SERVER['PHP_SELF'] . '?';
+        $params = $_GET;
+        unset($params['status']);
+        $url_redirect .= http_build_query($params);
+        header("Location: $url_redirect");
+        exit();
+    }
+    
     $agendamentos = buscarAgendamentosCompletos($filtros);
     
     // Organizar agendamentos por data
@@ -97,26 +111,20 @@ function formatarDataPorExtensor($data) {
 
         body {
             background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
         .header {
             background-color: rgba(64, 122, 53, 0.9);
-            padding: 12px 25px;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: white;
             flex-shrink: 0;
-        }
-
-        .header h1 {
-            color: white;
-            font-size: 22px;
-            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .user-info {
@@ -127,70 +135,118 @@ function formatarDataPorExtensor($data) {
 
         .user-info span {
             color: white;
-            font-size: 14px;
+            font-size: 16px;
             background-color: rgba(255, 255, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 15px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn-logout {
             background-color: rgba(255, 255, 255, 0.2);
             color: white;
-            border: 2px solid white;
+            border: 1px solid white;
             padding: 8px 15px;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 13px;
-            font-weight: bold;
-            transition: all 0.3s;
+            font-size: 14px;
+            transition: background-color 0.3s;
         }
 
         .btn-logout:hover {
-            background-color: white;
-            color: rgba(64, 122, 53, 0.9);
-            transform: translateY(-1px);
+            background-color: rgba(255, 255, 255, 0.3);
+            color: white;
         }
 
         .content {
             background-color: rgb(225, 225, 228);
             border-radius: 15px 15px 0 0;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-            padding: 20px;
+            padding: 25px;
             flex: 1;
-            margin: 10px;
+            margin: 15px;
             margin-bottom: 0;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
+        .page-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .page-title h2 {
+            color: rgba(64, 122, 53, 0.819);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-title p {
+            color: rgb(100, 100, 100);
+            font-size: 16px;
+        }
+
+        /* NOVO: Aviso para operador sobre pendentes */
+        .operador-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border: 2px solid #2196f3;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .operador-info h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .operador-info p {
+            color: #1976d2;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
         .filters {
             background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
 
         .filters h3 {
             color: rgba(64, 122, 53, 0.819);
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 20px;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .filter-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
             align-items: end;
         }
 
         .filter-group label {
-            font-size: 13px;
-            margin-bottom: 6px;
+            font-size: 14px;
+            margin-bottom: 8px;
             color: rgb(60, 59, 59);
             font-weight: bold;
             display: block;
@@ -199,33 +255,35 @@ function formatarDataPorExtensor($data) {
         .filter-group input,
         .filter-group select {
             width: 100%;
-            padding: 8px;
+            padding: 12px;
             border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 13px;
+            border-radius: 8px;
+            font-size: 14px;
             font-family: Georgia, 'Times New Roman', Times, serif;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            background-color: white;
         }
 
         .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
             border-color: rgba(64, 122, 53, 0.819);
+            box-shadow: 0 0 0 3px rgba(64, 122, 53, 0.1);
         }
 
         .btn {
-            padding: 8px 15px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
             font-family: Georgia, 'Times New Roman', Times, serif;
             font-weight: bold;
             transition: all 0.3s;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -235,7 +293,8 @@ function formatarDataPorExtensor($data) {
 
         .btn-primary:hover {
             background-color: rgba(44, 81, 36, 0.819);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(64, 122, 53, 0.3);
         }
 
         .btn-success {
@@ -245,7 +304,8 @@ function formatarDataPorExtensor($data) {
 
         .btn-success:hover {
             background-color: #218838;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
         }
 
         .btn-secondary {
@@ -255,7 +315,8 @@ function formatarDataPorExtensor($data) {
 
         .btn-secondary:hover {
             background-color: #5a6268;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
         }
 
         .btn-warning {
@@ -265,47 +326,54 @@ function formatarDataPorExtensor($data) {
 
         .btn-warning:hover {
             background-color: #e0a800;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
         }
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
             flex-shrink: 0;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
-            padding: 15px;
-            border-radius: 10px;
+            background: linear-gradient(135deg, white 0%, #f8f9fa 100%);
+            padding: 20px;
+            border-radius: 12px;
             text-align: center;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
-            transition: transform 0.3s;
+            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .stat-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .stat-number {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: rgba(64, 122, 53, 0.819);
-            margin-bottom: 4px;
+            margin-bottom: 8px;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 14px;
             color: rgb(100, 100, 100);
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .actions {
             display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 25px;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
@@ -314,29 +382,33 @@ function formatarDataPorExtensor($data) {
 
         .actions-left {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             flex-wrap: wrap;
         }
 
         .export-specific-date {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #ffc107;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
             flex-shrink: 0;
         }
 
         .export-specific-date h4 {
             color: #856404;
-            margin-bottom: 12px;
-            font-size: 16px;
+            margin-bottom: 15px;
+            font-size: 18px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .export-date-form {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             align-items: end;
             flex-wrap: wrap;
         }
@@ -349,83 +421,99 @@ function formatarDataPorExtensor($data) {
 
         /* Barra de rolagem personalizada */
         .appointments-container::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
 
         .appointments-container::-webkit-scrollbar-track {
             background: rgba(0, 0, 0, 0.1);
-            border-radius: 4px;
+            border-radius: 5px;
         }
 
         .appointments-container::-webkit-scrollbar-thumb {
-            background: rgba(64, 122, 53, 0.6);
-            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(64, 122, 53, 0.6) 0%, rgba(64, 122, 53, 0.8) 100%);
+            border-radius: 5px;
+            transition: all 0.3s;
         }
 
         .appointments-container::-webkit-scrollbar-thumb:hover {
-            background: rgba(64, 122, 53, 0.8);
+            background: linear-gradient(135deg, rgba(64, 122, 53, 0.8) 0%, rgba(64, 122, 53, 1) 100%);
         }
 
         .day-section {
             background-color: white;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
             overflow: hidden;
-            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            border-left: 6px solid rgba(64, 122, 53, 0.819);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+
+        .day-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
         .day-header {
             background: linear-gradient(135deg, rgba(64, 122, 53, 0.819) 0%, rgba(44, 81, 36, 0.819) 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 20px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .day-title {
-            font-size: 18px;
+            font-size: 22px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .day-date {
-            font-size: 13px;
+            font-size: 14px;
             opacity: 0.9;
+            margin-top: 5px;
         }
 
         .day-stats {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
         }
 
         .day-count {
             background-color: rgba(255, 255, 255, 0.2);
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .appointments-grid {
-            padding: 20px;
+            padding: 25px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
         }
 
         .appointment-card {
-            background-color: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, white 100%);
+            border-radius: 12px;
+            padding: 20px;
             border: 2px solid #e9ecef;
             transition: all 0.3s;
             position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         }
 
         .appointment-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             border-color: rgba(64, 122, 53, 0.3);
         }
 
@@ -434,20 +522,41 @@ function formatarDataPorExtensor($data) {
             border-color: #ffc107;
         }
 
+        .appointment-card.empresa-card:hover {
+            border-color: #ff9800;
+            box-shadow: 0 10px 30px rgba(255, 193, 7, 0.2);
+        }
+
+        /* NOVO: Cards verde claro para usuários logados */
+        .appointment-card.user-logado-card {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border-left-color: #28a745;
+            border-color: #28a745;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1);
+        }
+
+        .appointment-card.user-logado-card:hover {
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+            border-color: #1e7e34;
+        }
+
         .appointment-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .appointment-id {
             background-color: rgba(64, 122, 53, 0.1);
             color: rgba(64, 122, 53, 0.819);
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .appointment-id.empresa {
@@ -456,112 +565,130 @@ function formatarDataPorExtensor($data) {
         }
 
         .appointment-time {
-            font-size: 16px;
+            font-size: 20px;
             font-weight: bold;
             color: rgba(64, 122, 53, 0.819);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .appointment-info {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
         .appointment-info h4 {
             color: rgb(60, 59, 59);
-            margin-bottom: 6px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .appointment-info h4.empresa-name {
             color: #856404;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .appointment-info p {
-            font-size: 13px;
+            font-size: 14px;
             color: rgb(100, 100, 100);
-            margin-bottom: 3px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .empresa-details {
-            background-color: rgba(255, 193, 7, 0.1);
-            padding: 8px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            border-left: 3px solid #ffc107;
+            background-color: rgba(255, 193, 7, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
         }
 
         .pessoas-count {
             background-color: rgba(255, 193, 7, 0.2);
             color: #856404;
-            padding: 4px 8px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .status {
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 11px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
             text-align: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .status-confirmado {
-            background-color: #d4edda;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
             color: #155724;
+            border: 2px solid #28a745;
         }
 
         .status-cancelado {
-            background-color: #f8d7da;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
             color: #721c24;
+            border: 2px solid #dc3545;
         }
 
-        .status-pendente {
-            background-color: #fff3cd;
-            color: #856404;
+        .status-negado {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 2px solid #dc3545;
         }
 
         .user-type {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 10px;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .user-logado {
-            background-color: #e3f2fd;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
             color: #1976d2;
+            border: 2px solid #2196f3;
         }
 
         .user-anonimo {
-            background-color: #f3e5f5;
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
             color: #7b1fa2;
+            border: 2px solid #9c27b0;
         }
 
         .user-empresa {
-            background-color: #fff3cd;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             color: #856404;
+            border: 2px solid #ffc107;
         }
 
         .no-appointments {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             color: rgb(150, 150, 150);
-            font-size: 16px;
+            font-size: 18px;
             background-color: #f8f9fa;
-            border-radius: 12px;
+            border-radius: 15px;
             margin: 20px 0;
         }
 
         .no-appointments i {
-            font-size: 50px;
-            margin-bottom: 15px;
+            font-size: 60px;
+            margin-bottom: 20px;
             opacity: 0.5;
         }
 
@@ -575,13 +702,13 @@ function formatarDataPorExtensor($data) {
         }
 
         .past-day {
-            opacity: 0.7;
+            opacity: 0.8;
         }
 
         .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             border: 1px solid transparent;
         }
 
@@ -591,11 +718,49 @@ function formatarDataPorExtensor($data) {
             border-color: #f5c6cb;
         }
 
+        /* Melhorias visuais extras */
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-today {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .badge-future {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .badge-past {
+            background-color: #6c757d;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .header {
+                padding: 10px 15px;
                 flex-direction: column;
-                gap: 10px;
-                text-align: center;
+                gap: 15px;
+            }
+            
+            .content {
+                margin: 10px;
+                padding: 20px;
             }
             
             .filter-row {
@@ -608,12 +773,12 @@ function formatarDataPorExtensor($data) {
             
             .appointments-grid {
                 grid-template-columns: 1fr;
-                padding: 15px;
+                padding: 20px;
             }
 
             .actions {
                 flex-direction: column;
-                gap: 10px;
+                gap: 15px;
                 align-items: stretch;
             }
 
@@ -623,7 +788,7 @@ function formatarDataPorExtensor($data) {
 
             .day-header {
                 flex-direction: column;
-                gap: 8px;
+                gap: 10px;
                 text-align: center;
             }
 
@@ -657,6 +822,17 @@ function formatarDataPorExtensor($data) {
             </div>
         <?php endif; ?>
 
+        <div class="page-title">
+            <h2><i class="fa-solid fa-calendar-alt"></i> Relatórios e Agendamentos</h2>
+            <p>Visualize e analise todos os agendamentos confirmados e processados do sistema</p>
+        </div>
+
+        <!-- NOVO: Aviso sobre política de acesso para operadores -->
+        <div class="operador-info">
+            <h4><i class="fa-solid fa-info-circle"></i> Informação para Operadores</h4>
+            <p>Como operador, você visualiza apenas agendamentos <strong>confirmados</strong>, <strong>cancelados</strong> e <strong>negados</strong>. Agendamentos pendentes são visíveis apenas para administradores.</p>
+        </div>
+
         <div class="filters">
             <h3><i class="fa-solid fa-filter"></i> Filtros e Controles</h3>
             <form method="GET" action="">
@@ -672,10 +848,10 @@ function formatarDataPorExtensor($data) {
                     <div class="filter-group">
                         <label for="status"><i class="fa-solid fa-tags"></i> Status:</label>
                         <select id="status" name="status">
-                            <option value="">Todos os Status</option>
+                            <option value="">Todos os Status Visíveis</option>
                             <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
                             <option value="cancelado" <?php echo $filtro_status === 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
-                            <option value="pendente" <?php echo $filtro_status === 'pendente' ? 'selected' : ''; ?>>Pendente</option>
+                            <option value="negado" <?php echo $filtro_status === 'negado' ? 'selected' : ''; ?>>Negado</option>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -691,7 +867,7 @@ function formatarDataPorExtensor($data) {
         <div class="export-specific-date">
             <h4><i class="fa-solid fa-calendar-day"></i> Exportar Agendamentos de uma Data Específica</h4>
             <div class="export-date-form">
-                <div class="filter-group" style="flex: 1; min-width: 180px;">
+                <div class="filter-group" style="flex: 1; min-width: 200px;">
                     <label for="data_especifica">Selecione a Data:</label>
                     <input type="date" id="data_especifica" name="data_especifica" style="border-color: #ffc107;">
                 </div>
@@ -724,6 +900,10 @@ function formatarDataPorExtensor($data) {
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
                 <div class="stat-label"><i class="fa-solid fa-building"></i> Empresas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'negado')); ?></div>
+                <div class="stat-label"><i class="fa-solid fa-ban"></i> Negados</div>
             </div>
         </div>
 
@@ -773,7 +953,7 @@ function formatarDataPorExtensor($data) {
                                 <div class="day-count">
                                     <i class="fa-solid fa-building"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?> empresa<?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')) != 1 ? 's' : ''; ?>
                                 </div>
-                                <button type="button" class="btn btn-warning" onclick="exportarDataEspecificaDireta('<?php echo $data; ?>', 'pdf')" style="font-size: 11px; padding: 4px 8px;">
+                                <button type="button" class="btn btn-warning" onclick="exportarDataEspecificaDireta('<?php echo $data; ?>', 'pdf')" style="font-size: 12px; padding: 6px 12px;">
                                     <i class="fa-solid fa-download"></i> PDF
                                 </button>
                             </div>
@@ -782,7 +962,29 @@ function formatarDataPorExtensor($data) {
                         <div class="appointments-grid">
                             <?php foreach ($agendamentos_do_dia as $agendamento): 
                                 $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
-                                $cardClass = $isEmpresa ? 'empresa-card' : '';
+                                
+                                // NOVO: Definir classe baseada no tipo de usuário
+                                if (!$isEmpresa && $agendamento['usuario_id']) {
+                                    $cardClass = 'user-logado-card';  // Verde claro para usuários logados
+                                } elseif ($isEmpresa) {
+                                    $cardClass = 'empresa-card';      // Amarelo para empresas
+                                } else {
+                                    $cardClass = '';                  // Padrão para anônimos
+                                }
+                                
+                                // Badge para data
+                                $badge_class = '';
+                                $badge_text = '';
+                                if ($is_today) {
+                                    $badge_class = 'badge-today';
+                                    $badge_text = 'HOJE';
+                                } elseif ($is_past) {
+                                    $badge_class = 'badge-past';
+                                    $badge_text = 'PASSADO';
+                                } else {
+                                    $badge_class = 'badge-future';
+                                    $badge_text = 'FUTURO';
+                                }
                             ?>
                             <div class="appointment-card <?php echo $cardClass; ?>">
                                 <div class="appointment-header">
@@ -811,37 +1013,41 @@ function formatarDataPorExtensor($data) {
                                     <?php endif; ?>
                                     <p><i class="fa-solid fa-envelope"></i> <?php echo htmlspecialchars($agendamento['email']); ?></p>
                                     <p><i class="fa-solid fa-id-card"></i> <?php echo htmlspecialchars($agendamento['cpf']); ?></p>
-                                    <p><i class="fa-solid fa-calendar-plus"></i> Criado em: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?></p>
+                                    <p><i class="fa-solid fa-calendar-plus"></i> Criado: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?></p>
                                     <?php if ($agendamento['data_cancelamento']): ?>
-                                    <p><i class="fa-solid fa-calendar-times"></i> Cancelado em: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?></p>
+                                    <p><i class="fa-solid fa-calendar-times"></i> Cancelado: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?></p>
                                     <?php endif; ?>
                                 </div>
                                 
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span class="status status-<?php echo $agendamento['status']; ?>">
-                                        <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                            <i class="fa-solid fa-check-circle"></i>
-                                        <?php elseif ($agendamento['status'] === 'pendente'): ?>
-                                            <i class="fa-solid fa-clock"></i>
+                                <div class="card-footer">
+                                    <div>
+                                        <span class="status status-<?php echo $agendamento['status']; ?>">
+                                            <?php if ($agendamento['status'] === 'confirmado'): ?>
+                                                <i class="fa-solid fa-check-circle"></i>
+                                            <?php elseif ($agendamento['status'] === 'negado'): ?>
+                                                <i class="fa-solid fa-times-circle"></i>
+                                            <?php else: ?>
+                                                <i class="fa-solid fa-ban"></i>
+                                            <?php endif; ?>
+                                            <?php echo ucfirst($agendamento['status']); ?>
+                                        </span>
+                                        
+                                        <?php if ($isEmpresa): ?>
+                                            <span class="user-type user-empresa">
+                                                <i class="fa-solid fa-building"></i> Empresa
+                                            </span>
+                                        <?php elseif ($agendamento['usuario_id']): ?>
+                                            <span class="user-type user-logado">
+                                                <i class="fa-solid fa-user-check"></i> Usuário Cadastrado
+                                            </span>
                                         <?php else: ?>
-                                            <i class="fa-solid fa-times-circle"></i>
+                                            <span class="user-type user-anonimo">
+                                                <i class="fa-solid fa-user-secret"></i> Usuário Anônimo
+                                            </span>
                                         <?php endif; ?>
-                                        <?php echo ucfirst($agendamento['status']); ?>
-                                    </span>
+                                    </div>
                                     
-                                    <?php if ($isEmpresa): ?>
-                                        <span class="user-type user-empresa">
-                                            <i class="fa-solid fa-building"></i> Empresa
-                                        </span>
-                                    <?php elseif ($agendamento['usuario_id']): ?>
-                                        <span class="user-type user-logado">
-                                            <i class="fa-solid fa-user-check"></i> Usuário Cadastrado
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="user-type user-anonimo">
-                                            <i class="fa-solid fa-user-secret"></i> Usuário Anônimo
-                                        </span>
-                                    <?php endif; ?>
+                                    <span class="badge <?php echo $badge_class; ?>"><?php echo $badge_text; ?></span>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -852,7 +1058,7 @@ function formatarDataPorExtensor($data) {
                 <div class="no-appointments">
                     <i class="fa-solid fa-calendar-times"></i><br>
                     <strong>Nenhum agendamento encontrado</strong><br>
-                    <small>Tente ajustar os filtros para ver mais resultados</small>
+                    <small>Tente ajustar os filtros para ver mais resultados ou aguarde novos agendamentos serem confirmados</small>
                 </div>
             <?php endif; ?>
         </div>

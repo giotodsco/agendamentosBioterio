@@ -551,6 +551,9 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
                 </form>
 
                 <div class="action-buttons">
+                    <a href="pag_inicial.html" class="btn btn-secondary">
+                        <i class="fa-solid fa-home"></i> Página Inicial
+                    </a>
                     <a href="pag_meus_agendamentos.php" class="btn btn-secondary">
                         <i class="fa-solid fa-list"></i> Meus Agendamentos
                     </a>

@@ -393,7 +393,7 @@ function validarLogin($login, $senha) {
     }
 }
 
-// NOVA FUNÇÃO: Buscar dados completos de agendamentos incluindo empresas
+// NOVA FUNÇÃO: Buscar dados completos de agendamentos incluindo empresas - CORRIGIDA
 function buscarAgendamentosCompletos($filtros = []) {
     try {
         $conexao = conectarBanco();
@@ -430,9 +430,21 @@ function buscarAgendamentosCompletos($filtros = []) {
             $params[] = $filtros['status'];
         }
         
+        // NOVO: Filtro para excluir status específico (usado pelo operador)
+        if (!empty($filtros['status_excluir'])) {
+            $where[] = "a.status != ?";
+            $params[] = $filtros['status_excluir'];
+        }
+        
         if (!empty($filtros['tipo_agendamento'])) {
             $where[] = "a.tipo_agendamento = ?";
             $params[] = $filtros['tipo_agendamento'];
+        }
+        
+        // NOVO: Filtro para empresa específica
+        if (!empty($filtros['empresa_id'])) {
+            $where[] = "a.empresa_id = ?";
+            $params[] = $filtros['empresa_id'];
         }
         
         if (!empty($where)) {

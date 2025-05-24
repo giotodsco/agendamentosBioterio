@@ -6,13 +6,17 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
     header("Location: pag_login_usuario.php");
     exit();
 }
+
+// Verificar o status do agendamento
+$status = $_GET['status'] ?? 'confirmado';
+$isPendente = ($status === 'pendente');
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agendamento Realizado - Biotério FSA</title>
+    <title><?php echo $isPendente ? 'Agendamento Solicitado' : 'Agendamento Realizado'; ?> - Biotério FSA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
         * {
@@ -34,7 +38,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         .success-container {
             background-color: rgb(225, 225, 228);
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             border-radius: 20px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
             padding: 40px;
@@ -43,9 +47,16 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
 
         .success-icon {
             font-size: 80px;
-            color: #28a745;
             margin-bottom: 20px;
             animation: bounce 1s ease-in-out;
+        }
+
+        .success-icon.confirmado {
+            color: #28a745;
+        }
+
+        .success-icon.pendente {
+            color: #ffc107;
         }
 
         @keyframes bounce {
@@ -74,15 +85,51 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         }
 
         .user-info {
-            background-color: rgba(64, 122, 53, 0.1);
-            padding: 20px;
+            padding: 25px;
             border-radius: 10px;
             margin-bottom: 30px;
             border-left: 4px solid rgba(64, 122, 53, 0.819);
         }
 
+        .user-info.confirmado {
+            background-color: rgba(64, 122, 53, 0.1);
+        }
+
+        .user-info.pendente {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%);
+            border-left-color: #ffc107;
+        }
+
         .user-info strong {
             color: rgba(64, 122, 53, 0.819);
+        }
+
+        .user-info.pendente strong {
+            color: #856404;
+        }
+
+        .status-info {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .status-info h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .status-info p {
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
         .buttons {
@@ -102,8 +149,9 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
             font-family: Georgia, 'Times New Roman', Times, serif;
+            font-weight: bold;
         }
 
         .btn-primary {
@@ -114,6 +162,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         .btn-primary:hover {
             background-color: rgba(44, 81, 36, 0.819);
             color: white;
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
@@ -124,6 +173,18 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         .btn-secondary:hover {
             background-color: rgb(180, 180, 180);
             color: rgb(60, 59, 59);
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #856404;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            color: #856404;
+            transform: translateY(-2px);
         }
 
         @media (max-width: 768px) {
@@ -147,31 +208,67 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
 </head>
 <body>
     <div class="success-container">
-        <div class="success-icon">
-            <i class="fa-solid fa-check-circle"></i>
-        </div>
-        
-        <h1>Agendamento Realizado com Sucesso!</h1>
-        
-        <div class="success-message">
-            Seu agendamento foi confirmado automaticamente e já está ativo no sistema!
-        </div>
-        
-        <div class="user-info">
-            <strong><?php echo htmlspecialchars($_SESSION['usuario_nome']); ?></strong>, 
-            seu agendamento está confirmado.<br>
-            Você pode visualizar e gerenciar todos os seus agendamentos na área "Meus Agendamentos".
-        </div>
+        <?php if ($isPendente): ?>
+            <!-- MODO PENDENTE -->
+            <div class="success-icon pendente">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+            
+            <h1>Agendamento Solicitado!</h1>
+            
+            <div class="success-message">
+                Sua solicitação foi enviada e está aguardando aprovação da administração.
+            </div>
+            
+            <div class="user-info pendente">
+                <strong><?php echo htmlspecialchars($_SESSION['usuario_nome']); ?></strong>, 
+                seu agendamento foi recebido e está na fila de aprovação.<br>
+                Você receberá uma confirmação por email quando for aprovado.
+            </div>
+
+            <div class="status-info">
+                <h3><i class="fa-solid fa-hourglass-half"></i> Aguardando Aprovação</h3>
+                <p><strong>Status:</strong> Pendente de análise pela administração<br>
+                <strong>Prazo:</strong> Resposta em até 2 dias úteis<br>
+                <strong>Notificação:</strong> Você receberá um email com a confirmação ou orientações adicionais</p>
+            </div>
+        <?php else: ?>
+            <!-- MODO CONFIRMADO -->
+            <div class="success-icon confirmado">
+                <i class="fa-solid fa-check-circle"></i>
+            </div>
+            
+            <h1>Agendamento Realizado com Sucesso!</h1>
+            
+            <div class="success-message">
+                Seu agendamento foi confirmado automaticamente e já está ativo no sistema!
+            </div>
+            
+            <div class="user-info confirmado">
+                <strong><?php echo htmlspecialchars($_SESSION['usuario_nome']); ?></strong>, 
+                seu agendamento está confirmado.<br>
+                Você pode visualizar e gerenciar todos os seus agendamentos na área "Meus Agendamentos".
+            </div>
+        <?php endif; ?>
         
         <div class="buttons">
             <a href="pag_meus_agendamentos.php" class="btn btn-primary">
                 <i class="fa-solid fa-calendar"></i>
                 Meus Agendamentos
             </a>
-            <a href="pag_agendar_logado.php" class="btn btn-secondary">
-                <i class="fa-solid fa-plus"></i>
-                Novo Agendamento
-            </a>
+            
+            <?php if ($isPendente): ?>
+                <a href="pag_dados_usuario.php" class="btn btn-warning">
+                    <i class="fa-solid fa-user"></i>
+                    Meus Dados
+                </a>
+            <?php else: ?>
+                <a href="pag_agendar_logado.php" class="btn btn-secondary">
+                    <i class="fa-solid fa-plus"></i>
+                    Novo Agendamento
+                </a>
+            <?php endif; ?>
+            
             <a href="pag_inicial.html" class="btn btn-secondary">
                 <i class="fa-solid fa-home"></i>
                 Página Inicial

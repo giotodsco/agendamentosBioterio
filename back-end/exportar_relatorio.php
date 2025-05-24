@@ -32,6 +32,11 @@ try {
     $sql = "SELECT a.*, u.nome as usuario_nome FROM agendamentos a LEFT JOIN usuarios u ON a.usuario_id = u.id WHERE 1=1 ";
     $params = [];
     
+    // CORREÇÃO: Se é operador, excluir agendamentos pendentes automaticamente
+    if ($_SESSION['tipo_usuario'] === 'operador') {
+        $sql .= " AND a.status != 'pendente'";
+    }
+    
     // NOVA FUNCIONALIDADE: Filtro por data específica tem prioridade
     if ($filtro_data_especifica) {
         $sql .= " AND a.data_agendamento = ?";
@@ -49,7 +54,8 @@ try {
         }
     }
     
-    if ($filtro_status) {
+    // CORREÇÃO: Se operador tentar filtrar por pendente, ignorar o filtro
+    if ($filtro_status && !($_SESSION['tipo_usuario'] === 'operador' && $filtro_status === 'pendente')) {
         $sql .= " AND a.status = ?";
         $params[] = $filtro_status;
     }
@@ -84,14 +90,15 @@ if ($export_type === 'excel') {
     // BOM para UTF-8 (para Excel reconhecer acentos)
     fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
     
-    // Cabeçalhos
+    // Cabeçalhos ATUALIZADOS
     fputcsv($output, [
         'ID',
         'Nome',
         'Email', 
-        'CPF',
+        'CPF/CNPJ',
         'Data do Agendamento',
         'Horário',
+        'Quantidade de Pessoas',
         'Status',
         'Tipo de Usuário',
         'Data de Criação',
@@ -100,6 +107,16 @@ if ($export_type === 'excel') {
     
     // Dados
     foreach ($agendamentos as $agendamento) {
+        // NOVO: Determinar tipo de usuário
+        $tipoUsuario = '';
+        if ($agendamento['tipo_agendamento'] === 'empresa') {
+            $tipoUsuario = 'Empresa';
+        } elseif ($agendamento['usuario_id']) {
+            $tipoUsuario = 'Usuário Logado';
+        } else {
+            $tipoUsuario = 'Anônimo';
+        }
+        
         fputcsv($output, [
             $agendamento['id'],
             $agendamento['nome'],
@@ -107,8 +124,9 @@ if ($export_type === 'excel') {
             $agendamento['cpf'],
             date('d/m/Y', strtotime($agendamento['data_agendamento'])),
             date('H:i', strtotime($agendamento['hora_agendamento'])),
+            $agendamento['quantidade_pessoas'] ?? 1,
             ucfirst($agendamento['status']),
-            $agendamento['usuario_id'] ? 'Usuário Logado' : 'Anônimo',
+            $tipoUsuario,
             date('d/m/Y H:i', strtotime($agendamento['data_criacao'])),
             $agendamento['data_cancelamento'] ? date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])) : ''
         ], ';');
@@ -122,11 +140,20 @@ if ($export_type === 'excel') {
     $titulo = 'Relatório de Agendamentos - Biotério FSA';
     $data_geracao = date('d/m/Y H:i:s');
     $usuario_gerador = $_SESSION['usuario_nome'];
+    $tipo_usuario = ucfirst($_SESSION['tipo_usuario']);
     
     // NOVA FUNCIONALIDADE: Título específico para data específica
     if ($filtro_data_especifica) {
         $data_formatada = date('d/m/Y', strtotime($filtro_data_especifica));
         $titulo = 'Agendamentos do dia ' . $data_formatada . ' - Biotério FSA';
+    }
+    
+    // CORREÇÃO: Adicionar nota se for operador
+    $nota_operador = '';
+    if ($_SESSION['tipo_usuario'] === 'operador') {
+        $nota_operador = '<div class="operator-note">
+            <p><strong>Nota:</strong> Como operador, este relatório exclui agendamentos pendentes. Agendamentos pendentes são visíveis apenas para administradores.</p>
+        </div>';
     }
     
     ?>
@@ -160,6 +187,21 @@ if ($export_type === 'excel') {
             .header p {
                 margin: 5px 0;
                 color: #666;
+            }
+            
+            .operator-note {
+                background-color: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            
+            .operator-note p {
+                margin: 0;
+                color: #1976d2;
+                font-weight: bold;
             }
             
             .filters {
@@ -238,6 +280,14 @@ if ($export_type === 'excel') {
                 font-size: 10px;
             }
             
+            .status-negado {
+                background-color: #f8d7da;
+                color: #721c24;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
             .footer {
                 margin-top: 30px;
                 text-align: center;
@@ -263,6 +313,57 @@ if ($export_type === 'excel') {
                 font-size: 20px;
             }
             
+            /* NOVO: Destaque para empresas */
+            .empresa-row {
+                background-color: #fff3cd !important;
+                border-left: 4px solid #ffc107;
+            }
+            
+            .tipo-empresa {
+                background-color: #ffc107;
+                color: #856404;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            .tipo-usuario {
+                background-color: #e3f2fd;
+                color: #1976d2;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            .tipo-anonimo {
+                background-color: #f3e5f5;
+                color: #7b1fa2;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            /* NOVO: Destaque para quantidade de pessoas */
+            .qtd-pessoas {
+                background-color: #e8f5e8;
+                color: #2e7d32;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-weight: bold;
+                display: inline-block;
+                min-width: 25px;
+                text-align: center;
+            }
+            
+            .qtd-multiplas {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 2px solid #ffc107;
+            }
+            
             @media print {
                 body { margin: 0; }
                 .no-print { display: none; }
@@ -273,8 +374,10 @@ if ($export_type === 'excel') {
         <div class="header">
             <h1><?php echo $titulo; ?></h1>
             <p><strong>Data de Geração:</strong> <?php echo $data_geracao; ?></p>
-            <p><strong>Gerado por:</strong> <?php echo htmlspecialchars($usuario_gerador); ?> (<?php echo ucfirst($_SESSION['tipo_usuario']); ?>)</p>
+            <p><strong>Gerado por:</strong> <?php echo htmlspecialchars($usuario_gerador); ?> (<?php echo $tipo_usuario; ?>)</p>
         </div>
+        
+        <?php echo $nota_operador; ?>
         
         <?php if ($filtro_data_especifica): ?>
         <div class="date-highlight">
@@ -296,8 +399,11 @@ if ($export_type === 'excel') {
                     <p><strong>Data Fim:</strong> <?php echo date('d/m/Y', strtotime($filtro_data_fim)); ?></p>
                 <?php endif; ?>
             <?php endif; ?>
-            <?php if ($filtro_status): ?>
+            <?php if ($filtro_status && !($_SESSION['tipo_usuario'] === 'operador' && $filtro_status === 'pendente')): ?>
                 <p><strong>Status:</strong> <?php echo ucfirst($filtro_status); ?></p>
+            <?php endif; ?>
+            <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
+                <p><strong>Política de Acesso:</strong> Agendamentos pendentes excluídos (acesso apenas para administradores)</p>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -308,6 +414,10 @@ if ($export_type === 'excel') {
                 <div class="stat-label">Total de Agendamentos</div>
             </div>
             <div class="stat-item">
+                <div class="stat-number"><?php echo array_sum(array_map(fn($a) => $a['quantidade_pessoas'] ?? 1, $agendamentos)); ?></div>
+                <div class="stat-label">Total de Pessoas</div>
+            </div>
+            <div class="stat-item">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado')); ?></div>
                 <div class="stat-label">Confirmados</div>
             </div>
@@ -316,8 +426,12 @@ if ($export_type === 'excel') {
                 <div class="stat-label">Cancelados</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['usuario_id'] !== null)); ?></div>
-                <div class="stat-label">Usuários Logados</div>
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'negado')); ?></div>
+                <div class="stat-label">Negados</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
+                <div class="stat-label">Empresas</div>
             </div>
         </div>
         
@@ -328,29 +442,60 @@ if ($export_type === 'excel') {
                         <th>ID</th>
                         <th>Nome</th>
                         <th>Email</th>
-                        <th>CPF</th>
+                        <th>CPF/CNPJ</th>
                         <th>Data</th>
                         <th>Horário</th>
+                        <th>Qtd. Pessoas</th>
                         <th>Status</th>
                         <th>Tipo</th>
                         <th>Criado em</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($agendamentos as $agendamento): ?>
-                    <tr>
+                    <?php foreach ($agendamentos as $agendamento): 
+                        $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
+                        $rowClass = $isEmpresa ? 'empresa-row' : '';
+                        
+                        // Determinar tipo de usuário
+                        $tipoUsuario = '';
+                        $tipoClass = '';
+                        if ($isEmpresa) {
+                            $tipoUsuario = 'Empresa';
+                            $tipoClass = 'tipo-empresa';
+                        } elseif ($agendamento['usuario_id']) {
+                            $tipoUsuario = 'Usuário Logado';
+                            $tipoClass = 'tipo-usuario';
+                        } else {
+                            $tipoUsuario = 'Anônimo';
+                            $tipoClass = 'tipo-anonimo';
+                        }
+                    ?>
+                    <tr class="<?php echo $rowClass; ?>">
                         <td><?php echo $agendamento['id']; ?></td>
                         <td><?php echo htmlspecialchars($agendamento['nome']); ?></td>
                         <td><?php echo htmlspecialchars($agendamento['email']); ?></td>
                         <td><?php echo htmlspecialchars($agendamento['cpf']); ?></td>
                         <td><?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></td>
                         <td><?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?></td>
+                        <td style="text-align: center;">
+                            <?php 
+                            $qtdPessoas = $agendamento['quantidade_pessoas'] ?? 1;
+                            $qtdClass = $qtdPessoas > 1 ? 'qtd-pessoas qtd-multiplas' : 'qtd-pessoas';
+                            ?>
+                            <span class="<?php echo $qtdClass; ?>">
+                                <?php echo $qtdPessoas; ?>
+                            </span>
+                        </td>
                         <td>
                             <span class="status-<?php echo $agendamento['status']; ?>">
                                 <?php echo ucfirst($agendamento['status']); ?>
                             </span>
                         </td>
-                        <td><?php echo $agendamento['usuario_id'] ? 'Usuário' : 'Anônimo'; ?></td>
+                        <td>
+                            <span class="<?php echo $tipoClass; ?>">
+                                <?php echo $tipoUsuario; ?>
+                            </span>
+                        </td>
                         <td><?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?></td>
                     </tr>
                     <?php endforeach; ?>
@@ -359,12 +504,18 @@ if ($export_type === 'excel') {
         <?php else: ?>
             <p style="text-align: center; padding: 40px; color: #666;">
                 Nenhum agendamento encontrado com os filtros aplicados.
+                <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
+                <br><small>Lembre-se: agendamentos pendentes não são exibidos para operadores.</small>
+                <?php endif; ?>
             </p>
         <?php endif; ?>
         
         <div class="footer">
             <p>Relatório gerado pelo Sistema de Agendamento do Biotério FSA</p>
             <p>Este documento contém informações confidenciais e deve ser tratado com sigilo.</p>
+            <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
+            <p><strong>Política de Acesso:</strong> Relatório gerado por operador - agendamentos pendentes não incluídos.</p>
+            <?php endif; ?>
         </div>
         
         <div class="no-print" style="text-align: center; margin-top: 20px;">

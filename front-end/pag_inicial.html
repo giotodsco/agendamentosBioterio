@@ -282,6 +282,19 @@
             text-decoration: none;
         }
 
+        /* NOVO: Estilo específico para empresas no link de agendamentos */
+        #header_lista_um a#link-meus-agendamentos.empresa {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-color: #ffc107;
+            color: #856404;
+        }
+
+        #header_lista_um a#link-meus-agendamentos.empresa:hover {
+            background-color: #ffc107;
+            color: white;
+            border-color: #e0a800;
+        }
+
         #inicio {
             width: 100%;
             height: 100vh;
@@ -514,6 +527,15 @@
 
         .popup-btn-danger:hover {
             background-color: #c82333;
+        }
+
+        .popup-btn-warning {
+            background-color: #ffc107;
+            color: white;
+        }
+
+        .popup-btn-warning:hover {
+            background-color: #e0a800;
         }
 
         @media (max-width: 1024px) {
@@ -755,6 +777,7 @@
             const userName = document.getElementById('user-name');
             const userType = document.getElementById('user-type');
             const userActions = document.getElementById('user-actions');
+            const linkAgendamentos = document.getElementById('link-meus-agendamentos');
             
             // Configurar avatar
             avatar.className = 'user-avatar';
@@ -764,6 +787,9 @@
             userName.textContent = nome;
             userType.textContent = 'Usuário';
             userType.className = 'user-type';
+            
+            // Configurar link de agendamentos para usuário
+            linkAgendamentos.className = '';
             
             // Adicionar botão de sair
             userActions.innerHTML = `
@@ -789,6 +815,7 @@
             const userName = document.getElementById('user-name');
             const userType = document.getElementById('user-type');
             const userActions = document.getElementById('user-actions');
+            const linkAgendamentos = document.getElementById('link-meus-agendamentos');
             
             // Configurar avatar amarelo para empresa
             avatar.className = 'user-avatar empresa';
@@ -798,6 +825,9 @@
             userName.textContent = nome;
             userType.textContent = 'Empresa';
             userType.className = 'user-type empresa';
+            
+            // Configurar link de agendamentos para empresa
+            linkAgendamentos.className = 'empresa';
             
             // Adicionar botão de sair
             userActions.innerHTML = `
@@ -823,6 +853,7 @@
             const userName = document.getElementById('user-name');
             const userType = document.getElementById('user-type');
             const userActions = document.getElementById('user-actions');
+            const linkAgendamentos = document.getElementById('link-meus-agendamentos');
             
             // Configurar avatar de visitante
             avatar.className = 'user-avatar guest';
@@ -832,6 +863,9 @@
             userName.textContent = 'Entre aqui';
             userType.textContent = 'Clique para acessar';
             userType.className = 'user-type guest';
+            
+            // Remover classe empresa do link de agendamentos
+            linkAgendamentos.className = '';
             
             // Limpar ações
             userActions.innerHTML = '';
@@ -879,6 +913,7 @@
                 });
         }
 
+        // ATUALIZADA: Função para acessar agendamentos (agora funciona para empresas também)
         function verificarLoginEAcessar(event) {
             event.preventDefault();
             
@@ -887,28 +922,10 @@
                 .then(data => {
                     if (data.logado) {
                         if (data.tipo_conta === 'empresa') {
-                            // Empresas vão para sua própria página
-                            showPopup(
-                                'Área Empresarial', 
-                                'Como empresa, você deve usar a área de agendamento empresarial.', 
-                                'info',
-                                [
-                                    {
-                                        text: 'Ir para Agendamentos',
-                                        class: 'popup-btn-primary',
-                                        action: function() {
-                                            closePopup();
-                                            window.location.href = 'pag_agendar_empresa.php';
-                                        }
-                                    },
-                                    {
-                                        text: 'Cancelar',
-                                        class: 'popup-btn-secondary',
-                                        action: closePopup
-                                    }
-                                ]
-                            );
+                            // Empresas vão para sua própria página de agendamentos
+                            window.location.href = 'pag_meus_agendamentos_empresa.php';
                         } else {
+                            // Usuários vão para página normal de agendamentos
                             window.location.href = 'pag_meus_agendamentos.php';
                         }
                     } else {
