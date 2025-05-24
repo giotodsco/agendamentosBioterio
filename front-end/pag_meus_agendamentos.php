@@ -103,40 +103,58 @@ try {
 
         body {
             background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .header {
             background-color: rgba(64, 122, 53, 0.9);
-            padding: 15px 30px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: white;
+            flex-shrink: 0;
         }
 
         .user-info {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .user-info span {
             color: white;
-            font-size: 16px;
+            font-size: 14px;
+        }
+
+        .user-info a {
+            color: white;
+            text-decoration: none;
+            margin-left: 12px;
+            padding: 4px 8px;
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .user-info a:hover {
+            background-color: rgba(255,255,255,0.4);
+            transform: translateY(-1px);
         }
 
         .btn-logout {
             background-color: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid white;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             transition: background-color 0.3s;
         }
 
@@ -145,45 +163,45 @@ try {
             color: white;
         }
 
-        .user-info a:hover {
-            background-color: rgba(255,255,255,0.4) !important;
-            transform: translateY(-1px);
-        }
-
         .main-container {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding: 20px;
+            padding: 15px;
+            overflow: hidden;
         }
 
         .content-container {
             background-color: rgb(225, 225, 228);
-            width: 95%;
+            width: 100%;
             max-width: 1200px;
-            border-radius: 20px;
+            height: 100%;
+            border-radius: 15px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-            padding: 30px;
-            max-height: 80vh;
-            overflow-y: auto;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
             color: rgb(55, 75, 51);
-            font-size: 28px;
+            font-size: 24px;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-weight: 700;
+            flex-shrink: 0;
         }
 
         .welcome-message {
             background-color: rgba(64, 122, 53, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             text-align: center;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            border-left: 3px solid rgba(64, 122, 53, 0.819);
+            flex-shrink: 0;
         }
 
         .welcome-message strong {
@@ -191,10 +209,12 @@ try {
         }
 
         .alert {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 4px;
             font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
         .alert-success {
@@ -211,78 +231,103 @@ try {
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
         }
 
         .stat-card {
             background-color: rgba(64, 122, 53, 0.1);
-            padding: 15px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             text-align: center;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            border-left: 3px solid rgba(64, 122, 53, 0.819);
         }
 
         .stat-number {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: rgba(64, 122, 53, 0.819);
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             color: rgb(100, 100, 100);
-            margin-top: 5px;
+            margin-top: 4px;
+        }
+
+        .appointments-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        /* Barra de rolagem personalizada */
+        .appointments-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .appointments-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        .appointments-container::-webkit-scrollbar-thumb {
+            background: rgba(64, 122, 53, 0.6);
+            border-radius: 4px;
+        }
+
+        .appointments-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(64, 122, 53, 0.8);
         }
 
         .no-appointments {
             text-align: center;
             padding: 40px 20px;
             color: rgb(100, 100, 100);
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .appointments-grid {
             display: grid;
-            gap: 20px;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         }
 
         .appointment-card {
             background-color: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid rgba(64, 122, 53, 0.819);
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
         .appointment-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         .appointment-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .appointment-id {
             background-color: rgba(64, 122, 53, 0.1);
             color: rgba(64, 122, 53, 0.819);
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: bold;
         }
 
         .appointment-status {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: bold;
             text-align: center;
         }
@@ -297,6 +342,11 @@ try {
             color: #155724;
         }
 
+        .status-cancelado {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         .completed-appointments {
             background-color: rgba(40, 167, 69, 0.05);
             border-left-color: #28a745;
@@ -305,9 +355,9 @@ try {
         .appointment-date {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 18px;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 16px;
             font-weight: bold;
             color: rgba(64, 122, 53, 0.819);
         }
@@ -315,36 +365,36 @@ try {
         .appointment-time {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 16px;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
             color: rgb(60, 59, 59);
         }
 
         .appointment-info {
-            font-size: 14px;
+            font-size: 12px;
             color: rgb(100, 100, 100);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .appointment-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
             flex-wrap: wrap;
         }
 
         .btn {
-            padding: 8px 15px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 12px;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            transition: background-color 0.3s;
+            gap: 4px;
+            transition: all 0.3s;
             font-family: Georgia, 'Times New Roman', Times, serif;
         }
 
@@ -388,15 +438,16 @@ try {
 
         .action-buttons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
-            margin-top: 30px;
+            margin-top: 20px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .btn-lg {
-            padding: 12px 25px;
-            font-size: 16px;
+            padding: 10px 20px;
+            font-size: 14px;
         }
 
         .upcoming-appointments {
@@ -432,12 +483,12 @@ try {
 
         .custom-popup {
             background-color: rgb(225, 225, 228);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 400px;
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 350px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
             animation: popupSlideIn 0.3s ease-out;
         }
 
@@ -453,36 +504,36 @@ try {
         }
 
         .popup-icon {
-            font-size: 50px;
-            margin-bottom: 20px;
+            font-size: 40px;
+            margin-bottom: 15px;
             color: #ffc107;
         }
 
         .popup-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: rgb(55, 75, 51);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .popup-message {
-            font-size: 16px;
+            font-size: 14px;
             color: rgb(60, 59, 59);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             line-height: 1.4;
         }
 
         .popup-buttons {
             display: flex;
-            gap: 15px;
+            gap: 12px;
             justify-content: center;
         }
 
         .popup-btn {
-            padding: 12px 25px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -509,15 +560,17 @@ try {
 
         @media (max-width: 768px) {
             .header {
-                padding: 10px 15px;
+                padding: 8px 15px;
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
             }
             
+            .main-container {
+                padding: 8px;
+            }
+
             .content-container {
-                width: 100%;
-                padding: 20px 15px;
-                max-height: none;
+                padding: 15px;
             }
 
             .appointments-grid {
@@ -569,7 +622,7 @@ try {
         <div class="user-info">
             <i class="fa-solid fa-user"></i>
             <span>Olá, <?php echo htmlspecialchars($_SESSION['usuario_nome']); ?>!</span>
-            <a href="pag_dados_usuario.php" style="color: white; text-decoration: none; margin-left: 15px; padding: 5px 10px; background-color: rgba(255,255,255,0.2); border-radius: 5px; transition: all 0.3s;">
+            <a href="pag_dados_usuario.php">
                 <i class="fa-solid fa-user-circle"></i> Meus Dados
             </a>
         </div>
@@ -605,7 +658,7 @@ try {
                 <div class="stats">
                     <div class="stat-card">
                         <div class="stat-number"><?php echo count($agendamentos); ?></div>
-                        <div class="stat-label">Total de Agendamentos</div>
+                        <div class="stat-label">Total</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= date('Y-m-d'))); ?></div>
@@ -621,100 +674,104 @@ try {
                     </div>
                 </div>
 
-                <div class="appointments-grid">
-                    <?php foreach ($agendamentos as $agendamento): 
-                        $isUpcoming = $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= date('Y-m-d');
-                        $isPast = $agendamento['data_agendamento'] < date('Y-m-d');
-                        $isCancelled = $agendamento['status'] === 'cancelado';
-                        $isConcluido = $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < date('Y-m-d');
-                        
-                        $cardClass = '';
-                        if ($isCancelled) {
-                            $cardClass = 'cancelled-appointments';
-                        } elseif ($isConcluido) {
-                            $cardClass = 'completed-appointments';
-                        } elseif ($isUpcoming) {
-                            $cardClass = 'upcoming-appointments';
-                        } elseif ($isPast) {
-                            $cardClass = 'past-appointments';
-                        }
-                        
-                        // Determinar status display
-                        $statusDisplay = $agendamento['status'];
-                        $statusClass = $agendamento['status'];
-                        if ($isConcluido) {
-                            $statusDisplay = 'concluído';
-                            $statusClass = 'concluido';
-                        }
-                    ?>
-                    <div class="appointment-card <?php echo $cardClass; ?>">
-                        <div class="appointment-header">
-                            <div class="appointment-id">
-                                <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
+                <div class="appointments-container">
+                    <div class="appointments-grid">
+                        <?php foreach ($agendamentos as $agendamento): 
+                            $isUpcoming = $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= date('Y-m-d');
+                            $isPast = $agendamento['data_agendamento'] < date('Y-m-d');
+                            $isCancelled = $agendamento['status'] === 'cancelado';
+                            $isConcluido = $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < date('Y-m-d');
+                            
+                            $cardClass = '';
+                            if ($isCancelled) {
+                                $cardClass = 'cancelled-appointments';
+                            } elseif ($isConcluido) {
+                                $cardClass = 'completed-appointments';
+                            } elseif ($isUpcoming) {
+                                $cardClass = 'upcoming-appointments';
+                            } elseif ($isPast) {
+                                $cardClass = 'past-appointments';
+                            }
+                            
+                            // Determinar status display
+                            $statusDisplay = $agendamento['status'];
+                            $statusClass = $agendamento['status'];
+                            if ($isConcluido) {
+                                $statusDisplay = 'concluído';
+                                $statusClass = 'concluido';
+                            }
+                        ?>
+                        <div class="appointment-card <?php echo $cardClass; ?>">
+                            <div class="appointment-header">
+                                <div class="appointment-id">
+                                    <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
+                                </div>
+                                <div class="appointment-status status-<?php echo $statusClass; ?>">
+                                    <?php if ($isConcluido): ?>
+                                        <i class="fa-solid fa-check-circle"></i>
+                                    <?php elseif ($agendamento['status'] === 'confirmado'): ?>
+                                        <i class="fa-solid fa-clock"></i>
+                                    <?php else: ?>
+                                        <i class="fa-solid fa-times-circle"></i>
+                                    <?php endif; ?>
+                                    <?php echo ucfirst($statusDisplay); ?>
+                                </div>
                             </div>
-                            <div class="appointment-status status-<?php echo $statusClass; ?>">
-                                <?php if ($isConcluido): ?>
-                                    <i class="fa-solid fa-check-circle"></i>
-                                <?php elseif ($agendamento['status'] === 'confirmado'): ?>
-                                    <i class="fa-solid fa-clock"></i>
-                                <?php else: ?>
-                                    <i class="fa-solid fa-times-circle"></i>
+                            
+                            <div class="appointment-date">
+                                <i class="fa-solid fa-calendar"></i>
+                                <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?>
+                                <span style="font-size: 12px; color: rgb(100, 100, 100);">
+                                    (<?php echo diaSemanaPortugues($agendamento['data_agendamento']); ?>)
+                                </span>
+                            </div>
+                            
+                            <div class="appointment-time">
+                                <i class="fa-solid fa-clock"></i>
+                                <?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?>
+                            </div>
+                            
+                            <div class="appointment-info">
+                                <strong>Agendado em:</strong> <?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?><br>
+                                <?php if ($agendamento['data_cancelamento']): ?>
+                                    <strong>Cancelado em:</strong> <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?>
+                                <?php elseif ($isConcluido): ?>
+                                    <strong>Visita concluída em:</strong> <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?>
                                 <?php endif; ?>
-                                <?php echo ucfirst($statusDisplay); ?>
+                            </div>
+                            
+                            <div class="appointment-actions">
+                                <?php if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= date('Y-m-d')): ?>
+                                    <form method="POST" style="display: inline;" id="cancel-form-<?php echo $agendamento['id']; ?>">
+                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                        <input type="hidden" name="acao" value="cancelar">
+                                        <button type="button" class="btn btn-warning" 
+                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('cancel-form-<?php echo $agendamento['id']; ?>').submit(); })">
+                                            <i class="fa-solid fa-ban"></i> Cancelar
+                                        </button>
+                                    </form>
+                                <?php elseif ($agendamento['status'] === 'cancelado' || $isConcluido): ?>
+                                    <form method="POST" style="display: inline;" id="delete-form-<?php echo $agendamento['id']; ?>">
+                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                        <input type="hidden" name="acao" value="excluir">
+                                        <button type="button" class="btn btn-danger" 
+                                                onclick="showCustomConfirm('Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita!', () => { document.getElementById('delete-form-<?php echo $agendamento['id']; ?>').submit(); })">
+                                            <i class="fa-solid fa-trash"></i> Excluir
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             </div>
                         </div>
-                        
-                        <div class="appointment-date">
-                            <i class="fa-solid fa-calendar"></i>
-                            <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?>
-                            <span style="font-size: 14px; color: rgb(100, 100, 100);">
-                                (<?php echo diaSemanaPortugues($agendamento['data_agendamento']); ?>)
-                            </span>
-                        </div>
-                        
-                        <div class="appointment-time">
-                            <i class="fa-solid fa-clock"></i>
-                            <?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?>
-                        </div>
-                        
-                        <div class="appointment-info">
-                            <strong>Agendado em:</strong> <?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?><br>
-                            <?php if ($agendamento['data_cancelamento']): ?>
-                                <strong>Cancelado em:</strong> <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?>
-                            <?php elseif ($isConcluido): ?>
-                                <strong>Visita concluída em:</strong> <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?>
-                            <?php endif; ?>
-                        </div>
-                        
-                        <div class="appointment-actions">
-                            <?php if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= date('Y-m-d')): ?>
-                                <form method="POST" style="display: inline;" id="cancel-form-<?php echo $agendamento['id']; ?>">
-                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                    <input type="hidden" name="acao" value="cancelar">
-                                    <button type="button" class="btn btn-warning" 
-                                            onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('cancel-form-<?php echo $agendamento['id']; ?>').submit(); })">
-                                        <i class="fa-solid fa-ban"></i> Cancelar
-                                    </button>
-                                </form>
-                            <?php elseif ($agendamento['status'] === 'cancelado' || $isConcluido): ?>
-                                <form method="POST" style="display: inline;" id="delete-form-<?php echo $agendamento['id']; ?>">
-                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                    <input type="hidden" name="acao" value="excluir">
-                                    <button type="button" class="btn btn-danger" 
-                                            onclick="showCustomConfirm('Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita!', () => { document.getElementById('delete-form-<?php echo $agendamento['id']; ?>').submit(); })">
-                                        <i class="fa-solid fa-trash"></i> Excluir
-                                    </button>
-                                </form>
-                            <?php endif; ?>
-                        </div>
+                        <?php endforeach; ?>
                     </div>
-                    <?php endforeach; ?>
                 </div>
             <?php else: ?>
-                <div class="no-appointments">
-                    <i class="fa-solid fa-calendar-times" style="font-size: 50px; margin-bottom: 15px; color: rgb(150, 150, 150);"></i><br>
-                    Você ainda não possui agendamentos.<br>
-                    Faça seu primeiro agendamento agora!
+                <div class="appointments-container">
+                    <div class="no-appointments">
+                        <i class="fa-solid fa-calendar-times" style="font-size: 50px; margin-bottom: 15px; color: rgb(150, 150, 150);"></i><br>
+                        Você ainda não possui agendamentos.<br>
+                        Faça seu primeiro agendamento agora!
+                    </div>
                 </div>
             <?php endif; ?>
 

@@ -40,10 +40,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Validação da hora (10:00 às 18:00, intervalos de 30 min)
-    $horariosValidos = gerarHorariosDisponiveis();
-    if (!in_array($hora_agendamento, $horariosValidos)) {
-        header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("Horário inválido. Escolha um horário entre 10:00 e 18:00."));
+    // ATUALIZADO: Validação da hora para empresas (08:00 às 16:00, intervalos de 30 min)
+    $horariosValidosEmpresa = gerarHorariosDisponiveis(true); // true = empresa
+    if (!in_array($hora_agendamento, $horariosValidosEmpresa)) {
+        header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("Horário inválido. Escolha um horário entre 08:00 e 16:00."));
         exit();
     }
 
@@ -79,6 +79,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($conflito_empresa > 0) {
             header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("Sua empresa já possui um agendamento para esta data."));
+            exit();
+        }
+
+        // Verificar se já existe outro agendamento de empresa no mesmo horário da mesma data
+        $stmt_check_horario = $conexao->prepare("
+            SELECT COUNT(*) FROM agendamentos 
+            WHERE data_agendamento = ? AND hora_agendamento = ? AND status IN ('pendente', 'confirmado') AND tipo_agendamento = 'empresa'
+        ");
+        $stmt_check_horario->execute([$data_agendamento, $hora_agendamento]);
+        $conflito_horario = $stmt_check_horario->fetchColumn();
+
+        if ($conflito_horario > 0) {
+            header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("Já existe um agendamento de empresa neste horário. Escolha outro horário."));
             exit();
         }
 

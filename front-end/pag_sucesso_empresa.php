@@ -25,27 +25,40 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
         body {
             background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            line-height: 1.6;
         }
 
         .success-container {
             background-color: rgb(225, 225, 228);
-            width: 90%;
-            max-width: 650px;
-            border-radius: 20px;
-            box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-            padding: 40px;
-            text-align: center;
+            width: 100%;
+            max-width: 750px;
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(90, 90, 90, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .success-icon {
-            font-size: 80px;
+            font-size: 90px;
             color: #ffc107;
-            margin-bottom: 20px;
-            animation: bounce 1s ease-in-out;
+            margin-bottom: 25px;
+            animation: bounce 1.2s ease-out;
         }
 
         @keyframes bounce {
@@ -53,108 +66,172 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 transform: translateY(0);
             }
             40% {
-                transform: translateY(-10px);
+                transform: translateY(-15px);
             }
             60% {
-                transform: translateY(-5px);
+                transform: translateY(-8px);
             }
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.95) 0%, rgba(255, 152, 0, 0.95) 100%);
+            padding: 45px 40px;
+            text-align: center;
+            color: white;
         }
 
         h1 {
-            color: rgb(55, 75, 51);
-            font-size: 32px;
-            margin-bottom: 20px;
+            color: white;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
             font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .success-message {
-            font-size: 20px;
-            margin-bottom: 30px;
-            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            margin-bottom: 0;
+            font-weight: 400;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .content-area {
+            padding: 40px;
         }
 
         .company-info {
-            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border-left: 5px solid #ffc107;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.12) 0%, rgba(255, 193, 7, 0.08) 100%);
+            padding: 30px;
+            border-radius: 18px;
+            margin-bottom: 35px;
+            border-left: 6px solid #ffc107;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1);
         }
 
         .company-info strong {
+            color: #b8860b;
+            font-size: 1.1rem;
+        }
+
+        .company-info p {
             color: #856404;
+            font-size: 1rem;
+            margin: 0;
         }
 
         .pending-notice {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border-left: 5px solid #ffc107;
+            padding: 30px;
+            border-radius: 18px;
+            margin-bottom: 35px;
+            border-left: 6px solid #ffc107;
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.15);
         }
 
         .pending-notice h3 {
             color: #856404;
-            font-size: 20px;
-            margin-bottom: 15px;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
+            font-weight: 700;
         }
 
-        .pending-notice p {
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .status-item strong {
+            display: block;
+            color: #b8860b;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .status-item p {
             color: #856404;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 10px;
+            font-size: 0.95rem;
+            margin: 0;
         }
 
         .next-steps {
-            background-color: rgba(64, 122, 53, 0.1);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            background: linear-gradient(135deg, rgba(64, 122, 53, 0.12) 0%, rgba(64, 122, 53, 0.08) 100%);
+            padding: 30px;
+            border-radius: 18px;
+            margin-bottom: 35px;
+            border-left: 6px solid rgba(64, 122, 53, 0.819);
+            box-shadow: 0 4px 15px rgba(64, 122, 53, 0.1);
         }
 
         .next-steps h4 {
             color: rgba(64, 122, 53, 0.819);
-            margin-bottom: 15px;
-            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .next-steps ul {
+            margin-left: 25px;
             text-align: left;
-            margin-left: 20px;
         }
 
         .next-steps li {
-            margin-bottom: 8px;
-            color: rgb(60, 59, 59);
-            line-height: 1.4;
+            margin-bottom: 12px;
+            color: rgba(64, 122, 53, 0.9);
+            line-height: 1.5;
+            font-size: 1rem;
+        }
+
+        .next-steps li::marker {
+            color: rgba(64, 122, 53, 0.819);
         }
 
         .buttons {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
+            margin-bottom: 35px;
         }
 
         .btn {
-            padding: 12px 25px;
+            padding: 16px 32px;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
+            gap: 10px;
+            transition: all 0.3s ease;
             font-family: Georgia, 'Times New Roman', Times, serif;
-            font-weight: bold;
+            font-weight: 600;
+            text-transform: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
         .btn-primary {
@@ -165,120 +242,276 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         .btn-primary:hover {
             background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
         }
 
         .btn-secondary {
-            background-color: rgb(200, 200, 200);
-            color: rgb(60, 59, 59);
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
         }
 
         .btn-secondary:hover {
-            background-color: rgb(180, 180, 180);
-            color: rgb(60, 59, 59);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            color: white;
         }
 
         .contact-info {
-            background-color: #e7f3ff;
-            padding: 20px;
-            border-radius: 15px;
-            margin-top: 25px;
-            border-left: 5px solid #2196f3;
+            background: linear-gradient(135deg, #e7f3ff 0%, #cce7ff 100%);
+            padding: 30px;
+            border-radius: 18px;
+            border-left: 6px solid #2196f3;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.1);
         }
 
         .contact-info h4 {
             color: #1976d2;
-            margin-bottom: 10px;
-            font-size: 16px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .contact-info p {
             color: #1976d2;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
         }
 
+        /* Melhorias para responsividade */
         @media (max-width: 768px) {
-            .success-container {
-                width: 95%;
-                padding: 30px 20px;
+            body {
+                padding: 15px;
             }
-            
+
+            .success-container {
+                max-width: 100%;
+                border-radius: 20px;
+            }
+
+            .header-section {
+                padding: 35px 25px;
+            }
+
+            .content-area {
+                padding: 30px 25px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .success-message {
+                font-size: 1rem;
+            }
+
+            .success-icon {
+                font-size: 75px;
+            }
+
             .buttons {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .btn {
                 width: 100%;
-                max-width: 280px;
+                max-width: 300px;
                 justify-content: center;
             }
 
-            h1 {
-                font-size: 28px;
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
 
-            .success-message {
-                font-size: 18px;
+            .company-info,
+            .pending-notice,
+            .next-steps,
+            .contact-info {
+                padding: 25px 20px;
             }
+
+            .next-steps ul {
+                margin-left: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-section {
+                padding: 30px 20px;
+            }
+
+            .content-area {
+                padding: 25px 20px;
+            }
+
+            h1 {
+                font-size: 1.6rem;
+            }
+
+            .success-icon {
+                font-size: 65px;
+            }
+
+            .pending-notice h3 {
+                font-size: 1.2rem;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .next-steps h4 {
+                font-size: 1.1rem;
+            }
+
+            .contact-info h4 {
+                font-size: 1.1rem;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .company-info,
+            .pending-notice,
+            .next-steps,
+            .contact-info {
+                padding: 20px 18px;
+            }
+        }
+
+        /* Pequenas animações sutis */
+        .company-info,
+        .pending-notice,
+        .next-steps,
+        .contact-info {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .company-info { animation-delay: 0.2s; }
+        .pending-notice { animation-delay: 0.4s; }
+        .next-steps { animation-delay: 0.6s; }
+        .buttons { animation-delay: 0.8s; }
+        .contact-info { animation-delay: 1s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .buttons {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        /* Hover effects sutis */
+        .company-info:hover,
+        .pending-notice:hover,
+        .next-steps:hover,
+        .contact-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .status-item:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Melhoria na tipografia */
+        .pending-notice p,
+        .company-info p,
+        .next-steps li,
+        .contact-info p {
+            font-weight: 500;
+        }
+
+        /* Melhor espaçamento */
+        .status-item {
+            transition: all 0.3s ease;
+        }
+
+        /* Ícones com melhor alinhamento */
+        .pending-notice h3 i,
+        .next-steps h4 i,
+        .contact-info h4 i {
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body>
     <div class="success-container">
-        <div class="success-icon">
-            <i class="fa-solid fa-paper-plane"></i>
+        <div class="header-section">
+            <div class="success-icon">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <h1>Solicitação Enviada com Sucesso!</h1>
+            <p class="success-message">
+                Sua solicitação de agendamento empresarial foi recebida e está sendo analisada pela nossa equipe.
+            </p>
         </div>
         
-        <h1>Solicitação Enviada com Sucesso!</h1>
-        
-        <div class="success-message">
-            Sua solicitação de agendamento empresarial foi recebida e está sendo analisada pela nossa equipe.
-        </div>
-        
-        <div class="company-info">
-            <strong><?php echo htmlspecialchars($_SESSION['empresa_nome']); ?></strong>, 
-            agradecemos seu interesse em visitar nosso biotério.<br>
-            Sua solicitação está na fila de aprovação.
-        </div>
+        <div class="content-area">
+            <div class="company-info">
+                <p><strong><?php echo htmlspecialchars($_SESSION['empresa_nome']); ?></strong>, 
+                agradecemos seu interesse em visitar nosso biotério. Sua solicitação está na fila de aprovação e será analisada com todo cuidado pela nossa equipe especializada.</p>
+            </div>
 
-        <div class="pending-notice">
-            <h3>
-                <i class="fa-solid fa-clock"></i>
-                Aguardando Aprovação
-            </h3>
-            <p><strong>Status:</strong> Pendente de análise pela administração</p>
-            <p><strong>Prazo:</strong> Resposta em até 2 dias úteis</p>
-            <p><strong>Notificação:</strong> Você será notificado por email sobre a decisão</p>
-        </div>
+            <div class="pending-notice">
+                <h3>
+                    <i class="fa-solid fa-clock"></i>
+                    Aguardando Aprovação
+                </h3>
+                
+                <div class="status-grid">
+                    <div class="status-item">
+                        <strong>Status:</strong>
+                        <p>Pendente de análise</p>
+                    </div>
+                    <div class="status-item">
+                        <strong>Prazo:</strong>
+                        <p>Até 2 dias úteis</p>
+                    </div>
+                    <div class="status-item">
+                        <strong>Notificação:</strong>
+                        <p>Resposta por email</p>
+                    </div>
+                </div>
+            </div>
 
-        <div class="next-steps">
-            <h4><i class="fa-solid fa-list-check"></i> Próximos Passos:</h4>
-            <ul>
-                <li>Nossa equipe analisará sua solicitação considerando a disponibilidade</li>
-                <li>Verificaremos se a data e horário solicitados estão disponíveis</li>
-                <li>Você receberá um email com a confirmação ou sugestão de nova data</li>
-                <li>Em caso de aprovação, receberá instruções detalhadas para a visita</li>
-            </ul>
-        </div>
-        
-        <div class="buttons">
-            <a href="pag_agendar_empresa.php" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i>
-                Nova Solicitação
-            </a>
-            <a href="pag_inicial.html" class="btn btn-secondary">
-                <i class="fa-solid fa-home"></i>
-                Página Inicial
-            </a>
-        </div>
+            <div class="next-steps">
+                <h4><i class="fa-solid fa-list-check"></i> Próximos Passos</h4>
+                <ul>
+                    <li>Nossa equipe analisará sua solicitação considerando a disponibilidade da data e horário solicitados</li>
+                    <li>Verificaremos se todos os requisitos para a visita empresarial estão atendidos</li>
+                    <li>Você receberá um email com a confirmação ou sugestão de nova data caso necessário</li>
+                    <li>Em caso de aprovação, receberá instruções detalhadas para a realização da visita</li>
+                </ul>
+            </div>
+            
+            <div class="buttons">
+                <a href="pag_agendar_empresa.php" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i>
+                    Nova Solicitação
+                </a>
+                <a href="pag_inicial.html" class="btn btn-secondary">
+                    <i class="fa-solid fa-home"></i>
+                    Página Inicial
+                </a>
+            </div>
 
-        <div class="contact-info">
-            <h4><i class="fa-solid fa-info-circle"></i> Precisa de Ajuda?</h4>
-            <p>Em caso de dúvidas, entre em contato conosco através dos canais oficiais da FSA ou aguarde nossa resposta por email.</p>
+            <div class="contact-info">
+                <h4><i class="fa-solid fa-info-circle"></i> Precisa de Ajuda?</h4>
+                <p>Em caso de dúvidas ou necessidade de informações adicionais, entre em contato conosco através dos canais oficiais da FSA. Nossa equipe está sempre disponível para auxiliar sua empresa no processo de agendamento.</p>
+            </div>
         </div>
     </div>
 </body>

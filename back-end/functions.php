@@ -102,11 +102,19 @@ function validarCNPJ($cnpj) {
     return intval($cnpj[13]) === $dv2;
 }
 
-// Função para gerar horários disponíveis (10:00 às 18:00, de 30 em 30 min)
-function gerarHorariosDisponiveis() {
+// ATUALIZADO: Função para gerar horários disponíveis com opção para empresas
+function gerarHorariosDisponiveis($isEmpresa = false) {
     $horarios = [];
-    $inicio = new DateTime('10:00');
-    $fim = new DateTime('18:00');
+    
+    if ($isEmpresa) {
+        // Horários para empresas: 8:00 às 16:00
+        $inicio = new DateTime('08:00');
+        $fim = new DateTime('16:00');
+    } else {
+        // Horários para usuários individuais: 10:00 às 18:00
+        $inicio = new DateTime('10:00');
+        $fim = new DateTime('18:00');
+    }
     
     while ($inicio <= $fim) {
         $horarios[] = $inicio->format('H:i');
@@ -382,6 +390,64 @@ function validarLogin($login, $senha) {
         
     } catch (PDOException $e) {
         return ['sucesso' => false, 'mensagem' => 'Erro na autenticação: ' . $e->getMessage()];
+    }
+}
+
+// NOVA FUNÇÃO: Buscar dados completos de agendamentos incluindo empresas
+function buscarAgendamentosCompletos($filtros = []) {
+    try {
+        $conexao = conectarBanco();
+        
+        $sql = "SELECT 
+                    a.*,
+                    u.nome as usuario_nome,
+                    e.nome_instituicao as empresa_nome,
+                    CASE 
+                        WHEN a.empresa_id IS NOT NULL THEN 'empresa'
+                        WHEN a.usuario_id IS NOT NULL THEN 'usuario_logado'
+                        ELSE 'anonimo'
+                    END as tipo_usuario_real
+                FROM agendamentos a 
+                LEFT JOIN usuarios u ON a.usuario_id = u.id 
+                LEFT JOIN empresas e ON a.empresa_id = e.id";
+        
+        $where = [];
+        $params = [];
+        
+        // Aplicar filtros se fornecidos
+        if (!empty($filtros['data_inicio'])) {
+            $where[] = "a.data_agendamento >= ?";
+            $params[] = $filtros['data_inicio'];
+        }
+        
+        if (!empty($filtros['data_fim'])) {
+            $where[] = "a.data_agendamento <= ?";
+            $params[] = $filtros['data_fim'];
+        }
+        
+        if (!empty($filtros['status'])) {
+            $where[] = "a.status = ?";
+            $params[] = $filtros['status'];
+        }
+        
+        if (!empty($filtros['tipo_agendamento'])) {
+            $where[] = "a.tipo_agendamento = ?";
+            $params[] = $filtros['tipo_agendamento'];
+        }
+        
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+        
+        $sql .= " ORDER BY a.data_agendamento DESC, a.hora_agendamento ASC";
+        
+        $stmt = $conexao->prepare($sql);
+        $stmt->execute($params);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (PDOException $e) {
+        return [];
     }
 }
 ?>

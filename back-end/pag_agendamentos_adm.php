@@ -29,7 +29,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 $mensagem = "Agendamento negado com sucesso!";
                 
             } elseif ($acao === 'cancelar') {
-                // NOVO: Cancelar agendamento
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'cancelado', data_cancelamento = NOW() WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
@@ -49,13 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
 
 try {
     $conexao = conectarBanco();
-    $stmt = $conexao->query("
-        SELECT a.*, u.nome as usuario_nome 
-        FROM agendamentos a 
-        LEFT JOIN usuarios u ON a.usuario_id = u.id 
-        ORDER BY a.data_agendamento DESC, a.hora_agendamento ASC
-    ");
-    $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $agendamentos = buscarAgendamentosCompletos();
 } catch (PDOException $e) {
     $mensagem = "Erro ao carregar agendamentos: " . $e->getMessage();
     $agendamentos = [];
@@ -67,268 +60,486 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotério - Administração de Agendamentos</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
         * {
-            color: rgb(60, 59, 59);
-            font-family: Georgia, 'Times New Roman', Times, serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
         body {
-            background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            color: #333;
         }
 
         .header {
-            background-color: rgba(64, 122, 53, 0.9);
-            padding: 15px 30px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            padding: 20px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: white;
+            padding: 0 30px;
         }
 
         .header h1 {
             color: white;
-            font-size: 24px;
-        }
-
-        .btn-logout {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-
-        .btn-logout:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            color: white;
-        }
-
-        .content {
-            background-color: rgb(225, 225, 228);
-            border-radius: 20px;
-            box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
-            padding: 30px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .message {
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .stats {
+            font-size: 28px;
+            font-weight: 600;
             display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-header:hover {
+            background: white;
+            color: #2c3e50;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-left: 6px solid #3498db;
+        }
+
+        .welcome-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .welcome-subtitle {
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
-            flex-wrap: wrap;
         }
 
         .stat-card {
-            background-color: rgba(64, 122, 53, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-            flex: 1;
-            min-width: 200px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 15px;
+            padding: 25px;
             text-align: center;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .stat-card:nth-child(1) { border-left-color: #3498db; }
+        .stat-card:nth-child(2) { border-left-color: #f39c12; }
+        .stat-card:nth-child(3) { border-left-color: #27ae60; }
+        .stat-card:nth-child(4) { border-left-color: #9b59b6; }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
         }
 
         .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: rgba(64, 122, 53, 0.819);
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #2c3e50;
         }
 
         .stat-label {
             font-size: 14px;
-            color: rgb(100, 100, 100);
-            margin-top: 5px;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .controls-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-config {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-config:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            color: white;
+        }
+
+        .table-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .table-container {
-            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* Barra de rolagem estilizada */
+        .table-container::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #ecf0f1;
+            border-radius: 6px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #34495e 100%);
         }
 
         .appointments-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .appointments-table th,
-        .appointments-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            vertical-align: middle;
+            background: white;
         }
 
         .appointments-table th {
-            background-color: rgba(64, 122, 53, 0.819);
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
             color: white;
-            font-weight: bold;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             position: sticky;
             top: 0;
+            z-index: 10;
+            border-bottom: 3px solid #3498db;
         }
 
-        .appointments-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .appointments-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        .appointments-table tr {
+            transition: all 0.3s ease;
         }
 
         .appointments-table tr:hover {
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #ebf3fd 0%, #f8f9fa 100%);
+            transform: scale(1.01);
+        }
+
+        .empresa-row {
+            background: linear-gradient(135deg, #fff3cd 0%, rgba(255, 243, 205, 0.3) 100%);
+            border-left: 4px solid #f39c12;
+        }
+
+        .empresa-row:hover {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fff3cd 100%);
         }
 
         .status {
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: bold;
+            font-weight: 700;
             text-align: center;
-            white-space: nowrap;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 80px;
+            display: inline-block;
         }
 
         .status-pendente {
-            background-color: #fff3cd;
-            color: #856404;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
         }
 
         .status-confirmado {
-            background-color: #d4edda;
-            color: #155724;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
         }
 
         .status-negado {
-            background-color: #f8d7da;
-            color: #721c24;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
         }
 
         .status-cancelado {
-            background-color: #f8d7da;
-            color: #721c24;
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.4);
         }
 
         .btn-action {
-            padding: 4px 8px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 4px;
+            border-radius: 15px;
             cursor: pointer;
             font-size: 11px;
-            margin: 1px;
-            white-space: nowrap;
+            font-weight: 600;
+            margin: 2px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .btn-confirmar {
-            background-color: #28a745;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
         }
 
         .btn-confirmar:hover {
-            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
         }
 
         .btn-negar {
-            background-color: #ffc107;
-            color: #333;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
         }
 
         .btn-negar:hover {
-            background-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
         }
 
         .btn-cancelar {
-            background-color: #fd7e14;
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
             color: white;
         }
 
         .btn-cancelar:hover {
-            background-color: #e56b03;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
         }
 
         .btn-remover {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
         }
 
         .btn-remover:hover {
-            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
         }
 
         .user-type {
-            padding: 2px 6px;
-            border-radius: 8px;
+            padding: 4px 8px;
+            border-radius: 12px;
             font-size: 10px;
-            font-weight: bold;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .user-logado {
-            background-color: #e3f2fd;
-            color: #1976d2;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
         }
 
         .user-anonimo {
-            background-color: #f3e5f5;
-            color: #7b1fa2;
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            color: white;
         }
 
-        /* NOVO: Estilos para pop-up personalizado */
+        .user-empresa {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .empresa-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .empresa-nome {
+            font-weight: 700;
+            color: #e67e22;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .empresa-pessoas {
+            background: linear-gradient(135deg, #f39c12 0%, rgba(243, 156, 18, 0.2) 100%);
+            color: #e67e22;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .message {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #7f8c8d;
+        }
+
+        .no-data i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-data h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #34495e;
+        }
+
+        /* Pop-up personalizado */
         .custom-popup-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 10000;
+            backdrop-filter: blur(5px);
         }
 
         .custom-popup {
-            background-color: rgb(225, 225, 228);
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 400px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 450px;
             width: 90%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            animation: popupSlideIn 0.3s ease-out;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: popupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes popupSlideIn {
             from {
                 opacity: 0;
-                transform: scale(0.8) translateY(-20px);
+                transform: scale(0.7) translateY(-50px);
             }
             to {
                 opacity: 1;
@@ -337,23 +548,23 @@ try {
         }
 
         .popup-icon {
-            font-size: 50px;
+            font-size: 60px;
             margin-bottom: 20px;
-            color: #ffc107;
+            color: #f39c12;
         }
 
         .popup-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: rgb(55, 75, 51);
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
             margin-bottom: 15px;
         }
 
         .popup-message {
             font-size: 16px;
-            color: rgb(60, 59, 59);
-            margin-bottom: 25px;
-            line-height: 1.4;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
         }
 
         .popup-buttons {
@@ -363,59 +574,66 @@ try {
         }
 
         .popup-btn {
-            padding: 12px 25px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 8px;
+            border-radius: 25px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
-            font-family: Georgia, 'Times New Roman', Times, serif;
+            transition: all 0.3s ease;
         }
 
         .popup-btn-confirm {
-            background-color: rgba(64, 122, 53, 0.819);
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
         }
 
         .popup-btn-confirm:hover {
-            background-color: rgba(44, 81, 36, 0.819);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
         }
 
         .popup-btn-cancel {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
         }
 
         .popup-btn-cancel:hover {
-            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+            .main-container {
+                padding: 15px;
             }
             
-            .stats {
+            .header-content {
                 flex-direction: column;
+                gap: 15px;
+                padding: 0 20px;
             }
             
-            .appointments-table {
-                font-size: 12px;
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .controls-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .table-container {
+                max-height: 500px;
             }
             
             .appointments-table th,
             .appointments-table td {
-                padding: 4px;
+                padding: 10px 8px;
+                font-size: 12px;
             }
-
-            .custom-popup {
-                padding: 20px;
-                margin: 20px;
-            }
-
+            
             .popup-buttons {
                 flex-direction: column;
             }
@@ -423,7 +641,7 @@ try {
     </style>
 </head>
 <body>
-    <!-- NOVO: Pop-up personalizado -->
+    <!-- Pop-up personalizado -->
     <div class="custom-popup-overlay" id="popup-overlay">
         <div class="custom-popup">
             <div class="popup-icon" id="popup-icon">
@@ -439,132 +657,202 @@ try {
     </div>
 
     <div class="header">
-        <h1><i class="fa-solid fa-calendar-check"></i> Administração de Agendamentos</h1>
-        <!-- CORRIGIDO: Botão de sair agora faz logout corretamente -->
-        <a href="logout.php" class="btn-logout">
-            <i class="fa-solid fa-sign-out-alt"></i> Sair
-        </a>
+        <div class="header-content">
+            <h1>
+                <i class="fa-solid fa-shield-halved"></i>
+                Painel Administrativo
+            </h1>
+            <div class="header-actions">
+                <a href="configuracoes.php" class="btn-header">
+                    <i class="fa-solid fa-cog"></i>
+                    Configurações
+                </a>
+                <a href="logout.php" class="btn-header">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                    Sair
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="content">
+    <div class="main-container">
         <?php if (isset($mensagem)): ?>
-            <div class="message success"><?php echo htmlspecialchars($mensagem); ?></div>
+            <div class="message">
+                <i class="fa-solid fa-check-circle"></i>
+                <?php echo htmlspecialchars($mensagem); ?>
+            </div>
         <?php endif; ?>
 
-        <!-- Botão para configurações -->
-        <div style="margin-bottom: 20px;">
-            <a href="configuracoes.php" class="btn-action" style="background-color: rgba(64, 122, 53, 0.819); color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-size: 14px;">
-                <i class="fa-solid fa-cog"></i> Configurações
-            </a>
+        <div class="dashboard-header">
+            <div class="welcome-text">
+                <i class="fa-solid fa-calendar-check"></i>
+                Administração de Agendamentos
+            </div>
+            <div class="welcome-subtitle">
+                Gerencie todos os agendamentos do sistema do Biotério FSA
+            </div>
         </div>
 
-        <div class="stats">
+        <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($agendamentos); ?></div>
-                <div class="stat-label">Total de Agendamentos</div>
+                <div class="stat-label">Total Agendamentos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'pendente')); ?></div>
-                <div class="stat-label">Pendentes</div>
+                <div class="stat-label">Aguardando Aprovação</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado')); ?></div>
                 <div class="stat-label">Confirmados</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['usuario_id'] !== null)); ?></div>
-                <div class="stat-label">Usuários Logados</div>
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
+                <div class="stat-label">Agendamentos Empresariais</div>
             </div>
         </div>
 
         <?php if (count($agendamentos) > 0): ?>
-            <div class="table-container">
-                <table class="appointments-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>CPF</th>
-                            <th>Data</th>
-                            <th>Hora</th>
-                            <th>Status</th>
-                            <th>Tipo</th>
-                            <th>Criado em</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($agendamentos as $agendamento): ?>
-                        <tr>
-                            <td><?php echo $agendamento['id']; ?></td>
-                            <td><?php echo htmlspecialchars($agendamento['nome']); ?></td>
-                            <td><?php echo htmlspecialchars($agendamento['email']); ?></td>
-                            <td><?php echo htmlspecialchars($agendamento['cpf']); ?></td>
-                            <td><?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></td>
-                            <td><?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?></td>
-                            <td>
-                                <span class="status status-<?php echo $agendamento['status']; ?>">
-                                    <?php echo ucfirst($agendamento['status']); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <?php if ($agendamento['usuario_id']): ?>
-                                    <span class="user-type user-logado">Usuário</span>
-                                <?php else: ?>
-                                    <span class="user-type user-anonimo">Anônimo</span>
-                                <?php endif; ?>
-                            </td>
-                            <td><?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?></td>
-                            <td>
-                                <?php if ($agendamento['status'] === 'pendente'): ?>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                        <button type="submit" name="acao" value="confirmar" class="btn-action btn-confirmar" title="Confirmar agendamento">
-                                            <i class="fa-solid fa-check"></i> Confirmar
-                                        </button>
-                                    </form>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                        <button type="submit" name="acao" value="negar" class="btn-action btn-negar" title="Negar agendamento">
-                                            <i class="fa-solid fa-times"></i> Negar
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                                
-                                <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                        <button type="button" name="acao" value="cancelar" class="btn-action btn-cancelar" title="Cancelar agendamento" 
-                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { this.type='submit'; this.click(); })">
-                                            <i class="fa-solid fa-ban"></i> Cancelar
-                                        </button>
-                                    </form>
-                                <?php endif; ?>
-                                
-                                <form method="POST" style="display: inline;">
-                                    <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                    <button type="button" name="acao" value="remover" class="btn-action btn-remover" title="Remover agendamento permanentemente"
-                                            onclick="showCustomConfirm('Tem certeza que deseja remover este agendamento? Esta ação não pode ser desfeita!', () => { this.type='submit'; this.click(); })">
-                                        <i class="fa-solid fa-trash"></i> Remover
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div class="table-section">
+                <div class="table-header">
+                    <div class="table-title">
+                        <i class="fa-solid fa-list"></i>
+                        Lista de Agendamentos
+                    </div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 14px;">
+                        Total: <?php echo count($agendamentos); ?> registros
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="appointments-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fa-solid fa-hashtag"></i> ID</th>
+                                <th><i class="fa-solid fa-user"></i> Nome/Empresa</th>
+                                <th><i class="fa-solid fa-envelope"></i> Email</th>
+                                <th><i class="fa-solid fa-id-card"></i> CPF/CNPJ</th>
+                                <th><i class="fa-solid fa-calendar"></i> Data</th>
+                                <th><i class="fa-solid fa-clock"></i> Hora</th>
+                                <th><i class="fa-solid fa-info-circle"></i> Status</th>
+                                <th><i class="fa-solid fa-tag"></i> Tipo</th>
+                                <th><i class="fa-solid fa-users"></i> Pessoas</th>
+                                <th><i class="fa-solid fa-calendar-plus"></i> Criado</th>
+                                <th><i class="fa-solid fa-cogs"></i> Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($agendamentos as $agendamento): 
+                                $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
+                                $rowClass = $isEmpresa ? 'empresa-row' : '';
+                            ?>
+                            <tr class="<?php echo $rowClass; ?>">
+                                <td><strong>#<?php echo $agendamento['id']; ?></strong></td>
+                                <td>
+                                    <?php if ($isEmpresa): ?>
+                                        <div class="empresa-info">
+                                            <div class="empresa-nome">
+                                                <i class="fa-solid fa-building"></i>
+                                                <?php echo htmlspecialchars($agendamento['empresa_nome'] ?? $agendamento['nome']); ?>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <i class="fa-solid fa-user"></i>
+                                            <?php echo htmlspecialchars($agendamento['nome']); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($agendamento['email']); ?></td>
+                                <td><code><?php echo htmlspecialchars($agendamento['cpf']); ?></code></td>
+                                <td><strong><?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></strong></td>
+                                <td><strong><?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?></strong></td>
+                                <td>
+                                    <span class="status status-<?php echo $agendamento['status']; ?>">
+                                        <?php echo ucfirst($agendamento['status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <?php if ($isEmpresa): ?>
+                                        <span class="user-type user-empresa">
+                                            <i class="fa-solid fa-building"></i> Empresa
+                                        </span>
+                                    <?php elseif ($agendamento['usuario_id']): ?>
+                                        <span class="user-type user-logado">
+                                            <i class="fa-solid fa-user-check"></i> Usuário
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="user-type user-anonimo">
+                                            <i class="fa-solid fa-user-secret"></i> Anônimo
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($isEmpresa): ?>
+                                        <span class="empresa-pessoas">
+                                            <i class="fa-solid fa-users"></i> <?php echo $agendamento['quantidade_pessoas'] ?? 1; ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="empresa-pessoas" style="background: linear-gradient(135deg, #3498db 0%, rgba(52, 152, 219, 0.2) 100%); color: #2980b9;">
+                                            <i class="fa-solid fa-user"></i> 1
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo date('d/m H:i', strtotime($agendamento['data_criacao'])); ?></td>
+                                <td>
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                        <?php if ($agendamento['status'] === 'pendente'): ?>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <button type="submit" name="acao" value="confirmar" class="btn-action btn-confirmar" title="Confirmar agendamento">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <button type="submit" name="acao" value="negar" class="btn-action btn-negar" title="Negar agendamento">
+                                                    <i class="fa-solid fa-times"></i>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        
+                                        <?php if ($agendamento['status'] === 'confirmado'): ?>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <button type="button" name="acao" value="cancelar" class="btn-action btn-cancelar" title="Cancelar agendamento" 
+                                                        onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { this.type='submit'; this.click(); })">
+                                                    <i class="fa-solid fa-ban"></i>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        
+                                        <form method="POST" style="display: inline;">
+                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                            <button type="button" name="acao" value="remover" class="btn-action btn-remover" title="Remover agendamento permanentemente"
+                                                    onclick="showCustomConfirm('Tem certeza que deseja remover este agendamento? Esta ação não pode ser desfeita!', () => { this.type='submit'; this.click(); })">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         <?php else: ?>
-            <div style="text-align: center; padding: 40px; color: rgb(100, 100, 100);">
-                <i class="fa-solid fa-calendar-times" style="font-size: 50px; margin-bottom: 15px;"></i><br>
-                Nenhum agendamento encontrado.
+            <div class="table-section">
+                <div class="no-data">
+                    <i class="fa-solid fa-calendar-times"></i>
+                    <h3>Nenhum agendamento encontrado</h3>
+                    <p>Não há agendamentos cadastrados no sistema no momento.</p>
+                </div>
             </div>
         <?php endif; ?>
     </div>
 
     <script>
-        // NOVO: Sistema de pop-up personalizado
+        // Sistema de pop-up personalizado
         function showCustomConfirm(message, onConfirm) {
             const overlay = document.getElementById('popup-overlay');
             const messageElement = document.getElementById('popup-message');
@@ -595,6 +883,24 @@ try {
                 }
             });
         }
+
+        // Adicionar efeitos visuais
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animar cards de estatísticas
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(30px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
     </script>
 </body>
 </html>

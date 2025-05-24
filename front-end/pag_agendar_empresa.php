@@ -106,16 +106,17 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         .container {
             background-color: rgb(225, 225, 228);
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             border-radius: 20px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
             overflow: hidden;
         }
 
         .form-header {
+            /* ALTERADO: Cores amarelas para empresa */
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
-            padding: 25px;
+            padding: 20px;
             text-align: center;
         }
 
@@ -123,7 +124,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             color: white;
             font-size: 28px;
             margin-bottom: 10px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
 
         .form-header p {
@@ -135,24 +135,65 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             padding: 30px;
         }
 
+        /* ALTERADO: Cores amarelas para empresa */
         .company-welcome {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            padding: 20px;
-            border-radius: 15px;
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 25px;
-            border-left: 5px solid #ffc107;
+            border-left: 4px solid #ffc107;
         }
 
         .company-welcome h3 {
             color: #856404;
             margin-bottom: 10px;
-            font-size: 18px;
         }
 
         .company-welcome p {
             font-size: 14px;
             color: #856404;
-            line-height: 1.5;
+        }
+
+        /* NOVO: Aviso específico para empresas */
+        .pending-notice {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+            text-align: center;
+        }
+
+        .pending-notice h4 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .pending-notice p {
+            color: #856404;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        /* ALTERADO: Cores amarelas */
+        .availability-info {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .availability-info h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .availability-info p {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #856404;
         }
 
         .form-group {
@@ -167,7 +208,8 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             font-weight: bold;
         }
 
-        select, input[type="number"] {
+        select,
+        input[type="number"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
@@ -179,8 +221,10 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             cursor: pointer;
         }
 
-        select:focus, input:focus {
+        select:focus,
+        input:focus {
             outline: none;
+            /* ALTERADO: Cor do foco em amarelo */
             border-color: #ffc107;
             background-color: rgb(250, 250, 250);
         }
@@ -214,54 +258,16 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .horario-label:hover {
+            /* ALTERADO: Hover em amarelo */
             border-color: #ffc107;
             background-color: rgba(255, 193, 7, 0.1);
         }
 
         .horario-radio:checked + .horario-label {
+            /* ALTERADO: Selecionado em amarelo */
             background-color: #ffc107;
             color: white;
             border-color: #ffc107;
-        }
-
-        .quantity-info {
-            background-color: rgba(255, 193, 7, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 4px solid #ffc107;
-        }
-
-        .quantity-info h4 {
-            color: #856404;
-            margin-bottom: 10px;
-        }
-
-        .quantity-info p {
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #856404;
-        }
-
-        .pending-notice {
-            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            border-left: 5px solid #ffc107;
-            text-align: center;
-        }
-
-        .pending-notice h4 {
-            color: #856404;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .pending-notice p {
-            color: #856404;
-            font-size: 14px;
-            line-height: 1.5;
         }
 
         .btn {
@@ -272,27 +278,23 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             font-size: 18px;
             font-family: Georgia, 'Times New Roman', Times, serif;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: background-color 0.3s;
             margin-top: 10px;
-            font-weight: bold;
         }
 
         .btn-primary {
+            /* ALTERADO: Botão amarelo */
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
         }
 
         .btn-primary:hover {
             background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
         }
 
         .btn-primary:disabled {
             background-color: #ccc;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
         }
 
         .btn-secondary {
@@ -317,6 +319,12 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             border: 1px solid #f5c6cb;
         }
 
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
         .loading {
             display: none;
             text-align: center;
@@ -324,6 +332,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .spinner {
+            /* ALTERADO: Spinner amarelo */
             border: 4px solid #f3f3f3;
             border-top: 4px solid #ffc107;
             border-radius: 50%;
@@ -386,7 +395,12 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             color: #dc3545;
         }
 
+        .popup-icon.success {
+            color: #28a745;
+        }
+
         .popup-icon.warning {
+            /* ALTERADO: Warning em amarelo */
             color: #ffc107;
         }
 
@@ -422,6 +436,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .popup-btn-primary {
+            /* ALTERADO: Botão de popup em amarelo */
             background-color: #ffc107;
             color: white;
         }
@@ -500,7 +515,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             </a>
             <div class="company-info">
                 <i class="fa-solid fa-building"></i>
-                <span><?php echo htmlspecialchars($_SESSION['empresa_nome']); ?></span>
+                <span>Olá, <?php echo htmlspecialchars($_SESSION['empresa_nome']); ?>!</span>
             </div>
         </div>
         <div>
@@ -522,10 +537,11 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             
             <div class="form-container">
                 <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                <div id="success-message" class="alert alert-success" style="display: none;"></div>
 
                 <div class="company-welcome">
-                    <h3><i class="fa-solid fa-handshake"></i> Agendamento Institucional</h3>
-                    <p>Sua empresa pode agendar visitas para grupos. Preencha os dados abaixo e aguarde nossa confirmação.</p>
+                    <h3><i class="fa-solid fa-handshake"></i> Bem-vindo de volta!</h3>
+                    <p>Seus dados já estão salvos. Selecione a data, horário e quantidade de pessoas para sua visita empresarial.</p>
                 </div>
 
                 <div class="pending-notice">
@@ -533,11 +549,12 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     <p>Todos os agendamentos de empresas passam por análise e aprovação da administração antes da confirmação.</p>
                 </div>
                 
-                <div class="quantity-info">
-                    <h4><i class="fa-solid fa-users"></i> Informações sobre Quantidade</h4>
-                    <p><strong>Mínimo:</strong> 1 pessoa</p>
-                    <p><strong>Máximo:</strong> 20 pessoas por agendamento</p>
-                    <p><strong>Horário:</strong> Segunda a Sexta, das 10:00 às 18:00</p>
+                <div class="availability-info">
+                    <h4><i class="fa-solid fa-info-circle"></i> Informações para Empresas</h4>
+                    <p><strong>Horário empresarial:</strong> Segunda a Sexta, das 08:00 às 16:00</p>
+                    <p><strong>Quantidade:</strong> De 1 a 20 pessoas por agendamento</p>
+                    <p><strong>Aprovação:</strong> Todas as solicitações são analisadas individualmente</p>
+                    <p><strong>Resposta:</strong> Confirmação em até 2 dias úteis por email</p>
                 </div>
 
                 <form id="agendamento-form" method="POST" action="../back-end/agendar_empresa.php">
@@ -559,6 +576,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                         </div>
                     </div>
 
+                    <!-- NOVO: Campo de quantidade de pessoas -->
                     <div class="form-group">
                         <label for="quantidade_pessoas">
                             <i class="fa-solid fa-users"></i> Quantidade de Pessoas:
@@ -569,7 +587,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
                     <div class="loading" id="loading">
                         <div class="spinner"></div>
-                        <p>Processando agendamento...</p>
+                        <p>Processando solicitação...</p>
                     </div>
 
                     <div class="action-buttons">
@@ -578,6 +596,12 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                         </button>
                     </div>
                 </form>
+
+                <div class="action-buttons">
+                    <a href="pag_inicial.html" class="btn btn-secondary">
+                        <i class="fa-solid fa-home"></i> Página Inicial
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -590,11 +614,11 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             const btnAgendar = document.getElementById('btn-agendar');
             const loading = document.getElementById('loading');
 
-            // Horários disponíveis (10:00 às 18:00, de 30 em 30 min)
+            // ALTERADO: Horários para empresas (08:00 às 16:00)
             const horariosDisponiveis = [
-                '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
-                '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
-                '16:00', '16:30', '17:00', '17:30', '18:00'
+                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                '14:00', '14:30', '15:00', '15:30', '16:00'
             ];
 
             // Função para gerar datas disponíveis (próximos 30 dias úteis)

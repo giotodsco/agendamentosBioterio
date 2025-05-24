@@ -25,25 +25,28 @@ if (isset($_SESSION['cadastro_dados'])) {
             font-family: Georgia, 'Times New Roman', Times, serif;
             background: radial-gradient(circle, rgba(173,199,205,1) 0%, rgba(169,189,165,1) 31%, rgba(64, 122, 53, 0.819) 85%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            overflow-x: hidden;
+            padding: 10px;
         }
 
+        /* MELHORADO: Container principal com melhor controle de altura */
         .login-container {
             display: flex;
-            max-width: 1000px;
+            max-width: 1100px;
             width: 100%;
-            min-height: 600px;
+            margin: 0 auto;
             background-color: rgb(225, 225, 228);
             border-radius: 20px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
             overflow: hidden;
+            min-height: calc(100vh - 20px);
+            max-height: calc(100vh - 20px);
         }
 
+        /* MELHORADO: Seção de imagem com altura responsiva */
         .login-image {
             flex: 1;
+            min-height: 300px;
             background-image:
                 radial-gradient(circle, rgba(121, 125, 125, 0.43) 0%, rgba(101, 113, 98, 0.626) 31%, rgba(64,122,53,0.36) 85%),
                 url('https://www.fsa.br/wp-content/uploads/2019/02/d79abec1-2674-42b2-9873-431fbdaa9007.jpg');
@@ -58,54 +61,108 @@ if (isset($_SESSION['cadastro_dados'])) {
         }
 
         .image-overlay {
-            background-color: rgba(64, 122, 53, 0.1);
-            padding: 40px;
+            background-color: rgba(64, 122, 53, 0.15);
+            padding: 30px;
             border-radius: 15px;
             text-align: center;
             color: white;
             backdrop-filter: blur(5px);
+            max-width: 90%;
         }
 
         .image-overlay h2 {
             color: white;
-            font-size: 28px;
+            font-size: 24px;
             margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
         }
 
         .image-overlay p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
             line-height: 1.6;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
         }
 
+        /* MELHORADO: Seção de formulário com scroll controlado */
         .login-form-section {
             flex: 1;
-            padding: 40px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            overflow-y: auto;
-            max-height: 100vh;
+            height: calc(100vh - 20px);
+            max-height: calc(100vh - 20px);
+            overflow: hidden;
         }
 
+        /* MELHORADO: Header fixo para manter título sempre visível */
+        .form-header {
+            background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(64, 122, 53, 0.1);
+            flex-shrink: 0;
+        }
+
+        .main-title {
+            color: rgb(55, 75, 51);
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgb(100, 100, 100);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* MELHORADO: Área de conteúdo com scroll suave */
+        .form-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 30px 30px;
+        }
+
+        /* MELHORADO: Barra de rolagem personalizada */
+        .form-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .form-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        .form-content::-webkit-scrollbar-thumb {
+            background: rgba(64, 122, 53, 0.3);
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .form-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(64, 122, 53, 0.6);
+        }
+
+        /* MELHORADO: Tabs mais compactas */
         .tabs {
             display: flex;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             background-color: rgb(200, 200, 200);
             border-radius: 10px;
             overflow: hidden;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 12px 8px;
             text-align: center;
             cursor: pointer;
             border: none;
             background-color: transparent;
-            font-size: 16px;
+            font-size: 14px;
             font-family: Georgia, 'Times New Roman', Times, serif;
             transition: all 0.3s;
             font-weight: bold;
@@ -123,19 +180,16 @@ if (isset($_SESSION['cadastro_dados'])) {
 
         .tab.empresa-tab {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            border-bottom: 3px solid transparent;
             transition: all 0.3s;
         }
 
         .tab.empresa-tab:hover {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
-            border-bottom-color: #ffc107;
         }
 
         .tab.empresa-tab.active {
             background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
             color: white;
-            border-bottom-color: #ff9800;
         }
 
         .form-section {
@@ -146,22 +200,23 @@ if (isset($_SESSION['cadastro_dados'])) {
             display: block;
         }
 
-        h1 {
-            color: rgb(55, 75, 51);
-            font-size: 32px;
+        /* MELHORADO: Seções com melhor espaçamento */
+        .section-title {
+            color: rgba(64, 122, 53, 0.819);
+            font-size: 22px;
+            margin-bottom: 20px;
             text-align: center;
-            margin-bottom: 30px;
             font-weight: 700;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
+            margin-bottom: 6px;
+            font-size: 14px;
             color: rgb(60, 59, 59);
             font-weight: bold;
         }
@@ -172,14 +227,13 @@ if (isset($_SESSION['cadastro_dados'])) {
 
         input[type="text"],
         input[type="email"],
-        input[type="password"],
-        input[type="number"] {
+        input[type="password"] {
             width: 100%;
-            padding: 15px 20px 15px 50px;
+            padding: 12px 15px 12px 45px;
             border: 2px solid #ddd;
-            border-radius: 10px;
+            border-radius: 8px;
             background-color: rgb(240, 240, 240);
-            font-size: 16px;
+            font-size: 14px;
             font-family: Georgia, 'Times New Roman', Times, serif;
             transition: all 0.3s;
         }
@@ -188,34 +242,34 @@ if (isset($_SESSION['cadastro_dados'])) {
             outline: none;
             background-color: rgb(250, 250, 250);
             border-color: rgba(64, 122, 53, 0.819);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(64, 122, 53, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(64, 122, 53, 0.15);
         }
 
         .input-icon {
             position: absolute;
-            left: 18px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: rgba(64, 122, 53, 0.6);
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .btn {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 8px;
+            font-size: 16px;
             font-family: Georgia, 'Times New Roman', Times, serif;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 15px;
+            margin-top: 10px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-primary {
@@ -226,7 +280,7 @@ if (isset($_SESSION['cadastro_dados'])) {
         .btn-primary:hover {
             background: linear-gradient(135deg, rgba(44, 81, 36, 0.819) 0%, rgba(64, 122, 53, 0.819) 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(64, 122, 53, 0.3);
+            box-shadow: 0 6px 20px rgba(64, 122, 53, 0.3);
         }
 
         .btn-empresa {
@@ -237,103 +291,128 @@ if (isset($_SESSION['cadastro_dados'])) {
         .btn-empresa:hover {
             background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
         }
 
         .btn-secondary {
             background-color: rgb(200, 200, 200);
             color: rgb(60, 59, 59);
+            font-size: 13px;
+            padding: 8px 15px;
         }
 
         .btn-secondary:hover {
             background-color: rgb(180, 180, 180);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        .link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .link a {
-            color: rgba(64, 122, 53, 0.819);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-
-        .link a:hover {
-            text-decoration: underline;
-            color: rgba(44, 81, 36, 0.819);
-            transform: translateX(-5px);
-        }
-
+        /* MELHORADO: Cards informativos mais compactos */
         .welcome-info {
             background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             border-left: 4px solid rgba(64, 122, 53, 0.819);
         }
 
         .welcome-info h3 {
             color: rgba(64, 122, 53, 0.819);
-            margin-bottom: 10px;
-            font-size: 18px;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
 
         .welcome-info p {
             color: rgb(60, 59, 59);
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
         .empresa-section {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             border-left: 4px solid #ffc107;
         }
 
         .empresa-section h3 {
             color: #856404;
-            margin-bottom: 10px;
-            font-size: 18px;
+            margin-bottom: 8px;
+            font-size: 16px;
         }
 
         .empresa-section p {
             color: #856404;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.4;
         }
 
         .login-unificado-info {
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
             border-left: 4px solid #2196f3;
             text-align: center;
         }
 
         .login-unificado-info h4 {
             color: #1976d2;
-            margin-bottom: 8px;
-            font-size: 16px;
+            margin-bottom: 6px;
+            font-size: 14px;
         }
 
         .login-unificado-info p {
             color: #1976d2;
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.3;
         }
 
-        /* Pop-up personalizado melhorado */
+        /* MELHORADO: Links de cadastro mais organizados */
+        .cadastro-links {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .cadastro-links p {
+            text-align: center;
+            margin: 15px 0;
+            color: rgb(100, 100, 100);
+            font-size: 13px;
+        }
+
+        .cadastro-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .link a {
+            color: rgba(64, 122, 53, 0.819);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+            color: rgba(44, 81, 36, 0.819);
+            transform: translateX(-3px);
+        }
+
+        /* Pop-up personalizado */
         .custom-popup-overlay {
             position: fixed;
             top: 0;
@@ -350,9 +429,9 @@ if (isset($_SESSION['cadastro_dados'])) {
 
         .custom-popup {
             background-color: rgb(225, 225, 228);
-            border-radius: 20px;
-            padding: 35px;
-            max-width: 450px;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
             width: 90%;
             text-align: center;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
@@ -372,8 +451,8 @@ if (isset($_SESSION['cadastro_dados'])) {
         }
 
         .popup-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
+            font-size: 50px;
+            margin-bottom: 15px;
             color: #dc3545;
         }
 
@@ -390,24 +469,24 @@ if (isset($_SESSION['cadastro_dados'])) {
         }
 
         .popup-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: rgb(55, 75, 51);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .popup-message {
-            font-size: 16px;
+            font-size: 14px;
             color: rgb(60, 59, 59);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             line-height: 1.5;
         }
 
         .popup-btn {
-            padding: 12px 30px;
+            padding: 10px 25px;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
@@ -419,13 +498,16 @@ if (isset($_SESSION['cadastro_dados'])) {
         .popup-btn:hover {
             background-color: rgba(44, 81, 36, 0.819);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(64, 122, 53, 0.3);
+            box-shadow: 0 4px 12px rgba(64, 122, 53, 0.3);
         }
 
+        /* RESPONSIVO MELHORADO */
         @media (max-width: 1024px) {
             .login-container {
                 flex-direction: column;
                 max-width: 600px;
+                min-height: auto;
+                max-height: none;
             }
             
             .login-image {
@@ -434,44 +516,133 @@ if (isset($_SESSION['cadastro_dados'])) {
             }
             
             .login-form-section {
-                padding: 30px;
+                height: auto;
                 max-height: none;
+            }
+
+            .form-content {
+                max-height: 70vh;
+            }
+            
+            .image-overlay h2 {
+                font-size: 20px;
+            }
+
+            .image-overlay p {
+                font-size: 13px;
             }
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
             .login-container {
-                margin: 10px;
+                min-height: calc(100vh - 10px);
+                border-radius: 15px;
             }
             
-            .login-form-section {
-                padding: 20px;
+            .form-header,
+            .form-content {
+                padding: 15px 20px;
             }
             
-            h1 {
-                font-size: 28px;
+            .main-title {
+                font-size: 24px;
             }
             
             .image-overlay {
                 padding: 20px;
             }
-            
-            .image-overlay h2 {
-                font-size: 22px;
-            }
 
             .tabs {
-                flex-wrap: wrap;
+                margin-bottom: 20px;
             }
 
             .tab {
-                min-width: 120px;
+                font-size: 12px;
+                padding: 10px 6px;
+            }
+
+            .cadastro-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-secondary {
+                width: 100%;
+                max-width: 200px;
             }
 
             .custom-popup {
-                padding: 25px;
+                padding: 20px;
                 margin: 20px;
             }
+        }
+
+        @media (max-width: 480px) {
+            .form-header,
+            .form-content {
+                padding: 12px 15px;
+            }
+
+            .main-title {
+                font-size: 20px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="password"] {
+                padding: 10px 12px 10px 38px;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+
+        /* MELHORAMENTOS VISUAIS EXTRAS */
+        .form-section {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-container:focus-within .input-icon {
+            color: rgba(64, 122, 53, 0.819);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Loading state para botões */
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn.loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -497,233 +668,240 @@ if (isset($_SESSION['cadastro_dados'])) {
         </div>
         
         <div class="login-form-section">
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('login')">
-                    <i class="fa-solid fa-sign-in-alt"></i> Login
-                </button>
-                <button class="tab" onclick="showTab('cadastro')">
-                    <i class="fa-solid fa-user-plus"></i> Pessoa Física
-                </button>
-                <button class="tab empresa-tab" onclick="showTab('empresa')">
-                    <i class="fa-solid fa-building"></i> Empresa
-                </button>
+            <!-- MELHORADO: Header fixo -->
+            <div class="form-header">
+                <h1 class="main-title">Área de Acesso</h1>
+                <p class="subtitle">Sistema de Agendamento do Biotério FSA</p>
             </div>
-            
-            <!-- Seção de Login UNIFICADO -->
-            <div id="login-section" class="form-section active">
-                <h1>Bem-vindo de volta!</h1>
-                
-                <div class="login-unificado-info">
-                    <h4><i class="fa-solid fa-info-circle"></i> Login Unificado</h4>
-                    <p>Pessoas físicas: Digite seu <strong>email</strong><br>
-                    Empresas: Digite seu <strong>email</strong> ou <strong>CNPJ</strong></p>
-                </div>
-                
-                <div class="welcome-info">
-                    <h3><i class="fa-solid fa-key"></i> Acesse sua conta</h3>
-                    <p>Entre com seus dados para acessar o sistema de agendamentos e gerenciar suas visitas ao biotério.</p>
-                </div>
-                
-                <form action="../back-end/auth_unificado.php" method="POST" id="login-form">
-                    <input type="hidden" name="acao" value="login">
-                    <?php if (isset($_GET['redirect_to'])): ?>
-                        <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_GET['redirect_to']); ?>">
-                    <?php endif; ?>
-                    
-                    <div class="form-group">
-                        <label for="login_field">
-                            <i class="fa-solid fa-user"></i> Email ou CNPJ:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-user input-icon"></i>
-                            <input type="text" id="login_field" name="login" placeholder="Digite seu email ou CNPJ" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="senha_login">
-                            <i class="fa-solid fa-lock"></i> Senha:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="senha_login" name="senha" placeholder="Digite sua senha" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-sign-in-alt"></i>
-                        Entrar
+
+            <!-- MELHORADO: Conteúdo com scroll -->
+            <div class="form-content">
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('login')">
+                        <i class="fa-solid fa-sign-in-alt"></i> Login
                     </button>
-                </form>
+                    <button class="tab" onclick="showTab('cadastro')">
+                        <i class="fa-solid fa-user-plus"></i> Pessoa Física
+                    </button>
+                    <button class="tab empresa-tab" onclick="showTab('empresa')">
+                        <i class="fa-solid fa-building"></i> Empresa
+                    </button>
+                </div>
                 
-                <div class="cadastro-links">
-                    <p style="text-align: center; margin: 20px 0; color: rgb(100, 100, 100); font-size: 14px;">
-                        Ainda não tem conta?
-                    </p>
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-                        <button type="button" onclick="showTab('cadastro')" class="btn btn-secondary" style="width: auto; padding: 10px 20px; font-size: 14px;">
-                            <i class="fa-solid fa-user-plus"></i> Cadastrar Pessoa Física
+                <!-- Seção de Login UNIFICADO -->
+                <div id="login-section" class="form-section active">
+                    <h2 class="section-title">Bem-vindo de volta!</h2>
+                    
+                    <div class="login-unificado-info">
+                        <h4><i class="fa-solid fa-info-circle"></i> Login Unificado</h4>
+                        <p>Pessoas físicas: Digite seu <strong>email</strong><br>
+                        Empresas: Digite seu <strong>email</strong> ou <strong>CNPJ</strong></p>
+                    </div>
+                    
+                    <div class="welcome-info">
+                        <h3><i class="fa-solid fa-key"></i> Acesse sua conta</h3>
+                        <p>Entre com seus dados para acessar o sistema de agendamentos e gerenciar suas visitas ao biotério.</p>
+                    </div>
+                    
+                    <form action="../back-end/auth_unificado.php" method="POST" id="login-form">
+                        <input type="hidden" name="acao" value="login">
+                        <?php if (isset($_GET['redirect_to'])): ?>
+                            <input type="hidden" name="redirect_to" value="<?php echo htmlspecialchars($_GET['redirect_to']); ?>">
+                        <?php endif; ?>
+                        
+                        <div class="form-group">
+                            <label for="login_field">
+                                <i class="fa-solid fa-user"></i> Email ou CNPJ:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" id="login_field" name="login" placeholder="Digite seu email ou CNPJ" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="senha_login">
+                                <i class="fa-solid fa-lock"></i> Senha:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="senha_login" name="senha" placeholder="Digite sua senha" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-sign-in-alt"></i>
+                            Entrar
                         </button>
-                        <button type="button" onclick="showTab('empresa')" class="btn btn-empresa" style="width: auto; padding: 10px 20px; font-size: 14px;">
-                            <i class="fa-solid fa-building"></i> Cadastrar Empresa
+                    </form>
+                    
+                    <div class="cadastro-links">
+                        <p>Ainda não tem conta?</p>
+                        <div class="cadastro-buttons">
+                            <button type="button" onclick="showTab('cadastro')" class="btn btn-secondary">
+                                <i class="fa-solid fa-user-plus"></i> Cadastrar Pessoa Física
+                            </button>
+                            <button type="button" onclick="showTab('empresa')" class="btn btn-secondary" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.8) 0%, rgba(255, 193, 7, 0.6) 100%); color: #856404;">
+                                <i class="fa-solid fa-building"></i> Cadastrar Empresa
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="link">
+                        <a href="pag_inicial.html">
+                            <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Seção de Cadastro Pessoa Física -->
+                <div id="cadastro-section" class="form-section">
+                    <h2 class="section-title">Cadastro Pessoa Física</h2>
+                    
+                    <div class="welcome-info">
+                        <h3><i class="fa-solid fa-user-plus"></i> Cadastro Individual</h3>
+                        <p>Crie sua conta pessoal para ter acesso ao sistema de agendamentos do Biotério FSA.</p>
+                    </div>
+                    
+                    <form action="../back-end/auth_unificado.php" method="POST" id="cadastro-form">
+                        <input type="hidden" name="acao" value="cadastro">
+                        
+                        <div class="form-group">
+                            <label for="nome_cadastro">
+                                <i class="fa-solid fa-user"></i> Nome Completo:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-user input-icon"></i>
+                                <input type="text" id="nome_cadastro" name="nome" placeholder="Digite seu nome completo" value="<?php echo htmlspecialchars($cadastro_dados['nome'] ?? ''); ?>" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email_cadastro">
+                                <i class="fa-solid fa-envelope"></i> Email:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="email_cadastro" name="email" placeholder="Digite seu email" value="<?php echo htmlspecialchars($cadastro_dados['email'] ?? ''); ?>" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cpf_cadastro">
+                                <i class="fa-solid fa-id-card"></i> CPF:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-id-card input-icon"></i>
+                                <input type="text" id="cpf_cadastro" name="cpf" placeholder="000.000.000-00" maxlength="14" value="<?php echo htmlspecialchars($cadastro_dados['cpf'] ?? ''); ?>" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="senha_cadastro">
+                                <i class="fa-solid fa-lock"></i> Senha:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="senha_cadastro" name="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmar_senha">
+                                <i class="fa-solid fa-lock"></i> Confirmar Senha:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Digite a senha novamente" minlength="6" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-user-plus"></i>
+                            Criar Conta
                         </button>
+                    </form>
+                    
+                    <div class="link">
+                        <a href="pag_inicial.html">
+                            <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
+                        </a>
                     </div>
                 </div>
 
-                <div class="link">
-                    <a href="pag_inicial.html">
-                        <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
-                    </a>
-                </div>
-            </div>
-            
-            <!-- Seção de Cadastro Pessoa Física -->
-            <div id="cadastro-section" class="form-section">
-                <h1>Cadastro Pessoa Física</h1>
-                
-                <div class="welcome-info">
-                    <h3><i class="fa-solid fa-user-plus"></i> Cadastro Individual</h3>
-                    <p>Crie sua conta pessoal para ter acesso ao sistema de agendamentos do Biotério FSA.</p>
-                </div>
-                
-                <form action="../back-end/auth_unificado.php" method="POST" id="cadastro-form">
-                    <input type="hidden" name="acao" value="cadastro">
+                <!-- Seção de Cadastro Empresa -->
+                <div id="empresa-section" class="form-section">
+                    <h2 class="section-title">Cadastro Empresa</h2>
                     
-                    <div class="form-group">
-                        <label for="nome_cadastro">
-                            <i class="fa-solid fa-user"></i> Nome Completo:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-user input-icon"></i>
-                            <input type="text" id="nome_cadastro" name="nome" placeholder="Digite seu nome completo" value="<?php echo htmlspecialchars($cadastro_dados['nome'] ?? ''); ?>" required>
-                        </div>
+                    <div class="empresa-section">
+                        <h3><i class="fa-solid fa-building"></i> Cadastro Institucional</h3>
+                        <p>Registre sua empresa ou instituição para ter acesso ao sistema de agendamentos com condições especiais para grupos.</p>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="email_cadastro">
-                            <i class="fa-solid fa-envelope"></i> Email:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="email_cadastro" name="email" placeholder="Digite seu email" value="<?php echo htmlspecialchars($cadastro_dados['email'] ?? ''); ?>" required>
+                    <form action="../back-end/auth_unificado.php" method="POST" id="empresa-form">
+                        <input type="hidden" name="acao" value="cadastro_empresa">
+                        
+                        <div class="form-group">
+                            <label for="nome_instituicao">
+                                <i class="fa-solid fa-building"></i> Nome da Instituição:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-building input-icon"></i>
+                                <input type="text" id="nome_instituicao" name="nome_instituicao" placeholder="Digite o nome da empresa/instituição" required>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="cpf_cadastro">
-                            <i class="fa-solid fa-id-card"></i> CPF:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-id-card input-icon"></i>
-                            <input type="text" id="cpf_cadastro" name="cpf" placeholder="000.000.000-00" maxlength="14" value="<?php echo htmlspecialchars($cadastro_dados['cpf'] ?? ''); ?>" required>
+                        
+                        <div class="form-group">
+                            <label for="cnpj_empresa">
+                                <i class="fa-solid fa-file-alt"></i> CNPJ:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-file-alt input-icon"></i>
+                                <input type="text" id="cnpj_empresa" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18" required>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="senha_cadastro">
-                            <i class="fa-solid fa-lock"></i> Senha:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="senha_cadastro" name="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        
+                        <div class="form-group">
+                            <label for="email_empresa">
+                                <i class="fa-solid fa-envelope"></i> Email Corporativo:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-envelope input-icon"></i>
+                                <input type="email" id="email_empresa" name="email" placeholder="Digite o email da empresa" required>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirmar_senha">
-                            <i class="fa-solid fa-lock"></i> Confirmar Senha:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="confirmar_senha" name="confirmar_senha" placeholder="Digite a senha novamente" minlength="6" required>
+                        
+                        <div class="form-group">
+                            <label for="senha_empresa">
+                                <i class="fa-solid fa-lock"></i> Senha:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="senha_empresa" name="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-user-plus"></i>
-                        Criar Conta
-                    </button>
-                </form>
-                
-                <div class="link">
-                    <a href="pag_inicial.html">
-                        <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
-                    </a>
-                </div>
-            </div>
-
-            <!-- Seção de Cadastro Empresa -->
-            <div id="empresa-section" class="form-section">
-                <h1>Cadastro Empresa</h1>
-                
-                <div class="empresa-section">
-                    <h3><i class="fa-solid fa-building"></i> Cadastro Institucional</h3>
-                    <p>Registre sua empresa ou instituição para ter acesso ao sistema de agendamentos com condições especiais para grupos.</p>
-                </div>
-                
-                <form action="../back-end/auth_unificado.php" method="POST" id="empresa-form">
-                    <input type="hidden" name="acao" value="cadastro_empresa">
-                    
-                    <div class="form-group">
-                        <label for="nome_instituicao">
-                            <i class="fa-solid fa-building"></i> Nome da Instituição:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-building input-icon"></i>
-                            <input type="text" id="nome_instituicao" name="nome_instituicao" placeholder="Digite o nome da empresa/instituição" required>
+                        
+                        <div class="form-group">
+                            <label for="confirmar_senha_empresa">
+                                <i class="fa-solid fa-lock"></i> Confirmar Senha:
+                            </label>
+                            <div class="input-container">
+                                <i class="fa-solid fa-lock input-icon"></i>
+                                <input type="password" id="confirmar_senha_empresa" name="confirmar_senha" placeholder="Digite a senha novamente" minlength="6" required>
+                            </div>
                         </div>
-                    </div>
+                        
+                        <button type="submit" class="btn btn-empresa">
+                            <i class="fa-solid fa-building"></i>
+                            Cadastrar Empresa
+                        </button>
+                    </form>
                     
-                    <div class="form-group">
-                        <label for="cnpj_empresa">
-                            <i class="fa-solid fa-file-alt"></i> CNPJ:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-file-alt input-icon"></i>
-                            <input type="text" id="cnpj_empresa" name="cnpj" placeholder="00.000.000/0000-00" maxlength="18" required>
-                        </div>
+                    <div class="link">
+                        <a href="pag_inicial.html">
+                            <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
+                        </a>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="email_empresa">
-                            <i class="fa-solid fa-envelope"></i> Email Corporativo:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="email_empresa" name="email" placeholder="Digite o email da empresa" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="senha_empresa">
-                            <i class="fa-solid fa-lock"></i> Senha:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="senha_empresa" name="senha" placeholder="Mínimo 6 caracteres" minlength="6" required>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirmar_senha_empresa">
-                            <i class="fa-solid fa-lock"></i> Confirmar Senha:
-                        </label>
-                        <div class="input-container">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="confirmar_senha_empresa" name="confirmar_senha" placeholder="Digite a senha novamente" minlength="6" required>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-empresa">
-                        <i class="fa-solid fa-building"></i>
-                        Cadastrar Empresa
-                    </button>
-                </form>
-                
-                <div class="link">
-                    <a href="pag_inicial.html">
-                        <i class="fa-solid fa-arrow-left"></i> Voltar à Página Inicial
-                    </a>
                 </div>
             </div>
         </div>
@@ -812,19 +990,25 @@ if (isset($_SESSION['cadastro_dados'])) {
         }
 
         function showTab(tabName) {
+            // Remover classes ativas
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.form-section').forEach(section => section.classList.remove('active'));
             
+            // Adicionar classe ativa
+            const tabs = document.querySelectorAll('.tab');
             if (tabName === 'login') {
-                document.querySelectorAll('.tab')[0].classList.add('active');
+                tabs[0].classList.add('active');
                 document.getElementById('login-section').classList.add('active');
             } else if (tabName === 'cadastro') {
-                document.querySelectorAll('.tab')[1].classList.add('active');
+                tabs[1].classList.add('active');
                 document.getElementById('cadastro-section').classList.add('active');
             } else if (tabName === 'empresa') {
-                document.querySelectorAll('.tab')[2].classList.add('active');
+                tabs[2].classList.add('active');
                 document.getElementById('empresa-section').classList.add('active');
             }
+
+            // Scroll para o topo do conteúdo
+            document.querySelector('.form-content').scrollTop = 0;
         }
 
         function showPopup(title, message, type = 'success') {
@@ -864,21 +1048,15 @@ if (isset($_SESSION['cadastro_dados'])) {
             document.getElementById('popup-overlay').style.display = 'none';
         }
 
-        // Detectar tipo de login automaticamente
-        function detectarTipoLogin(valor) {
-            // Remove caracteres especiais
-            const limpo = valor.replace(/\D/g, '');
-            
-            // Se tem 14 dígitos, provavelmente é CNPJ
-            if (limpo.length === 14 || valor.includes('/')) {
-                return 'empresa';
+        // MELHORADO: Loading state para botões
+        function setButtonLoading(button, loading = true) {
+            if (loading) {
+                button.disabled = true;
+                button.classList.add('loading');
+            } else {
+                button.disabled = false;
+                button.classList.remove('loading');
             }
-            // Se tem @, é email
-            if (valor.includes('@')) {
-                return 'usuario';
-            }
-            // Default para auto (deixar o back-end decidir)
-            return 'auto';
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -931,12 +1109,13 @@ if (isset($_SESSION['cadastro_dados'])) {
                 });
             }
 
-            // Simplificação: Formulário de login agora usa o auth_unificado.php diretamente
+            // Formulário de login com loading
             const loginForm = document.getElementById('login-form');
             if (loginForm) {
                 loginForm.addEventListener('submit', function(e) {
                     const loginValue = document.getElementById('login_field').value.trim();
                     const senhaValue = document.getElementById('senha_login').value;
+                    const submitBtn = this.querySelector('button[type="submit"]');
                     
                     if (!loginValue || !senhaValue) {
                         e.preventDefault();
@@ -944,8 +1123,8 @@ if (isset($_SESSION['cadastro_dados'])) {
                         return;
                     }
                     
-                    // O back-end agora detecta automaticamente o tipo
-                    // Não precisamos mais fazer detecção manual aqui
+                    // Adicionar loading
+                    setButtonLoading(submitBtn, true);
                 });
             }
 
@@ -956,6 +1135,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                     const cpf = document.getElementById('cpf_cadastro').value;
                     const senha = document.getElementById('senha_cadastro').value;
                     const confirmarSenha = document.getElementById('confirmar_senha').value;
+                    const submitBtn = this.querySelector('button[type="submit"]');
                     
                     if (!validarCPF(cpf)) {
                         e.preventDefault();
@@ -968,6 +1148,8 @@ if (isset($_SESSION['cadastro_dados'])) {
                         showPopup('Senhas Diferentes', 'As senhas não coincidem.', 'error');
                         return;
                     }
+
+                    setButtonLoading(submitBtn, true);
                 });
             }
 
@@ -977,6 +1159,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                     const cnpj = document.getElementById('cnpj_empresa').value;
                     const senha = document.getElementById('senha_empresa').value;
                     const confirmarSenha = document.getElementById('confirmar_senha_empresa').value;
+                    const submitBtn = this.querySelector('button[type="submit"]');
                     
                     if (!validarCNPJ(cnpj)) {
                         e.preventDefault();
@@ -989,8 +1172,11 @@ if (isset($_SESSION['cadastro_dados'])) {
                         showPopup('Senhas Diferentes', 'As senhas não coincidem.', 'error');
                         return;
                     }
+
+                    setButtonLoading(submitBtn, true);
                 });
             }
         });
     </script>
 </body>
+</html>
