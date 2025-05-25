@@ -846,6 +846,10 @@ try {
                     <i class="fa-solid fa-plus"></i>
                     Nova Solicitação
                 </a>
+                <a href="pag_dados_empresa.php" class="btn btn-secondary btn-lg">
+                    <i class="fa-solid fa-id-card"></i>
+                    Meus Dados
+                </a>
                 <a href="pag_inicial.html" class="btn btn-secondary btn-lg">
                     <i class="fa-solid fa-home"></i>
                     Página Inicial

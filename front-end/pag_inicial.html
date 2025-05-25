@@ -732,8 +732,8 @@
             if (isUserLoggedIn) {
                 // Se logado, verificar tipo de conta
                 if (tipoConta === 'empresa') {
-                    // Empresa logada - ir para página de agendamento de empresa
-                    window.location.href = 'pag_agendar_empresa.php';
+                    // Empresa logada - ir para página de dados da empresa
+                    window.location.href = 'pag_dados_empresa.php';
                 } else {
                     // Usuário comum logado - ir para página de dados do usuário
                     window.location.href = 'pag_dados_usuario.php';
@@ -819,7 +819,7 @@
             
             // Configurar avatar amarelo para empresa
             avatar.className = 'user-avatar empresa';
-            avatar.title = 'Empresa - Clique para agendar';
+            avatar.title = 'Empresa - Clique para ver dados';
             
             // Configurar informações
             userName.textContent = nome;
@@ -893,7 +893,7 @@
                             }
                         } else {
                             if (data.tipo_conta === 'empresa') {
-                                window.location.href = 'pag_agendar_empresa.php';
+                                window.location.href = 'pag_dados_empresa.php';
                             } else {
                                 window.location.href = 'pag_dados_usuario.php';
                             }

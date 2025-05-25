@@ -2,43 +2,46 @@
 session_start();
 require_once '../back-end/functions.php';
 
-// Verifica se o usuário está logado
-if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true) {
-    header("Location: pag_login_usuario.php?login_required=true");
+// Verifica se a empresa está logada
+if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true) {
+    header("Location: pag_login_usuario.php?tab=empresa");
     exit();
 }
 
-// Buscar dados do usuário
+// Buscar dados da empresa
 try {
     $conexao = conectarBanco();
     
-    // Dados básicos do usuário
-    $stmt = $conexao->prepare("SELECT nome, email, cpf FROM usuarios WHERE id = ?");
-    $stmt->execute([$_SESSION['usuario_id']]);
-    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+    // Dados básicos da empresa
+    $stmt = $conexao->prepare("SELECT nome_instituicao, email, cnpj, ativo FROM empresas WHERE id = ?");
+    $stmt->execute([$_SESSION['empresa_id']]);
+    $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    // Estatísticas de agendamentos
+    // Estatísticas de agendamentos da empresa
     $stmt = $conexao->prepare("
         SELECT 
             COUNT(*) as total_agendamentos,
             COUNT(CASE WHEN status = 'confirmado' AND data_agendamento >= CURDATE() THEN 1 END) as proximas_visitas,
             COUNT(CASE WHEN status = 'cancelado' THEN 1 END) as cancelados,
-            COUNT(CASE WHEN status = 'confirmado' AND data_agendamento < CURDATE() THEN 1 END) as visitas_concluidas
+            COUNT(CASE WHEN status = 'confirmado' AND data_agendamento < CURDATE() THEN 1 END) as visitas_concluidas,
+            COUNT(CASE WHEN status = 'pendente' THEN 1 END) as aguardando_aprovacao,
+            COUNT(CASE WHEN status = 'negado' THEN 1 END) as negados,
+            SUM(CASE WHEN status IN ('confirmado', 'pendente') THEN quantidade_pessoas ELSE 0 END) as total_pessoas
         FROM agendamentos 
-        WHERE usuario_id = ?
+        WHERE empresa_id = ?
     ");
-    $stmt->execute([$_SESSION['usuario_id']]);
+    $stmt->execute([$_SESSION['empresa_id']]);
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
     
     // Último agendamento
     $stmt = $conexao->prepare("
-        SELECT data_agendamento, hora_agendamento, status 
+        SELECT data_agendamento, hora_agendamento, status, quantidade_pessoas 
         FROM agendamentos 
-        WHERE usuario_id = ? 
+        WHERE empresa_id = ? 
         ORDER BY data_criacao DESC 
         LIMIT 1
     ");
-    $stmt->execute([$_SESSION['usuario_id']]);
+    $stmt->execute([$_SESSION['empresa_id']]);
     $ultimo_agendamento = $stmt->fetch(PDO::FETCH_ASSOC);
     
 } catch (PDOException $e) {
@@ -50,7 +53,7 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meus Dados - Biotério FSA</title>
+    <title>Dados da Empresa - Biotério FSA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <style>
         * {
@@ -69,14 +72,14 @@ try {
         }
 
         .header {
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.9) 0%, rgba(44, 81, 36, 0.9) 100%);
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: white;
             flex-shrink: 0;
-            box-shadow: 0 4px 15px rgba(64, 122, 53, 0.3);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
         }
 
         .header-left {
@@ -108,13 +111,13 @@ try {
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .user-info {
+        .company-info {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .user-info span {
+        .company-info span {
             color: white;
             font-size: 16px;
             background-color: rgba(255, 255, 255, 0.1);
@@ -172,16 +175,16 @@ try {
         }
 
         .content-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.819) 0%, rgba(44, 81, 36, 0.819) 100%);
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             border-radius: 4px;
         }
 
         .content-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, rgba(44, 81, 36, 0.819) 0%, rgba(64, 122, 53, 0.819) 100%);
+            background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
         }
 
         h1 {
-            color: rgba(64, 122, 53, 0.819);
+            color: #856404;
             font-size: 26px;
             text-align: center;
             margin-bottom: 20px;
@@ -194,22 +197,21 @@ try {
         }
 
         .profile-header {
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%);
             padding: 25px;
             border-radius: 15px;
             margin-bottom: 30px;
-            border-left: 5px solid rgba(64, 122, 53, 0.819);
+            border-left: 5px solid #ffc107;
             display: flex;
             align-items: center;
             gap: 20px;
-            flex-shrink: 0;
         }
 
         .profile-avatar {
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.819) 0%, rgba(44, 81, 36, 0.819) 100%);
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -220,13 +222,13 @@ try {
         }
 
         .profile-info h2 {
-            color: rgba(64, 122, 53, 0.819);
+            color: #856404;
             font-size: 24px;
             margin-bottom: 5px;
         }
 
         .profile-info p {
-            color: rgb(100, 100, 100);
+            color: #856404;
             font-size: 14px;
         }
 
@@ -240,7 +242,7 @@ try {
         }
 
         .section-title {
-            color: rgba(64, 122, 53, 0.819);
+            color: #856404;
             font-size: 20px;
             font-weight: bold;
             margin-bottom: 20px;
@@ -256,10 +258,10 @@ try {
         }
 
         .data-item {
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
             padding: 15px;
             border-radius: 10px;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            border-left: 4px solid #ffc107;
         }
 
         .data-item.email-item {
@@ -268,14 +270,14 @@ try {
 
         .data-label {
             font-size: 14px;
-            color: rgb(100, 100, 100);
+            color: #856404;
             margin-bottom: 8px;
             font-weight: bold;
         }
 
         .data-value {
             font-size: 16px;
-            color: rgb(60, 59, 59);
+            color: #856404;
             font-weight: bold;
             word-break: break-all; /* Quebra palavras longas */
             line-height: 1.4;
@@ -285,10 +287,10 @@ try {
             word-break: break-all;
             overflow-wrap: break-word;
             font-size: 15px;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.7);
             padding: 8px 12px;
             border-radius: 6px;
-            border: 1px solid rgba(64, 122, 53, 0.3);
+            border: 1px solid rgba(255, 193, 7, 0.3);
             font-family: 'Courier New', monospace;
             user-select: all; /* Permite seleção fácil do texto */
             cursor: text;
@@ -296,22 +298,22 @@ try {
         }
 
         .data-value.email-value:hover {
-            background-color: rgba(255, 255, 255, 1);
-            border-color: rgba(64, 122, 53, 0.819);
+            background-color: rgba(255, 255, 255, 0.9);
+            border-color: #ffc107;
         }
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 193, 7, 0.08) 100%);
             padding: 20px;
             border-radius: 12px;
             text-align: center;
-            border-left: 4px solid rgba(64, 122, 53, 0.819);
+            border-left: 4px solid #ffc107;
             transition: transform 0.3s;
         }
 
@@ -322,13 +324,13 @@ try {
         .stat-number {
             font-size: 28px;
             font-weight: bold;
-            color: rgba(64, 122, 53, 0.819);
+            color: #856404;
             margin-bottom: 5px;
         }
 
         .stat-label {
             font-size: 12px;
-            color: rgb(100, 100, 100);
+            color: #856404;
             font-weight: bold;
         }
 
@@ -349,6 +351,18 @@ try {
             color: #856404;
             font-size: 14px;
             margin-bottom: 5px;
+        }
+
+        .company-type-badge {
+            background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+            color: white;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .action-buttons {
@@ -377,24 +391,24 @@ try {
         }
 
         .btn-primary {
-            background-color: rgba(64, 122, 53, 0.819);
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background-color: rgba(44, 81, 36, 0.819);
+            background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
             color: white;
             transform: translateY(-2px);
         }
 
         .btn-secondary {
-            background-color: rgb(200, 200, 200);
-            color: rgb(60, 59, 59);
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
         }
 
         .btn-secondary:hover {
-            background-color: rgb(180, 180, 180);
-            color: rgb(60, 59, 59);
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            color: white;
             transform: translateY(-2px);
         }
 
@@ -403,7 +417,6 @@ try {
             border-radius: 10px;
             margin-bottom: 20px;
             border: 1px solid transparent;
-            flex-shrink: 0;
         }
 
         .alert-danger {
@@ -457,7 +470,7 @@ try {
         .popup-title {
             font-size: 20px;
             font-weight: bold;
-            color: rgb(55, 75, 51);
+            color: #856404;
             margin-bottom: 15px;
         }
 
@@ -486,12 +499,12 @@ try {
         }
 
         .popup-btn-primary {
-            background-color: rgba(64, 122, 53, 0.819);
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
         }
 
         .popup-btn-primary:hover {
-            background-color: rgba(44, 81, 36, 0.819);
+            background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
         }
 
         .popup-btn-secondary {
@@ -608,57 +621,76 @@ try {
                 <i class="fa-solid fa-arrow-left"></i> 
                 <span>Voltar ao Início</span>
             </a>
-            <div class="user-info">
-                <i class="fa-solid fa-user"></i>
-                <span>Olá, <?php echo htmlspecialchars($_SESSION['usuario_nome']); ?>!</span>
+            <div class="company-info">
+                <i class="fa-solid fa-building"></i>
+                <span>Olá, <?php echo htmlspecialchars($_SESSION['empresa_nome']); ?>!</span>
             </div>
         </div>
         <div>
             <a href="#" class="btn-logout" onclick="showLogoutConfirm(event)">
                 <i class="fa-solid fa-sign-out-alt"></i> Sair
             </a>
-            <form id="logout-form" action="../back-end/auth_usuario.php" method="POST" style="display: none;">
-                <input type="hidden" name="acao" value="logout">
+            <form id="logout-form" action="../back-end/auth_empresa.php" method="POST" style="display: none;">
+                <input type="hidden" name="acao" value="logout_empresa">
             </form>
         </div>
     </div>
 
     <div class="main-container">
         <div class="content-container">
-            <h1><i class="fa-solid fa-user-circle"></i> Meus Dados</h1>
+            <h1><i class="fa-solid fa-building"></i> Dados da Empresa</h1>
             
             <?php if (isset($erro)): ?>
                 <div class="alert alert-danger"><?php echo htmlspecialchars($erro); ?></div>
             <?php endif; ?>
 
-            <?php if (isset($usuario)): ?>
+            <?php if (isset($empresa)): ?>
                 <div class="profile-header">
                     <div class="profile-avatar">
-                        <?php echo strtoupper(substr($usuario['nome'], 0, 1)); ?>
+                        <?php echo strtoupper(substr($empresa['nome_instituicao'], 0, 1)); ?>
                     </div>
                     <div class="profile-info">
-                        <h2><?php echo htmlspecialchars($usuario['nome']); ?></h2>
-                        <p>Membro do Biotério FSA</p>
+                        <h2><?php echo htmlspecialchars($empresa['nome_instituicao']); ?></h2>
+                        <p>
+                            <span class="company-type-badge">
+                                <i class="fa-solid fa-building"></i>
+                                Empresa Cadastrada
+                            </span>
+                        </p>
                     </div>
                 </div>
 
                 <div class="data-section">
                     <div class="section-title">
                         <i class="fa-solid fa-id-card"></i>
-                        Informações Pessoais
+                        Informações Empresariais
                     </div>
                     <div class="data-grid">
                         <div class="data-item">
-                            <div class="data-label">Nome Completo</div>
-                            <div class="data-value"><?php echo htmlspecialchars($usuario['nome']); ?></div>
+                            <div class="data-label">Nome da Instituição</div>
+                            <div class="data-value"><?php echo htmlspecialchars($empresa['nome_instituicao']); ?></div>
                         </div>
                         <div class="data-item">
-                            <div class="data-label">CPF</div>
-                            <div class="data-value"><?php echo preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $usuario['cpf']); ?></div>
+                            <div class="data-label">CNPJ</div>
+                            <div class="data-value"><?php echo preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $empresa['cnpj']); ?></div>
+                        </div>
+                        <div class="data-item">
+                            <div class="data-label">Status da Conta</div>
+                            <div class="data-value">
+                                <?php if ($empresa['ativo']): ?>
+                                    <span style="color: #28a745; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-check-circle"></i> Ativa
+                                    </span>
+                                <?php else: ?>
+                                    <span style="color: #dc3545; display: flex; align-items: center; gap: 6px;">
+                                        <i class="fa-solid fa-times-circle"></i> Inativa
+                                    </span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="data-item email-item">
-                            <div class="data-label">Email</div>
-                            <div class="data-value email-value"><?php echo htmlspecialchars($usuario['email']); ?></div>
+                            <div class="data-label">Email Corporativo</div>
+                            <div class="data-value email-value"><?php echo htmlspecialchars($empresa['email']); ?></div>
                         </div>
                     </div>
                 </div>
@@ -671,19 +703,27 @@ try {
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-number"><?php echo $stats['total_agendamentos']; ?></div>
-                            <div class="stat-label">Total de Agendamentos</div>
+                            <div class="stat-label">Total de Solicitações</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><?php echo $stats['aguardando_aprovacao']; ?></div>
+                            <div class="stat-label">Aguardando Aprovação</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-number"><?php echo $stats['proximas_visitas']; ?></div>
-                            <div class="stat-label">Próximas Visitas</div>
+                            <div class="stat-label">Visitas Confirmadas</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-number"><?php echo $stats['visitas_concluidas']; ?></div>
-                            <div class="stat-label">Visitas Concluídas</div>
+                            <div class="stat-label">Visitas Realizadas</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number"><?php echo $stats['cancelados']; ?></div>
-                            <div class="stat-label">Cancelados</div>
+                            <div class="stat-number"><?php echo $stats['negados']; ?></div>
+                            <div class="stat-label">Solicitações Negadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"><?php echo $stats['total_pessoas'] ?? 0; ?></div>
+                            <div class="stat-label">Total de Pessoas</div>
                         </div>
                     </div>
                 </div>
@@ -692,12 +732,13 @@ try {
                 <div class="data-section">
                     <div class="section-title">
                         <i class="fa-solid fa-clock"></i>
-                        Último Agendamento
+                        Última Solicitação
                     </div>
                     <div class="last-appointment">
-                        <h4><i class="fa-solid fa-calendar"></i> Último agendamento realizado</h4>
+                        <h4><i class="fa-solid fa-calendar"></i> Última solicitação enviada</h4>
                         <p><strong>Data:</strong> <?php echo date('d/m/Y', strtotime($ultimo_agendamento['data_agendamento'])); ?></p>
                         <p><strong>Horário:</strong> <?php echo date('H:i', strtotime($ultimo_agendamento['hora_agendamento'])); ?></p>
+                        <p><strong>Pessoas:</strong> <?php echo $ultimo_agendamento['quantidade_pessoas'] ?? 1; ?></p>
                         <?php 
                         $statusUltimo = $ultimo_agendamento['status'];
                         if ($ultimo_agendamento['status'] === 'confirmado' && $ultimo_agendamento['data_agendamento'] < date('Y-m-d')) {
@@ -711,11 +752,11 @@ try {
             <?php endif; ?>
 
             <div class="action-buttons">
-                <a href="pag_agendar_logado.php" class="btn btn-primary">
+                <a href="pag_agendar_empresa.php" class="btn btn-primary">
                     <i class="fa-solid fa-calendar-plus"></i>
-                    Novo Agendamento
+                    Nova Solicitação
                 </a>
-                <a href="pag_meus_agendamentos.php" class="btn btn-secondary">
+                <a href="pag_meus_agendamentos_empresa.php" class="btn btn-secondary">
                     <i class="fa-solid fa-list"></i>
                     Meus Agendamentos
                 </a>

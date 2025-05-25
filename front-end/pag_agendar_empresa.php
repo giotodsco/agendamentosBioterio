@@ -106,14 +106,13 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         .container {
             background-color: rgb(225, 225, 228);
             width: 100%;
-            max-width: 600px;
+            max-width: 700px;
             border-radius: 20px;
             box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
             overflow: hidden;
         }
 
         .form-header {
-            /* ALTERADO: Cores amarelas para empresa */
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
             padding: 20px;
@@ -135,7 +134,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             padding: 30px;
         }
 
-        /* ALTERADO: Cores amarelas para empresa */
         .company-welcome {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
             padding: 15px;
@@ -154,7 +152,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             color: #856404;
         }
 
-        /* NOVO: Aviso específico para empresas */
         .pending-notice {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             padding: 15px;
@@ -176,7 +173,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             line-height: 1.4;
         }
 
-        /* ALTERADO: Cores amarelas */
         .availability-info {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
             padding: 15px;
@@ -208,7 +204,123 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             font-weight: bold;
         }
 
-        select,
+        /* NOVO: Estilos do calendário */
+        .calendar-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 10px 0;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #ffc107;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .calendar-nav:hover {
+            background-color: rgba(255, 193, 7, 0.1);
+            transform: scale(1.1);
+        }
+
+        .calendar-nav:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .calendar-nav:disabled:hover {
+            background: none;
+        }
+
+        .calendar-month-year {
+            font-size: 20px;
+            font-weight: bold;
+            color: #856404;
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-weight: bold;
+            color: #856404;
+            padding: 10px 5px;
+            font-size: 14px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: relative;
+            min-height: 45px;
+        }
+
+        .calendar-day.disabled {
+            color: #ddd;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .calendar-day.available {
+            color: #856404;
+            background-color: rgba(255, 193, 7, 0.1);
+            border: 2px solid transparent;
+        }
+
+        .calendar-day.available:hover {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-color: #ffc107;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.selected {
+            background-color: #ffc107;
+            color: white;
+            border-color: #e0a800;
+            transform: scale(1.05);
+        }
+
+        .calendar-day.today {
+            border: 2px solid #ffc107;
+            font-weight: bold;
+        }
+
+        .calendar-day.today.available {
+            background-color: rgba(255, 193, 7, 0.3);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
         input[type="number"] {
             width: 100%;
             padding: 12px;
@@ -221,10 +333,8 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             cursor: pointer;
         }
 
-        select:focus,
         input:focus {
             outline: none;
-            /* ALTERADO: Cor do foco em amarelo */
             border-color: #ffc107;
             background-color: rgb(250, 250, 250);
         }
@@ -258,13 +368,11 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .horario-label:hover {
-            /* ALTERADO: Hover em amarelo */
             border-color: #ffc107;
             background-color: rgba(255, 193, 7, 0.1);
         }
 
         .horario-radio:checked + .horario-label {
-            /* ALTERADO: Selecionado em amarelo */
             background-color: #ffc107;
             color: white;
             border-color: #ffc107;
@@ -283,7 +391,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .btn-primary {
-            /* ALTERADO: Botão amarelo */
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
             color: white;
         }
@@ -293,8 +400,9 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .btn-primary:disabled {
-            background-color: #ccc;
+            background-color: #ccc !important;
             cursor: not-allowed;
+            color: #666;
         }
 
         .btn-secondary {
@@ -332,7 +440,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .spinner {
-            /* ALTERADO: Spinner amarelo */
             border: 4px solid #f3f3f3;
             border-top: 4px solid #ffc107;
             border-radius: 50%;
@@ -400,7 +507,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .popup-icon.warning {
-            /* ALTERADO: Warning em amarelo */
             color: #ffc107;
         }
 
@@ -436,7 +542,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
         }
 
         .popup-btn-primary {
-            /* ALTERADO: Botão de popup em amarelo */
             background-color: #ffc107;
             color: white;
         }
@@ -488,6 +593,20 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
             .popup-buttons {
                 flex-direction: column;
+            }
+
+            .calendar-grid {
+                gap: 4px;
+            }
+
+            .calendar-day {
+                min-height: 35px;
+                font-size: 12px;
+            }
+
+            .calendar-month-year {
+                font-size: 18px;
+                min-width: 150px;
             }
         }
     </style>
@@ -559,12 +678,24 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
                 <form id="agendamento-form" method="POST" action="../back-end/agendar_empresa.php">
                     <div class="form-group">
-                        <label for="data_agendamento">
+                        <label>
                             <i class="fa-solid fa-calendar"></i> Escolha a Data:
                         </label>
-                        <select id="data_agendamento" name="data_agendamento" required>
-                            <option value="">Selecione uma data...</option>
-                        </select>
+                        <div class="calendar-container">
+                            <div class="calendar-header">
+                                <button type="button" class="calendar-nav" id="prev-month">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </button>
+                                <div class="calendar-month-year" id="month-year"></div>
+                                <button type="button" class="calendar-nav" id="next-month">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            <div class="calendar-grid" id="calendar-grid">
+                                <!-- Calendário será gerado via JavaScript -->
+                            </div>
+                        </div>
+                        <input type="hidden" id="data_agendamento" name="data_agendamento" required>
                     </div>
 
                     <div class="form-group">
@@ -576,7 +707,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                         </div>
                     </div>
 
-                    <!-- NOVO: Campo de quantidade de pessoas -->
                     <div class="form-group">
                         <label for="quantidade_pessoas">
                             <i class="fa-solid fa-users"></i> Quantidade de Pessoas:
@@ -592,12 +722,11 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
                     <div class="action-buttons">
                         <button type="submit" class="btn btn-primary" id="btn-agendar" disabled>
-                            <i class="fa-solid fa-paper-plane"></i> Solicitar Agendamento
+                            <i class="fa-solid fa-calendar-check"></i> Confirmar Agendamento
                         </button>
                     </div>
                 </form>
 
-                <!-- NOVO: Botões de navegação incluindo "Meus Agendamentos" -->
                 <div class="action-buttons">
                     <a href="pag_inicial.html" class="btn btn-secondary">
                         <i class="fa-solid fa-home"></i> Página Inicial
@@ -605,78 +734,184 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     <a href="pag_meus_agendamentos_empresa.php" class="btn btn-secondary">
                         <i class="fa-solid fa-list"></i> Meus Agendamentos
                     </a>
+                    <a href="pag_dados_empresa.php" class="btn btn-secondary">
+                        <i class="fa-solid fa-id-card"></i> Meus Dados
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('agendamento-form');
-            const dataSelect = document.getElementById('data_agendamento');
-            const horariosContainer = document.getElementById('horarios-container');
-            const btnAgendar = document.getElementById('btn-agendar');
-            const loading = document.getElementById('loading');
+        class CalendarScheduler {
+            constructor() {
+                this.currentDate = new Date();
+                this.selectedDate = null;
+                this.today = new Date();
+                this.today.setHours(0, 0, 0, 0);
+                
+                // Horários para empresas (08:00 às 16:00)
+                this.horariosDisponiveis = [
+                    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                    '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+                    '14:00', '14:30', '15:00', '15:30', '16:00'
+                ];
 
-            // ALTERADO: Horários para empresas (08:00 às 16:00)
-            const horariosDisponiveis = [
-                '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-                '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
-                '14:00', '14:30', '15:00', '15:30', '16:00'
-            ];
+                this.initializeElements();
+                this.bindEvents();
+                this.renderCalendar();
+                this.loadHorarios();
+                this.checkFormValidity(); // Garantir que o botão comece desabilitado
+            }
 
-            // Função para gerar datas disponíveis (próximos 30 dias úteis)
-            function gerarDatasDisponiveis() {
-                const hoje = new Date();
-                const datas = [];
-                let diasAdicionados = 0;
-                let dataAtual = new Date(hoje);
+            initializeElements() {
+                this.monthYearElement = document.getElementById('month-year');
+                this.calendarGrid = document.getElementById('calendar-grid');
+                this.prevMonthBtn = document.getElementById('prev-month');
+                this.nextMonthBtn = document.getElementById('next-month');
+                this.dataInput = document.getElementById('data_agendamento');
+                this.horariosContainer = document.getElementById('horarios-container');
+                this.btnAgendar = document.getElementById('btn-agendar');
+                this.form = document.getElementById('agendamento-form');
+                this.loading = document.getElementById('loading');
+            }
 
-                while (diasAdicionados < 30) {
-                    dataAtual.setDate(dataAtual.getDate() + 1);
-                    
-                    // Verifica se é dia útil (1=segunda, 5=sexta)
-                    const diaSemana = dataAtual.getDay();
-                    if (diaSemana >= 1 && diaSemana <= 5) {
-                        const ano = dataAtual.getFullYear();
-                        const mes = String(dataAtual.getMonth() + 1).padStart(2, '0');
-                        const dia = String(dataAtual.getDate()).padStart(2, '0');
-                        const dataFormatada = `${ano}-${mes}-${dia}`;
-                        const dataExibicao = `${dia}/${mes}/${ano}`;
-                        
-                        const nomeDia = dataAtual.toLocaleDateString('pt-BR', { weekday: 'long' });
-                        
-                        datas.push({
-                            valor: dataFormatada,
-                            texto: `${dataExibicao} - ${nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1)}`
-                        });
-                        
-                        diasAdicionados++;
+            bindEvents() {
+                this.prevMonthBtn.addEventListener('click', () => this.previousMonth());
+                this.nextMonthBtn.addEventListener('click', () => this.nextMonth());
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                document.getElementById('quantidade_pessoas').addEventListener('input', () => this.checkFormValidity());
+            }
+
+            previousMonth() {
+                this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+                this.renderCalendar();
+            }
+
+            nextMonth() {
+                this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+                this.renderCalendar();
+            }
+
+            isWeekday(date) {
+                const day = date.getDay();
+                return day >= 1 && day <= 5; // Segunda a sexta
+            }
+
+            isToday(date) {
+                return date.getTime() === this.today.getTime();
+            }
+
+            isDateAvailable(date) {
+                return date >= this.today && this.isWeekday(date);
+            }
+
+            formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            renderCalendar() {
+                const year = this.currentDate.getFullYear();
+                const month = this.currentDate.getMonth();
+
+                // Atualizar cabeçalho
+                const monthNames = [
+                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                ];
+                this.monthYearElement.textContent = `${monthNames[month]} ${year}`;
+
+                // Limpar grid
+                this.calendarGrid.innerHTML = '';
+
+                // Cabeçalhos dos dias da semana
+                const dayHeaders = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                dayHeaders.forEach(day => {
+                    const headerElement = document.createElement('div');
+                    headerElement.className = 'calendar-day-header';
+                    headerElement.textContent = day;
+                    this.calendarGrid.appendChild(headerElement);
+                });
+
+                // Primeiro dia do mês
+                const firstDay = new Date(year, month, 1);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+                // Gerar 42 dias (6 semanas)
+                for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = date.getDate();
+
+                    // Adicionar classes baseadas no estado do dia
+                    if (date.getMonth() !== month) {
+                        dayElement.classList.add('other-month', 'disabled');
+                    } else if (this.isToday(date)) {
+                        dayElement.classList.add('today');
+                        if (this.isDateAvailable(date)) {
+                            dayElement.classList.add('available');
+                        } else {
+                            dayElement.classList.add('disabled');
+                        }
+                    } else if (this.isDateAvailable(date)) {
+                        dayElement.classList.add('available');
+                    } else {
+                        dayElement.classList.add('disabled');
                     }
+
+                    // Verificar se é o dia selecionado
+                    if (this.selectedDate && date.getTime() === this.selectedDate.getTime()) {
+                        dayElement.classList.add('selected');
+                    }
+
+                    // Adicionar evento de clique
+                    if (dayElement.classList.contains('available')) {
+                        dayElement.addEventListener('click', () => this.selectDate(date));
+                    }
+
+                    this.calendarGrid.appendChild(dayElement);
                 }
 
-                return datas;
+                // Atualizar estado dos botões de navegação
+                const currentMonth = new Date(this.today.getFullYear(), this.today.getMonth(), 1);
+                const displayMonth = new Date(year, month, 1);
+                this.prevMonthBtn.disabled = displayMonth <= currentMonth;
             }
 
-            // Carregar datas disponíveis
-            function carregarDatas() {
-                const datas = gerarDatasDisponiveis();
-                
-                dataSelect.innerHTML = '<option value="">Selecione uma data...</option>';
-                
-                datas.forEach(data => {
-                    const option = document.createElement('option');
-                    option.value = data.valor;
-                    option.textContent = data.texto;
-                    dataSelect.appendChild(option);
+            selectDate(date) {
+                // Remover seleção anterior
+                document.querySelectorAll('.calendar-day.selected').forEach(day => {
+                    day.classList.remove('selected');
                 });
+
+                // Adicionar nova seleção
+                this.selectedDate = new Date(date);
+                const dayElements = document.querySelectorAll('.calendar-day');
+                dayElements.forEach(dayElement => {
+                    const dayNumber = parseInt(dayElement.textContent);
+                    if (dayNumber === date.getDate() && 
+                        !dayElement.classList.contains('other-month') &&
+                        dayElement.classList.contains('available')) {
+                        dayElement.classList.add('selected');
+                    }
+                });
+
+                // Atualizar input hidden
+                this.dataInput.value = this.formatDate(date);
+                this.checkFormValidity();
             }
 
-            // Carregar horários
-            function carregarHorarios() {
-                horariosContainer.innerHTML = '';
+            loadHorarios() {
+                this.horariosContainer.innerHTML = '';
                 
-                horariosDisponiveis.forEach(horario => {
+                this.horariosDisponiveis.forEach(horario => {
                     const div = document.createElement('div');
                     div.className = 'horario-item';
                     
@@ -695,31 +930,25 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     
                     div.appendChild(input);
                     div.appendChild(label);
-                    horariosContainer.appendChild(div);
+                    this.horariosContainer.appendChild(div);
                     
-                    input.addEventListener('change', verificarFormCompleto);
+                    input.addEventListener('change', () => this.checkFormValidity());
                 });
             }
 
-            // Verificar se o formulário está completo
-            function verificarFormCompleto() {
-                const data = dataSelect.value;
+            checkFormValidity() {
+                const data = this.dataInput.value;
                 const horarioSelecionado = document.querySelector('input[name="hora_agendamento"]:checked');
                 const quantidade = document.getElementById('quantidade_pessoas').value;
                 
                 const formCompleto = data && horarioSelecionado && quantidade >= 1 && quantidade <= 20;
-                btnAgendar.disabled = !formCompleto;
+                this.btnAgendar.disabled = !formCompleto;
             }
 
-            // Event listeners
-            dataSelect.addEventListener('change', verificarFormCompleto);
-            document.getElementById('quantidade_pessoas').addEventListener('input', verificarFormCompleto);
-
-            // Validação antes do envio
-            form.addEventListener('submit', function(e) {
+            handleSubmit(e) {
                 e.preventDefault();
                 
-                const data = dataSelect.value;
+                const data = this.dataInput.value;
                 const horarioSelecionado = document.querySelector('input[name="hora_agendamento"]:checked');
                 const quantidade = parseInt(document.getElementById('quantidade_pessoas').value);
                 
@@ -734,28 +963,28 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 }
 
                 // Mostrar loading
-                loading.style.display = 'block';
-                btnAgendar.disabled = true;
+                this.loading.style.display = 'block';
+                this.btnAgendar.disabled = true;
 
                 // Enviar formulário
                 setTimeout(() => {
-                    form.submit();
+                    this.form.submit();
                 }, 1000);
-            });
+            }
+        }
 
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendar = new CalendarScheduler();
+            
             // Verificar mensagens da URL
             const urlParams = new URLSearchParams(window.location.search);
             const erro = urlParams.get('erro');
 
             if (erro) {
                 showPopup('Erro', decodeURIComponent(erro), 'error');
-                // Limpar URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
-
-            // Inicializar
-            carregarDatas();
-            carregarHorarios();
         });
 
         // Sistema de pop-up personalizado
@@ -769,7 +998,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             titleElement.textContent = title;
             messageElement.textContent = message;
             
-            // Configurar ícone baseado no tipo
             let iconClass = 'fa-info-circle';
             let iconColorClass = '';
             
@@ -790,7 +1018,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             iconElement.innerHTML = `<i class="fa-solid ${iconClass}"></i>`;
             iconElement.className = `popup-icon ${iconColorClass}`;
             
-            // Configurar botões
             if (buttons) {
                 buttonsContainer.innerHTML = '';
                 buttons.forEach(button => {
@@ -811,7 +1038,6 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             document.getElementById('popup-overlay').style.display = 'none';
         }
 
-        // Função para confirmar logout
         function showLogoutConfirm(event) {
             event.preventDefault();
             
