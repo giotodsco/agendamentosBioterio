@@ -662,7 +662,7 @@ if (isset($_SESSION['cadastro_dados'])) {
     <div class="login-container">
         <div class="login-image">
             <div class="image-overlay">
-                <h2><i class="fa-solid fa-seedling"></i> Biotério FSA</h2>
+                <h2><i class="fa-solid fa-seedling"></i> Espaço de Biodiversidade FSA</h2>
                 <p>Seu portal de acesso ao sistema de agendamentos. Faça parte da nossa comunidade científica e contribua para o avanço da pesquisa!</p>
             </div>
         </div>
@@ -671,7 +671,7 @@ if (isset($_SESSION['cadastro_dados'])) {
             <!-- MELHORADO: Header fixo -->
             <div class="form-header">
                 <h1 class="main-title">Área de Acesso</h1>
-                <p class="subtitle">Sistema de Agendamento do Biotério FSA</p>
+                <p class="subtitle">Sistema de Agendamento do Espaço de Biodiversidade FSA</p>
             </div>
 
             <!-- MELHORADO: Conteúdo com scroll -->
@@ -700,7 +700,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                     
                     <div class="welcome-info">
                         <h3><i class="fa-solid fa-key"></i> Acesse sua conta</h3>
-                        <p>Entre com seus dados para acessar o sistema de agendamentos e gerenciar suas visitas ao biotério.</p>
+                        <p>Entre com seus dados para acessar o sistema de agendamentos e gerenciar suas visitas ao espaço de biodiversidade</p>
                     </div>
                     
                     <form action="../back-end/auth_unificado.php" method="POST" id="login-form">
@@ -760,7 +760,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                     
                     <div class="welcome-info">
                         <h3><i class="fa-solid fa-user-plus"></i> Cadastro Individual</h3>
-                        <p>Crie sua conta pessoal para ter acesso ao sistema de agendamentos do Biotério FSA.</p>
+                        <p>Crie sua conta pessoal para ter acesso ao sistema de agendamentos do espaço de biodiversidade</p>
                     </div>
                     
                     <form action="../back-end/auth_unificado.php" method="POST" id="cadastro-form">

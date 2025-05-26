@@ -610,7 +610,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         <div class="container">
             <div class="form-header">
                 <h1><i class="fa-solid fa-calendar-plus"></i> Novo Agendamento</h1>
-                <p>Sistema de Agendamento do Biotério FSA</p>
+                <p>Sistema de Agendamento do Agendamento do Espaço de Biodiversidade FSA</p>
             </div>
             
             <div class="form-container">

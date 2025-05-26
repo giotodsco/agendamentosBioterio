@@ -34,16 +34,16 @@ try {
     // CORREÇÃO: Operador NÃO deve ver agendamentos pendentes
     // Se não há filtro específico de status, excluir pendentes automaticamente
     if (empty($filtro_status)) {
-        $filtros['status_excluir'] = 'pendente';
-    } elseif ($filtro_status === 'pendente') {
-        // Se operador tentar filtrar por pendente, redirecionar sem esse filtro
-        $url_redirect = $_SERVER['PHP_SELF'] . '?';
-        $params = $_GET;
-        unset($params['status']);
-        $url_redirect .= http_build_query($params);
-        header("Location: $url_redirect");
-        exit();
-    }
+        $filtros['status_excluir'] = ['pendente', 'cancelado'];
+    } elseif ($filtro_status === 'pendente' || $filtro_status === 'cancelado') {
+    // Se operador tentar filtrar por pendente ou cancelado, redirecionar sem esse filtro
+    $url_redirect = $_SERVER['PHP_SELF'] . '?';
+    $params = $_GET;
+    unset($params['status']);
+    $url_redirect .= http_build_query($params);
+    header("Location: $url_redirect");
+    exit();
+}
     
     $agendamentos = buscarAgendamentosCompletos($filtros);
     

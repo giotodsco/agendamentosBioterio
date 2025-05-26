@@ -22,8 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     // Validação de quantidade (1 a 20 pessoas)
-    if ($quantidade_pessoas < 1 || $quantidade_pessoas > 20) {
-        header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("A quantidade de pessoas deve estar entre 1 e 20."));
+    if ($quantidade_pessoas < 1 || $quantidade_pessoas > 45)  {
+        header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("A quantidade de pessoas deve estar entre 1 a 45."));
         exit();
     }
 

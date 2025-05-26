@@ -671,9 +671,9 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 <div class="availability-info">
                     <h4><i class="fa-solid fa-info-circle"></i> Informações para Empresas</h4>
                     <p><strong>Horário empresarial:</strong> Segunda a Sexta, das 08:00 às 16:00</p>
-                    <p><strong>Quantidade:</strong> De 1 a 20 pessoas por agendamento</p>
-                    <p><strong>Aprovação:</strong> Todas as solicitações são analisadas individualmente</p>
-                    <p><strong>Resposta:</strong> Confirmação em até 2 dias úteis por email</p>
+                    <p><strong>Quantidade:</strong> De 1 a 45 pessoas por agendamento</p>
+                    <p><strong>Aprovação:</strong> Todas as solicitações são analisadas individualmente.</p>
+                    <p><strong>Resposta:</strong> Confirmação em até 2 dias úteis pelo site.</p>
                 </div>
 
                 <form id="agendamento-form" method="POST" action="../back-end/agendar_empresa.php">
@@ -712,7 +712,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                             <i class="fa-solid fa-users"></i> Quantidade de Pessoas:
                         </label>
                         <input type="number" id="quantidade_pessoas" name="quantidade_pessoas" 
-                               min="1" max="20" value="1" required>
+                               min="1" max="45" value="1" required>
                     </div>
 
                     <div class="loading" id="loading">
@@ -941,7 +941,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 const horarioSelecionado = document.querySelector('input[name="hora_agendamento"]:checked');
                 const quantidade = document.getElementById('quantidade_pessoas').value;
                 
-                const formCompleto = data && horarioSelecionado && quantidade >= 1 && quantidade <= 20;
+                const formCompleto = data && horarioSelecionado && quantidade >= 1 && quantidade <= 45;
                 this.btnAgendar.disabled = !formCompleto;
             }
 
@@ -957,8 +957,8 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     return false;
                 }
 
-                if (quantidade < 1 || quantidade > 20) {
-                    showPopup('Erro', 'A quantidade de pessoas deve estar entre 1 e 20.', 'error');
+                if (quantidade < 1 || quantidade > 45) {
+                    showPopup('Erro', 'A quantidade de pessoas deve estar entre 1 e 45.', 'error');
                     return false;
                 }
 

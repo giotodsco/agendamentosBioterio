@@ -430,10 +430,16 @@ function buscarAgendamentosCompletos($filtros = []) {
             $params[] = $filtros['status'];
         }
         
-        // NOVO: Filtro para excluir status específico (usado pelo operador)
+        // CORRIGIDO: Filtro para excluir status específico - Aceita string ou array
         if (!empty($filtros['status_excluir'])) {
-            $where[] = "a.status != ?";
-            $params[] = $filtros['status_excluir'];
+            if (is_array($filtros['status_excluir'])) {
+                $placeholders = implode(',', array_fill(0, count($filtros['status_excluir']), '?'));
+                $where[] = "a.status NOT IN ($placeholders)";
+                $params = array_merge($params, $filtros['status_excluir']);
+            } else {
+                $where[] = "a.status != ?";
+                $params[] = $filtros['status_excluir'];
+            }
         }
         
         if (!empty($filtros['tipo_agendamento'])) {
