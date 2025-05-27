@@ -22,11 +22,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 $stmt->execute();
                 $mensagem_sucesso = "Agendamento confirmado com sucesso!";
                 
-            } elseif ($acao === 'negar') {
-                $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'negado' WHERE id = :id");
+            } elseif ($acao === 'concluir') {
+                $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'concluido' WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
-                $mensagem_sucesso = "Agendamento negado com sucesso!";
+                $mensagem_sucesso = "Agendamento concluído com sucesso!";
+                
+            } elseif ($acao === 'excluir') {
+                // CORREÇÃO: Buscar dados do agendamento antes de excluir
+                $stmt = $conexao->prepare("SELECT data_agendamento FROM agendamentos WHERE id = :id");
+                $stmt->bindParam(':id', $agendamento_id);
+                $stmt->execute();
+                $agendamento_dados = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($agendamento_dados) {
+                    $data_agendamento = $agendamento_dados['data_agendamento'];
+                    
+                    // Excluir o agendamento
+                    $stmt = $conexao->prepare("DELETE FROM agendamentos WHERE id = :id");
+                    $stmt->bindParam(':id', $agendamento_id);
+                    $stmt->execute();
+                    
+                    if ($stmt->rowCount() > 0) {
+                        // Verificar se ainda existem agendamentos nesta data
+                        $stmt = $conexao->prepare("SELECT COUNT(*) as total FROM agendamentos WHERE data_agendamento = :data");
+                        $stmt->bindParam(':data', $data_agendamento);
+                        $stmt->execute();
+                        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        // Retornar resposta JSON para AJAX
+                        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+                            header('Content-Type: application/json');
+                            echo json_encode([
+                                'success' => true,
+                                'message' => 'Agendamento excluído com sucesso!',
+                                'remaining_count' => (int)$resultado['total']
+                            ]);
+                            exit();
+                        }
+                        
+                        $mensagem_sucesso = "Agendamento excluído permanentemente com sucesso!";
+                        if ($resultado['total'] == 0) {
+                            $mensagem_sucesso .= " A seção do dia foi removida pois não há mais agendamentos nesta data.";
+                        }
+                    } else {
+                        $mensagem_erro = "Erro ao excluir agendamento.";
+                    }
+                } else {
+                    $mensagem_erro = "Agendamento não encontrado.";
+                }
                 
             } elseif ($acao === 'cancelar') {
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'cancelado', data_cancelamento = NOW() WHERE id = :id");
@@ -60,7 +104,54 @@ try {
         'status' => $filtro_status
     ];
     
-    $agendamentos = buscarAgendamentosCompletos($filtros);
+    // Filtros para busca de agendamentos
+    $where_conditions = [];
+    $params = [];
+
+    // Filtro por data
+    if (!empty($filtro_data_inicio)) {
+        $where_conditions[] = "a.data_agendamento >= :data_inicio";
+        $params[':data_inicio'] = $filtro_data_inicio;
+    }
+    
+    if (!empty($filtro_data_fim)) {
+        $where_conditions[] = "a.data_agendamento <= :data_fim";
+        $params[':data_fim'] = $filtro_data_fim;
+    }
+
+    // Filtro por status - COM LÓGICA DE DATA
+    if (!empty($filtro_status)) {
+        $hoje = date('Y-m-d');
+        
+        if ($filtro_status === 'confirmado') {
+            // Confirmado: apenas agendamentos confirmados que NÃO são do passado
+            $where_conditions[] = "a.status = 'confirmado' AND a.data_agendamento >= :hoje_confirmado";
+            $params[':hoje_confirmado'] = $hoje;
+        } elseif ($filtro_status === 'concluido') {
+            // Concluído: agendamentos 'concluido' OU 'confirmado' do passado
+            $where_conditions[] = "(a.status = 'concluido' OR (a.status = 'confirmado' AND a.data_agendamento < :hoje_concluido))";
+            $params[':hoje_concluido'] = $hoje;
+        } else {
+            // Outros status: busca normal
+            $where_conditions[] = "a.status = :status";
+            $params[':status'] = $filtro_status;
+        }
+    }
+
+    // Montar a query
+    $sql = "SELECT a.*, u.nome as usuario_nome, u.email as usuario_email 
+            FROM agendamentos a 
+            LEFT JOIN usuarios u ON a.usuario_id = u.id";
+    
+    if (!empty($where_conditions)) {
+        $sql .= " WHERE " . implode(" AND ", $where_conditions);
+    }
+    
+    $sql .= " ORDER BY a.data_agendamento, a.hora_agendamento";
+    
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute($params);
+    $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Organizar agendamentos por data
     $agendamentos_por_data = [];
@@ -72,8 +163,28 @@ try {
         $agendamentos_por_data[$data][] = $agendamento;
     }
     
-    // Ordenar datas
-    krsort($agendamentos_por_data); // Mais recente primeiro para admin
+    // MODIFICAÇÃO: Organizar datas por proximidade (hoje primeiro, futuro próximo, depois passado)
+    $hoje = date('Y-m-d');
+    $datas_hoje = [];
+    $datas_futuras = [];
+    $datas_passadas = [];
+    
+    foreach ($agendamentos_por_data as $data => $agendamentos_do_dia) {
+        if ($data === $hoje) {
+            $datas_hoje[$data] = $agendamentos_do_dia;
+        } elseif ($data > $hoje) {
+            $datas_futuras[$data] = $agendamentos_do_dia;
+        } else {
+            $datas_passadas[$data] = $agendamentos_do_dia;
+        }
+    }
+    
+    // Ordenar futuras (mais próximas primeiro) e passadas (mais recentes primeiro)
+    ksort($datas_futuras);
+    krsort($datas_passadas);
+    
+    // Reorganizar: hoje + futuras + passadas
+    $agendamentos_por_data = array_merge($datas_hoje, $datas_futuras, $datas_passadas);
     
 } catch (PDOException $e) {
     $mensagem_erro = "Erro ao carregar agendamentos: " . $e->getMessage();
@@ -426,7 +537,7 @@ function formatarDataPorExtensor($data) {
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 20px;
             margin-bottom: 25px;
             flex-shrink: 0;
@@ -448,9 +559,10 @@ function formatarDataPorExtensor($data) {
         }
 
         .stat-card:nth-child(2) { border-left-color: #ffc107; }
-        .stat-card:nth-child(3) { border-left-color: #27ae60; }
-        .stat-card:nth-child(4) { border-left-color: #9b59b6; }
-        .stat-card:nth-child(5) { border-left-color: #e74c3c; }
+        .stat-card:nth-child(3) { border-left-color: #17a2b8; }
+        .stat-card:nth-child(4) { border-left-color: #28a745; }
+        .stat-card:nth-child(5) { border-left-color: #9b59b6; }
+        .stat-card:nth-child(6) { border-left-color: #e74c3c; }
 
         .stat-number {
             font-size: 32px;
@@ -475,7 +587,6 @@ function formatarDataPorExtensor($data) {
             padding-right: 5px;
         }
 
-        /* Barra de rolagem personalizada */
         .appointments-container::-webkit-scrollbar {
             width: 10px;
         }
@@ -700,7 +811,6 @@ function formatarDataPorExtensor($data) {
             justify-content: center;
         }
 
-        /* CORRIGIDO: Status pendente em amarelo */
         .status-pendente {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             color: #856404;
@@ -715,7 +825,7 @@ function formatarDataPorExtensor($data) {
             100% { transform: scale(1); box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4); }
         }
 
-        .status-confirmado {
+        .status-confirmado, .status-concluido {
             background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
             color: white;
             border: 2px solid #27ae60;
@@ -828,6 +938,42 @@ function formatarDataPorExtensor($data) {
             box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
         }
 
+        .btn-admin.concluir {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .btn-admin.concluir:hover {
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-admin-excluir-destaque {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: 3px solid #dc3545;
+            padding: 15px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 250px;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-admin-excluir-destaque:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.5);
+            border-color: #bd2130;
+        }
+
         .card-footer {
             display: flex;
             justify-content: space-between;
@@ -847,7 +993,56 @@ function formatarDataPorExtensor($data) {
         }
 
         .past-day {
-            opacity: 0.9;
+            opacity: 0.8;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left-color: #6c757d;
+        }
+
+        .past-day .day-header {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: #dee2e6;
+        }
+
+        .past-day .appointment-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #ced4da;
+        }
+
+        .past-day .appointment-card:hover {
+            border-color: #6c757d;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
+        .past-day .appointment-card.empresa-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #ced4da;
+        }
+
+        .past-day .appointment-card.pendente-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #ced4da;
+            animation: none;
+        }
+
+        .past-day .appointment-id {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+
+        .past-day .appointment-time {
+            color: #6c757d;
+        }
+
+        .past-day .appointment-info h4 {
+            color: #6c757d;
+        }
+
+        .past-day .appointment-info h4.empresa-name {
+            color: #6c757d;
+        }
+
+        .past-day .appointment-info p {
+            color: #868e96;
         }
 
         .no-appointments {
@@ -866,7 +1061,6 @@ function formatarDataPorExtensor($data) {
             opacity: 0.5;
         }
 
-        /* Pop-up personalizado */
         .custom-popup-overlay {
             position: fixed;
             top: 0;
@@ -1031,9 +1225,9 @@ function formatarDataPorExtensor($data) {
                 <span><i class="fa-solid fa-user-shield"></i> <?php echo htmlspecialchars($_SESSION['usuario_nome']); ?> (<?php echo ucfirst($_SESSION['tipo_usuario']); ?>)</span>
             </div>
             <?php if ($_SESSION['tipo_usuario'] === 'admin'): ?>
-            <a href="configuracoes.php" class="btn-header config">
+            <a href="pag_usuarios.php" class="btn-header config">
                 <i class="fa-solid fa-cog"></i>
-                Configurações
+                Usuarios
             </a>
             <?php endif; ?>
             <a href="../front-end/pag_inicial.html" class="btn-header">
@@ -1091,7 +1285,8 @@ function formatarDataPorExtensor($data) {
                         <select id="status" name="status">
                             <option value="">Todos os Status</option>
                             <option value="pendente" <?php echo $filtro_status === 'pendente' ? 'selected' : ''; ?>>Pendente</option>
-                            <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
+                            <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado (Ativo)</option>
+                            <option value="concluido" <?php echo $filtro_status === 'concluido' ? 'selected' : ''; ?>>Concluído (Passado)</option>
                             <option value="cancelado" <?php echo $filtro_status === 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
                             <option value="negado" <?php echo $filtro_status === 'negado' ? 'selected' : ''; ?>>Negado</option>
                         </select>
@@ -1115,8 +1310,21 @@ function formatarDataPorExtensor($data) {
                 <div class="stat-label"><i class="fa-solid fa-clock"></i> Aguardando Aprovação</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado')); ?></div>
-                <div class="stat-label"><i class="fa-solid fa-check-circle"></i> Confirmados</div>
+                <div class="stat-number"><?php 
+                    $hoje = date('Y-m-d');
+                    echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= $hoje)); 
+                ?></div>
+                <div class="stat-label"><i class="fa-solid fa-check-circle"></i> Confirmados (Ativos)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php 
+                    $hoje = date('Y-m-d');
+                    echo count(array_filter($agendamentos, fn($a) => 
+                        $a['status'] === 'concluido' || 
+                        ($a['status'] === 'confirmado' && $a['data_agendamento'] < $hoje)
+                    )); 
+                ?></div>
+                <div class="stat-label"><i class="fa-solid fa-check-double"></i> Concluídos (Passado)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
@@ -1137,7 +1345,7 @@ function formatarDataPorExtensor($data) {
                     $is_past = ($data < $hoje);
                     $day_class = $is_today ? 'today-highlight' : ($is_past ? 'past-day' : '');
                     ?>
-                    <div class="day-section <?php echo $day_class; ?>">
+                    <div class="day-section <?php echo $day_class; ?>" id="day-section-<?php echo $data; ?>">
                         <div class="day-header">
                             <div>
                                 <div class="day-title">
@@ -1150,10 +1358,22 @@ function formatarDataPorExtensor($data) {
                                     <?php endif; ?>
                                 </div>
                                 <div class="day-date"><?php echo formatarDataPorExtensor($data); ?></div>
+                                
+                                <!-- BOTÃO EXCLUIR PERMANENTEMENTE - APENAS para dias passados -->
+                                <?php if ($is_past): ?>
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #dc3545; text-align: center;">
+                                    <button type="button" class="btn-admin-excluir-destaque" 
+                                            onclick="excluirTodosAgendamentosDia('<?php echo $data; ?>')">
+                                        <i class="fa-solid fa-trash-alt"></i> EXCLUIR TODOS AGENDAMENTOS DESTE DIA
+                                    </button>
+                                </div>
+                                <?php endif; ?>
                             </div>
                             <div class="day-stats">
                                 <div class="day-count">
-                                    <i class="fa-solid fa-users"></i> <?php echo count($agendamentos_do_dia); ?> agendamento<?php echo count($agendamentos_do_dia) != 1 ? 's' : ''; ?>
+                                    <i class="fa-solid fa-users"></i> 
+                                    <span id="count-agendamentos-<?php echo $data; ?>"><?php echo count($agendamentos_do_dia); ?></span> 
+                                    agendamento<?php echo count($agendamentos_do_dia) != 1 ? 's' : ''; ?>
                                 </div>
                                 <div class="day-count">
                                     <i class="fa-solid fa-clock"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['status'] === 'pendente')); ?> pendente<?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['status'] === 'pendente')) != 1 ? 's' : ''; ?>
@@ -1164,7 +1384,7 @@ function formatarDataPorExtensor($data) {
                             </div>
                         </div>
                         
-                        <div class="appointments-grid">
+                        <div class="appointments-grid" id="appointments-grid-<?php echo $data; ?>">
                             <?php foreach ($agendamentos_do_dia as $agendamento): 
                                 $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
                                 $isPendente = $agendamento['status'] === 'pendente';
@@ -1176,7 +1396,7 @@ function formatarDataPorExtensor($data) {
                                     $cardClass = 'empresa-card';
                                 }
                             ?>
-                            <div class="appointment-card <?php echo $cardClass; ?>">
+                            <div class="appointment-card <?php echo $cardClass; ?>" id="card-<?php echo $agendamento['id']; ?>">
                                 <div class="appointment-header">
                                     <div class="appointment-id <?php echo $isEmpresa ? 'empresa' : ''; ?> <?php echo $isPendente ? 'pendente' : ''; ?>">
                                         <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
@@ -1216,7 +1436,13 @@ function formatarDataPorExtensor($data) {
                                     <div>
                                         <span class="status status-<?php echo $agendamento['status']; ?>">
                                             <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                                <i class="fa-solid fa-check-circle"></i> CONFIRMADO
+                                                <?php if ($is_past): ?>
+                                                    <i class="fa-solid fa-check-double"></i> CONCLUÍDO
+                                                <?php else: ?>
+                                                    <i class="fa-solid fa-check-circle"></i> CONFIRMADO
+                                                <?php endif; ?>
+                                            <?php elseif ($agendamento['status'] === 'concluido'): ?>
+                                                <i class="fa-solid fa-check-double"></i> CONCLUÍDO
                                             <?php elseif ($agendamento['status'] === 'pendente'): ?>
                                                 <i class="fa-solid fa-clock"></i> PENDENTE
                                             <?php elseif ($agendamento['status'] === 'negado'): ?>
@@ -1244,42 +1470,65 @@ function formatarDataPorExtensor($data) {
 
                                 <!-- AÇÕES ADMINISTRATIVAS -->
                                 <div class="admin-actions">
-                                    <?php if ($agendamento['status'] === 'pendente'): ?>
-                                        <form method="POST" style="display: inline;" action="">
-                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                            <input type="hidden" name="acao" value="confirmar">
-                                            <button type="submit" class="btn-admin confirmar">
-                                                <i class="fa-solid fa-check"></i> Confirmar
-                                            </button>
-                                        </form>
-                                        <form method="POST" style="display: inline;" action="">
-                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                            <input type="hidden" name="acao" value="negar">
-                                            <button type="submit" class="btn-admin negar">
-                                                <i class="fa-solid fa-times"></i> Negar
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                        <form method="POST" style="display: inline;" action="" id="form-cancelar-<?php echo $agendamento['id']; ?>">
-                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                            <input type="hidden" name="acao" value="cancelar">
-                                            <button type="button" class="btn-admin cancelar"
-                                                    onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('form-cancelar-<?php echo $agendamento['id']; ?>').submit(); })">
-                                                <i class="fa-solid fa-ban"></i> Cancelar
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                    
-                                    <form method="POST" style="display: inline;" action="" id="form-remover-<?php echo $agendamento['id']; ?>">
-                                        <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                        <input type="hidden" name="acao" value="remover">
+                                    <?php if ($is_past): ?>
+                                        <!-- Botão individual de exclusão para dias passados -->
                                         <button type="button" class="btn-admin remover"
-                                                onclick="showCustomConfirm('Tem certeza que deseja remover este agendamento? Esta ação não pode ser desfeita!', () => { document.getElementById('form-remover-<?php echo $agendamento['id']; ?>').submit(); })">
-                                            <i class="fa-solid fa-trash"></i> Remover
+                                                onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
+                                            <i class="fa-solid fa-trash"></i> Excluir Este
                                         </button>
-                                    </form>
+                                    <?php else: ?>
+                                        <!-- Ações normais para dias atuais/futuros -->
+                                        <?php if ($agendamento['status'] === 'pendente'): ?>
+                                            <form method="POST" style="display: inline;" action="">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="acao" value="confirmar">
+                                                <button type="submit" class="btn-admin confirmar">
+                                                    <i class="fa-solid fa-check"></i> Confirmar
+                                                </button>
+                                            </form>
+                                            <form method="POST" style="display: inline;" action="">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="acao" value="negar">
+                                                <button type="submit" class="btn-admin negar">
+                                                    <i class="fa-solid fa-times"></i> Negar
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        
+                                        <?php if ($agendamento['status'] === 'confirmado'): ?>
+                                            <form method="POST" style="display: inline;" action="">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="acao" value="concluir">
+                                                <button type="submit" class="btn-admin concluir">
+                                                    <i class="fa-solid fa-check-double"></i> Concluir
+                                                </button>
+                                            </form>
+                                            <form method="POST" style="display: inline;" action="" id="form-cancelar-<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="acao" value="cancelar">
+                                                <button type="button" class="btn-admin cancelar"
+                                                        onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('form-cancelar-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                    <i class="fa-solid fa-ban"></i> Cancelar
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+                                        
+                                        <!-- NOVO: Botão de excluir para agendamentos cancelados -->
+                                        <?php if ($agendamento['status'] === 'cancelado'): ?>
+                                            <button type="button" class="btn-admin remover"
+                                                    onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
+                                                <i class="fa-solid fa-trash"></i> Excluir Cancelado
+                                            </button>
+                                        <?php endif; ?>
+                                        
+                                        <!-- NOVO: Botão de excluir para agendamentos negados -->
+                                        <?php if ($agendamento['status'] === 'negado'): ?>
+                                            <button type="button" class="btn-admin remover"
+                                                    onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
+                                                <i class="fa-solid fa-trash"></i> Excluir Negado
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <?php endforeach; ?>
@@ -1297,6 +1546,187 @@ function formatarDataPorExtensor($data) {
     </div>
 
     <script>
+        // Função para excluir agendamento individual
+        function excluirAgendamentoIndividual(agendamentoId, data) {
+            showCustomConfirm(
+                '⚠️ ATENÇÃO: Deseja EXCLUIR permanentemente este agendamento?\n\nEsta ação não pode ser desfeita!',
+                () => {
+                    // Fazer requisição AJAX para excluir
+                    fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `agendamento_id=${agendamentoId}&acao=excluir`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remover o card da interface
+                            const card = document.getElementById(`card-${agendamentoId}`);
+                            if (card) {
+                                card.style.transition = 'all 0.5s ease';
+                                card.style.opacity = '0';
+                                card.style.transform = 'translateX(-100%)';
+                                
+                                setTimeout(() => {
+                                    card.remove();
+                                    
+                                    // Verificar se ainda há cards neste dia
+                                    const grid = document.getElementById(`appointments-grid-${data}`);
+                                    const remainingCards = grid.querySelectorAll('.appointment-card');
+                                    
+                                    if (remainingCards.length === 0) {
+                                        // Remover toda a seção do dia
+                                        const daySection = document.getElementById(`day-section-${data}`);
+                                        if (daySection) {
+                                            daySection.style.transition = 'all 0.5s ease';
+                                            daySection.style.opacity = '0';
+                                            daySection.style.transform = 'translateY(-20px)';
+                                            
+                                            setTimeout(() => {
+                                                daySection.remove();
+                                                
+                                                // Mostrar mensagem se não há mais agendamentos
+                                                checkIfNoAppointments();
+                                            }, 500);
+                                        }
+                                    } else {
+                                        // Atualizar contador
+                                        const counter = document.getElementById(`count-agendamentos-${data}`);
+                                        if (counter) {
+                                            counter.textContent = remainingCards.length;
+                                        }
+                                    }
+                                    
+                                    // Mostrar mensagem de sucesso
+                                    showSuccessMessage('Agendamento excluído permanentemente com sucesso!');
+                                }, 500);
+                            }
+                        } else {
+                            alert('Erro ao excluir agendamento. Tente novamente.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        alert('Erro ao excluir agendamento. Tente novamente.');
+                    });
+                }
+            );
+        }
+
+        // Função para excluir todos os agendamentos de um dia
+        function excluirTodosAgendamentosDia(data) {
+            const grid = document.getElementById(`appointments-grid-${data}`);
+            const cards = grid.querySelectorAll('.appointment-card');
+            const totalCards = cards.length;
+            
+            if (totalCards === 0) {
+                alert('Não há agendamentos para excluir neste dia.');
+                return;
+            }
+            
+            showCustomConfirm(
+                `⚠️ ATENÇÃO CRÍTICA: Deseja EXCLUIR PERMANENTEMENTE todos os ${totalCards} agendamento(s) do dia ${formatarData(data)}?\n\nEsta ação é IRREVERSÍVEL e removerá completamente este dia da lista!`,
+                () => {
+                    let excluidos = 0;
+                    const agendamentoIds = Array.from(cards).map(card => {
+                        const id = card.id.replace('card-', '');
+                        return id;
+                    });
+                    
+                    // Excluir cada agendamento
+                    agendamentoIds.forEach((id, index) => {
+                        fetch('', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: `agendamento_id=${id}&acao=excluir`
+                        })
+                        .then(response => response.json())
+                        .then(responseData => {
+                            excluidos++;
+                            
+                            // Quando todos foram excluídos
+                            if (excluidos === agendamentoIds.length) {
+                                // Remover toda a seção do dia com animação
+                                const daySection = document.getElementById(`day-section-${data}`);
+                                if (daySection) {
+                                    daySection.style.transition = 'all 0.8s ease';
+                                    daySection.style.opacity = '0';
+                                    daySection.style.transform = 'translateY(-50px) scale(0.95)';
+                                    
+                                    setTimeout(() => {
+                                        daySection.remove();
+                                        
+                                        // Verificar se ainda há dias
+                                        checkIfNoAppointments();
+                                        
+                                        // Mostrar mensagem de sucesso
+                                        showSuccessMessage(`Todos os agendamentos do dia foram excluídos permanentemente!`);
+                                    }, 800);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao excluir agendamento:', error);
+                        });
+                    });
+                }
+            );
+        }
+
+        // Função para verificar se não há mais agendamentos
+        function checkIfNoAppointments() {
+            const container = document.querySelector('.appointments-container');
+            const daySections = container.querySelectorAll('.day-section');
+            
+            if (daySections.length === 0) {
+                container.innerHTML = `
+                    <div class="no-appointments">
+                        <i class="fa-solid fa-calendar-times"></i><br>
+                        <strong>Nenhum agendamento encontrado</strong><br>
+                        <small>Todos os agendamentos foram removidos ou não há agendamentos no período selecionado</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Função para mostrar mensagem de sucesso
+        function showSuccessMessage(message) {
+            // Remover mensagens anteriores
+            const existingAlerts = document.querySelectorAll('.alert-success');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            // Criar nova mensagem
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success';
+            alertDiv.innerHTML = `
+                <i class="fa-solid fa-check-circle"></i>
+                ${message}
+            `;
+            
+            // Inserir no início do conteúdo
+            const content = document.querySelector('.content');
+            const pageTitle = content.querySelector('.page-title');
+            content.insertBefore(alertDiv, pageTitle.nextSibling);
+            
+            // Remover após 5 segundos
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 5000);
+        }
+
+        // Função auxiliar para formatar data
+        function formatarData(data) {
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
         // Sistema de pop-up personalizado
         function showCustomConfirm(message, onConfirm) {
             const overlay = document.getElementById('popup-overlay');

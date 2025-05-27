@@ -13,6 +13,38 @@ if (!in_array($_SESSION['tipo_usuario'], ['operador', 'admin'])) {
     exit();
 }
 
+// Processar remoção de agendamentos concluídos
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao']) && $_POST['acao'] === 'remover_concluido') {
+    $agendamento_id = $_POST['agendamento_id'] ?? '';
+    
+    if (!empty($agendamento_id)) {
+        try {
+            $conexao = conectarBanco();
+            
+            // Verificar se o agendamento está concluído
+            $stmt = $conexao->prepare("SELECT status, data_agendamento FROM agendamentos WHERE id = ?");
+            $stmt->execute([$agendamento_id]);
+            $agendamento = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($agendamento && $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < date('Y-m-d')) {
+                // Remover o agendamento concluído
+                $stmt = $conexao->prepare("DELETE FROM agendamentos WHERE id = ?");
+                $stmt->execute([$agendamento_id]);
+                
+                if ($stmt->rowCount() > 0) {
+                    $mensagem_sucesso = "Agendamento concluído removido com sucesso.";
+                } else {
+                    $mensagem_erro = "Erro ao remover agendamento.";
+                }
+            } else {
+                $mensagem_erro = "Apenas agendamentos concluídos podem ser removidos.";
+            }
+        } catch (PDOException $e) {
+            $mensagem_erro = "Erro ao remover agendamento: " . $e->getMessage();
+        }
+    }
+}
+
 // Buscar agendamentos
 try {
     $conexao = conectarBanco();
@@ -34,18 +66,36 @@ try {
     // CORREÇÃO: Operador NÃO deve ver agendamentos pendentes
     // Se não há filtro específico de status, excluir pendentes automaticamente
     if (empty($filtro_status)) {
-        $filtros['status_excluir'] = ['pendente', 'cancelado'];
-    } elseif ($filtro_status === 'pendente' || $filtro_status === 'cancelado') {
-    // Se operador tentar filtrar por pendente ou cancelado, redirecionar sem esse filtro
-    $url_redirect = $_SERVER['PHP_SELF'] . '?';
-    $params = $_GET;
-    unset($params['status']);
-    $url_redirect .= http_build_query($params);
-    header("Location: $url_redirect");
-    exit();
-}
+        $filtros['status_excluir'] = 'pendente';
+    } elseif ($filtro_status === 'pendente') {
+        // Se operador tentar filtrar por pendente, redirecionar sem esse filtro
+        $url_redirect = $_SERVER['PHP_SELF'] . '?';
+        $params = $_GET;
+        unset($params['status']);
+        $url_redirect .= http_build_query($params);
+        header("Location: $url_redirect");
+        exit();
+    }
     
     $agendamentos = buscarAgendamentosCompletos($filtros);
+    
+    // Separar agendamentos por status temporal
+    $agendamentos_atuais = [];
+    $agendamentos_concluidos = [];
+    
+    foreach ($agendamentos as $agendamento) {
+        // Determinar se está concluído (confirmado e data passou)
+        if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
+            $agendamento['status_display'] = 'concluido';
+            $agendamentos_concluidos[] = $agendamento;
+        } else {
+            $agendamento['status_display'] = $agendamento['status'];
+            $agendamentos_atuais[] = $agendamento;
+        }
+    }
+    
+    // Reorganizar: atuais primeiro, concluídos por último
+    $agendamentos = array_merge($agendamentos_atuais, $agendamentos_concluidos);
     
     // Organizar agendamentos por data
     $agendamentos_por_data = [];
@@ -57,8 +107,24 @@ try {
         $agendamentos_por_data[$data][] = $agendamento;
     }
     
-    // Ordenar datas
-    ksort($agendamentos_por_data);
+    // Ordenar datas: futuras/hoje primeiro, passadas por último
+    $datas_futuras = [];
+    $datas_passadas = [];
+    
+    foreach ($agendamentos_por_data as $data => $agends) {
+        if ($data >= $hoje) {
+            $datas_futuras[$data] = $agends;
+        } else {
+            $datas_passadas[$data] = $agends;
+        }
+    }
+    
+    // Ordenar futuras crescente, passadas decrescente
+    ksort($datas_futuras);
+    krsort($datas_passadas);
+    
+    // Reorganizar: futuras primeiro, passadas depois
+    $agendamentos_por_data = array_merge($datas_futuras, $datas_passadas);
     
 } catch (PDOException $e) {
     $mensagem_erro = "Erro ao buscar agendamentos: " . $e->getMessage();
@@ -217,6 +283,25 @@ function formatarDataPorExtensor($data) {
             line-height: 1.5;
         }
 
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+
         .filters {
             background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
             padding: 25px;
@@ -328,6 +413,17 @@ function formatarDataPorExtensor($data) {
             background-color: #e0a800;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
         }
 
         .stats {
@@ -454,6 +550,16 @@ function formatarDataPorExtensor($data) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
+        /* NOVO: Seção de dias passados com aparência diferente */
+        .day-section.past-day {
+            opacity: 0.8;
+            border-left-color: #6c757d;
+        }
+
+        .day-section.past-day .day-header {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+
         .day-header {
             background: linear-gradient(135deg, rgba(64, 122, 53, 0.819) 0%, rgba(44, 81, 36, 0.819) 100%);
             color: white;
@@ -540,6 +646,18 @@ function formatarDataPorExtensor($data) {
             border-color: #1e7e34;
         }
 
+        /* NOVO: Cards cinza para agendamentos concluídos */
+        .appointment-card.concluido-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #6c757d;
+            opacity: 0.85;
+        }
+
+        .appointment-card.concluido-card:hover {
+            border-color: #5a6268;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
         .appointment-header {
             display: flex;
             justify-content: space-between;
@@ -562,6 +680,11 @@ function formatarDataPorExtensor($data) {
         .appointment-id.empresa {
             background-color: rgba(255, 193, 7, 0.2);
             color: #856404;
+        }
+
+        .appointment-id.concluido {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
         }
 
         .appointment-time {
@@ -648,6 +771,13 @@ function formatarDataPorExtensor($data) {
             border: 2px solid #dc3545;
         }
 
+        /* NOVO: Status concluído em cinza */
+        .status-concluido {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            color: #495057;
+            border: 2px solid #6c757d;
+        }
+
         .user-type {
             padding: 6px 12px;
             border-radius: 15px;
@@ -701,24 +831,6 @@ function formatarDataPorExtensor($data) {
             background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
         }
 
-        .past-day {
-            opacity: 0.8;
-        }
-
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-        }
-
-        .alert-danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-
-        /* Melhorias visuais extras */
         .card-footer {
             display: flex;
             justify-content: space-between;
@@ -749,6 +861,149 @@ function formatarDataPorExtensor($data) {
         .badge-past {
             background-color: #6c757d;
             color: white;
+        }
+
+        /* NOVO: Botão de remoção para concluídos */
+        .btn-remove-completed {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-remove-completed:hover {
+            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        /* NOVO: Aviso sobre PDF */
+        .pdf-warning {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .pdf-warning h5 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .pdf-warning p {
+            color: #856404;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        /* Pop-up personalizado */
+        .custom-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+
+        .custom-popup {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            animation: popupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(64, 122, 53, 0.1);
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.7) translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .popup-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: rgba(64, 122, 53, 0.819);
+            margin-bottom: 15px;
+        }
+
+        .popup-message {
+            font-size: 16px;
+            color: rgb(100, 100, 100);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .popup-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .popup-btn-confirm {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+
+        .popup-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        }
+
+        .popup-btn-cancel {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .popup-btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
         }
 
         @media (max-width: 768px) {
@@ -800,10 +1055,29 @@ function formatarDataPorExtensor($data) {
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .popup-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Pop-up personalizado -->
+    <div class="custom-popup-overlay" id="popup-overlay">
+        <div class="custom-popup">
+            <div class="popup-icon" id="popup-icon">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+            </div>
+            <div class="popup-title" id="popup-title">Confirmar Ação</div>
+            <div class="popup-message" id="popup-message">Tem certeza que deseja realizar esta ação?</div>
+            <div class="popup-buttons">
+                <button class="popup-btn popup-btn-confirm" id="popup-confirm">Confirmar</button>
+                <button class="popup-btn popup-btn-cancel" id="popup-cancel">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="header">
         <h1><i class="fa-solid fa-chart-line"></i> Painel do Operador</h1>
         <div class="user-info">
@@ -815,6 +1089,13 @@ function formatarDataPorExtensor($data) {
     </div>
 
     <div class="content">
+        <?php if (isset($mensagem_sucesso)): ?>
+            <div class="alert alert-success">
+                <i class="fa-solid fa-check-circle"></i>
+                <?php echo htmlspecialchars($mensagem_sucesso); ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($mensagem_erro)): ?>
             <div class="alert alert-danger">
                 <i class="fa-solid fa-exclamation-triangle"></i>
@@ -830,8 +1111,19 @@ function formatarDataPorExtensor($data) {
         <!-- NOVO: Aviso sobre política de acesso para operadores -->
         <div class="operador-info">
             <h4><i class="fa-solid fa-info-circle"></i> Informação para Operadores</h4>
-            <p>Como operador, você visualiza apenas agendamentos <strong>confirmados</strong>, <strong>cancelados</strong> e <strong>negados</strong>. Agendamentos pendentes são visíveis apenas para administradores.</p>
+            <p>Como operador, você visualiza apenas agendamentos <strong>confirmados</strong>, <strong>cancelados</strong>, <strong>negados</strong> e <strong>concluídos</strong>. Agendamentos pendentes são visíveis apenas para administradores.</p>
         </div>
+
+        <?php if (count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) > 0): ?>
+        <!-- NOVO: Aviso sobre agendamentos concluídos -->
+        <div class="pdf-warning">
+            <h5><i class="fa-solid fa-exclamation-triangle"></i> Agendamentos Concluídos Detectados</h5>
+            <p>Há agendamentos concluídos na lista. <strong>Recomendamos salvar um PDF dos dados antes de removê-los</strong>, pois a remoção é permanente.</p>
+            <button type="button" class="btn btn-warning" onclick="exportarPDF()">
+                <i class="fa-solid fa-file-pdf"></i> Salvar PDF Antes de Remover
+            </button>
+        </div>
+        <?php endif; ?>
 
         <div class="filters">
             <h3><i class="fa-solid fa-filter"></i> Filtros e Controles</h3>
@@ -890,8 +1182,12 @@ function formatarDataPorExtensor($data) {
                 <div class="stat-label"><i class="fa-solid fa-calendar-check"></i> Total de Agendamentos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado')); ?></div>
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= date('Y-m-d'))); ?></div>
                 <div class="stat-label"><i class="fa-solid fa-check-circle"></i> Confirmados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?></div>
+                <div class="stat-label"><i class="fa-solid fa-flag-checkered"></i> Concluídos</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'cancelado')); ?></div>
@@ -953,6 +1249,11 @@ function formatarDataPorExtensor($data) {
                                 <div class="day-count">
                                     <i class="fa-solid fa-building"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?> empresa<?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')) != 1 ? 's' : ''; ?>
                                 </div>
+                                <?php if ($is_past): ?>
+                                <div class="day-count">
+                                    <i class="fa-solid fa-flag-checkered"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?> concluído<?php echo count(array_filter($agendamentos_do_dia, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) != 1 ? 's' : ''; ?>
+                                </div>
+                                <?php endif; ?>
                                 <button type="button" class="btn btn-warning" onclick="exportarDataEspecificaDireta('<?php echo $data; ?>', 'pdf')" style="font-size: 12px; padding: 6px 12px;">
                                     <i class="fa-solid fa-download"></i> PDF
                                 </button>
@@ -962,14 +1263,16 @@ function formatarDataPorExtensor($data) {
                         <div class="appointments-grid">
                             <?php foreach ($agendamentos_do_dia as $agendamento): 
                                 $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
+                                $isConcluido = isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido';
                                 
-                                // NOVO: Definir classe baseada no tipo de usuário
-                                if (!$isEmpresa && $agendamento['usuario_id']) {
+                                // NOVO: Definir classe baseada no tipo de usuário e status
+                                $cardClass = '';
+                                if ($isConcluido) {
+                                    $cardClass = 'concluido-card';  // Cinza para concluídos
+                                } elseif (!$isEmpresa && $agendamento['usuario_id']) {
                                     $cardClass = 'user-logado-card';  // Verde claro para usuários logados
                                 } elseif ($isEmpresa) {
                                     $cardClass = 'empresa-card';      // Amarelo para empresas
-                                } else {
-                                    $cardClass = '';                  // Padrão para anônimos
                                 }
                                 
                                 // Badge para data
@@ -988,8 +1291,11 @@ function formatarDataPorExtensor($data) {
                             ?>
                             <div class="appointment-card <?php echo $cardClass; ?>">
                                 <div class="appointment-header">
-                                    <div class="appointment-id <?php echo $isEmpresa ? 'empresa' : ''; ?>">
+                                    <div class="appointment-id <?php echo $isEmpresa ? 'empresa' : ''; ?> <?php echo $isConcluido ? 'concluido' : ''; ?>">
                                         <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
+                                        <?php if ($isConcluido): ?>
+                                            <span style="color: #6c757d; font-size: 10px; font-weight: bold;">CONCLUÍDO</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="appointment-time">
                                         <i class="fa-solid fa-clock"></i> <?php echo date('H:i', strtotime($agendamento['hora_agendamento'])); ?>
@@ -1017,19 +1323,23 @@ function formatarDataPorExtensor($data) {
                                     <?php if ($agendamento['data_cancelamento']): ?>
                                     <p><i class="fa-solid fa-calendar-times"></i> Cancelado: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?></p>
                                     <?php endif; ?>
+                                    <?php if ($isConcluido): ?>
+                                    <p><i class="fa-solid fa-flag-checkered"></i> Concluído: <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></p>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="card-footer">
                                     <div>
-                                        <span class="status status-<?php echo $agendamento['status']; ?>">
-                                            <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                                <i class="fa-solid fa-check-circle"></i>
+                                        <span class="status status-<?php echo $isConcluido ? 'concluido' : $agendamento['status']; ?>">
+                                            <?php if ($isConcluido): ?>
+                                                <i class="fa-solid fa-flag-checkered"></i> CONCLUÍDO
+                                            <?php elseif ($agendamento['status'] === 'confirmado'): ?>
+                                                <i class="fa-solid fa-check-circle"></i> CONFIRMADO
                                             <?php elseif ($agendamento['status'] === 'negado'): ?>
-                                                <i class="fa-solid fa-times-circle"></i>
+                                                <i class="fa-solid fa-times-circle"></i> NEGADO
                                             <?php else: ?>
-                                                <i class="fa-solid fa-ban"></i>
+                                                <i class="fa-solid fa-ban"></i> CANCELADO
                                             <?php endif; ?>
-                                            <?php echo ucfirst($agendamento['status']); ?>
                                         </span>
                                         
                                         <?php if ($isEmpresa): ?>
@@ -1044,6 +1354,17 @@ function formatarDataPorExtensor($data) {
                                             <span class="user-type user-anonimo">
                                                 <i class="fa-solid fa-user-secret"></i> Usuário Anônimo
                                             </span>
+                                        <?php endif; ?>
+
+                                        <?php if ($isConcluido): ?>
+                                            <form method="POST" style="display: inline;" action="" id="form-remover-concluido-<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                                <input type="hidden" name="acao" value="remover_concluido">
+                                                <button type="button" class="btn-remove-completed"
+                                                        onclick="showCustomConfirm('⚠️ ATENÇÃO: Tem certeza que deseja remover este agendamento concluído?\n\nRecomendamos salvar um PDF antes da remoção, pois esta ação é PERMANENTE e não pode ser desfeita!', () => { document.getElementById('form-remover-concluido-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                    <i class="fa-solid fa-trash"></i> Remover
+                                                </button>
+                                            </form>
                                         <?php endif; ?>
                                     </div>
                                     
@@ -1097,6 +1418,38 @@ function formatarDataPorExtensor($data) {
             params.append('data_especifica', data);
             
             window.open('exportar_relatorio.php?' + params.toString(), '_blank');
+        }
+
+        // Sistema de pop-up personalizado
+        function showCustomConfirm(message, onConfirm) {
+            const overlay = document.getElementById('popup-overlay');
+            const messageElement = document.getElementById('popup-message');
+            const confirmBtn = document.getElementById('popup-confirm');
+            const cancelBtn = document.getElementById('popup-cancel');
+            
+            messageElement.textContent = message;
+            overlay.style.display = 'flex';
+            
+            // Remover listeners anteriores
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+            
+            // Adicionar novos listeners
+            confirmBtn.onclick = function() {
+                overlay.style.display = 'none';
+                onConfirm();
+            };
+            
+            cancelBtn.onclick = function() {
+                overlay.style.display = 'none';
+            };
+            
+            // Fechar com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    overlay.style.display = 'none';
+                }
+            });
         }
 
         // Scroll suave para o dia atual

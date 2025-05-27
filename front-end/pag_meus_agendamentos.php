@@ -358,6 +358,17 @@ try {
             box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
         }
 
+        .appointment-card.concluido-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left-color: #6c757d;
+            opacity: 0.85;
+        }
+
+        .appointment-card.concluido-card:hover {
+            border-left-color: #5a6268;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
         .appointment-header {
             display: flex;
             justify-content: space-between;
@@ -400,9 +411,9 @@ try {
         }
 
         .status-concluido {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: #155724;
-            border: 2px solid #28a745;
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            color: #495057;
+            border: 2px solid #6c757d;
         }
 
         .status-cancelado {
@@ -781,7 +792,9 @@ try {
                             $isNegado = $agendamento['status'] === 'negado';
                             
                             $cardClass = '';
-                            if ($isPendente) {
+                            if ($isConcluido) {
+                                $cardClass = 'concluido-card';
+                            } elseif ($isPendente) {
                                 $cardClass = 'pending-card';
                             }
                             
@@ -805,7 +818,7 @@ try {
                                     <?php if ($isPendente): ?>
                                         <i class="fa-solid fa-clock"></i> Pendente
                                     <?php elseif ($isConcluido): ?>
-                                        <i class="fa-solid fa-check-circle"></i> Concluído
+                                        <i class="fa-solid fa-flag-checkered"></i> Concluído
                                     <?php elseif ($agendamento['status'] === 'confirmado'): ?>
                                         <i class="fa-solid fa-calendar-check"></i> Confirmado
                                     <?php elseif ($isNegado): ?>
@@ -834,10 +847,10 @@ try {
                                 
                                 <?php if ($isPendente): ?>
                                     <p><i class="fa-solid fa-hourglass-half"></i> <strong>Status:</strong> Aguardando aprovação da administração</p>
+                                <?php elseif ($isConcluido): ?>
+                                    <p><i class="fa-solid fa-flag-checkered"></i> <strong>Visita concluída em:</strong> <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></p>
                                 <?php elseif ($agendamento['data_cancelamento']): ?>
                                     <p><i class="fa-solid fa-calendar-times"></i> <strong>Cancelado em:</strong> <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?></p>
-                                <?php elseif ($isConcluido): ?>
-                                    <p><i class="fa-solid fa-check-double"></i> <strong>Visita concluída em:</strong> <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></p>
                                 <?php elseif ($isNegado): ?>
                                     <p><i class="fa-solid fa-times"></i> <strong>Status:</strong> Solicitação não aprovada pela administração</p>
                                 <?php endif; ?>

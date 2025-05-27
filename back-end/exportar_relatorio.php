@@ -66,6 +66,16 @@ try {
     $stmt->execute($params);
     $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+    // NOVO: Determinar status de exibição (incluindo concluído)
+    $hoje = date('Y-m-d');
+    foreach ($agendamentos as &$agendamento) {
+        if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
+            $agendamento['status_display'] = 'concluido';
+        } else {
+            $agendamento['status_display'] = $agendamento['status'];
+        }
+    }
+    
 } catch (PDOException $e) {
     die("Erro ao buscar dados: " . $e->getMessage());
 }
@@ -117,6 +127,14 @@ if ($export_type === 'excel') {
             $tipoUsuario = 'Anônimo';
         }
         
+        // NOVO: Status para exibição (incluindo concluído)
+        $statusExibicao = '';
+        if ($agendamento['status_display'] === 'concluido') {
+            $statusExibicao = 'Concluído';
+        } else {
+            $statusExibicao = ucfirst($agendamento['status']);
+        }
+        
         fputcsv($output, [
             $agendamento['id'],
             $agendamento['nome'],
@@ -125,7 +143,7 @@ if ($export_type === 'excel') {
             date('d/m/Y', strtotime($agendamento['data_agendamento'])),
             date('H:i', strtotime($agendamento['hora_agendamento'])),
             $agendamento['quantidade_pessoas'] ?? 1,
-            ucfirst($agendamento['status']),
+            $statusExibicao,
             $tipoUsuario,
             date('d/m/Y H:i', strtotime($agendamento['data_criacao'])),
             $agendamento['data_cancelamento'] ? date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])) : ''
@@ -288,6 +306,15 @@ if ($export_type === 'excel') {
                 font-size: 10px;
             }
             
+            /* NOVO: Status concluído */
+            .status-concluido {
+                background-color: #e9ecef;
+                color: #495057;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
             .footer {
                 margin-top: 30px;
                 text-align: center;
@@ -364,6 +391,13 @@ if ($export_type === 'excel') {
                 border: 2px solid #ffc107;
             }
             
+            /* NOVO: Destaque para agendamentos concluídos */
+            .concluido-row {
+                background-color: #f8f9fa !important;
+                opacity: 0.85;
+                border-left: 4px solid #6c757d;
+            }
+            
             @media print {
                 body { margin: 0; }
                 .no-print { display: none; }
@@ -418,8 +452,12 @@ if ($export_type === 'excel') {
                 <div class="stat-label">Total de Pessoas</div>
             </div>
             <div class="stat-item">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado')); ?></div>
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= date('Y-m-d'))); ?></div>
                 <div class="stat-label">Confirmados</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?></div>
+                <div class="stat-label">Concluídos</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'cancelado')); ?></div>
@@ -454,7 +492,14 @@ if ($export_type === 'excel') {
                 <tbody>
                     <?php foreach ($agendamentos as $agendamento): 
                         $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
-                        $rowClass = $isEmpresa ? 'empresa-row' : '';
+                        $isConcluido = isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido';
+                        
+                        $rowClass = '';
+                        if ($isConcluido) {
+                            $rowClass = 'concluido-row';
+                        } elseif ($isEmpresa) {
+                            $rowClass = 'empresa-row';
+                        }
                         
                         // Determinar tipo de usuário
                         $tipoUsuario = '';
@@ -468,6 +513,17 @@ if ($export_type === 'excel') {
                         } else {
                             $tipoUsuario = 'Anônimo';
                             $tipoClass = 'tipo-anonimo';
+                        }
+                        
+                        // Status para exibição
+                        $statusExibicao = '';
+                        $statusClass = '';
+                        if ($isConcluido) {
+                            $statusExibicao = 'Concluído';
+                            $statusClass = 'status-concluido';
+                        } else {
+                            $statusExibicao = ucfirst($agendamento['status']);
+                            $statusClass = 'status-' . $agendamento['status'];
                         }
                     ?>
                     <tr class="<?php echo $rowClass; ?>">
@@ -487,8 +543,8 @@ if ($export_type === 'excel') {
                             </span>
                         </td>
                         <td>
-                            <span class="status-<?php echo $agendamento['status']; ?>">
-                                <?php echo ucfirst($agendamento['status']); ?>
+                            <span class="<?php echo $statusClass; ?>">
+                                <?php echo $statusExibicao; ?>
                             </span>
                         </td>
                         <td>
@@ -515,6 +571,9 @@ if ($export_type === 'excel') {
             <p>Este documento contém informações confidenciais e deve ser tratado com sigilo.</p>
             <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
             <p><strong>Política de Acesso:</strong> Relatório gerado por operador - agendamentos pendentes não incluídos.</p>
+            <?php endif; ?>
+            <?php if (count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) > 0): ?>
+            <p><strong>Nota:</strong> Este relatório inclui agendamentos concluídos (confirmados com data passada).</p>
             <?php endif; ?>
         </div>
         
