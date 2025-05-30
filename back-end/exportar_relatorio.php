@@ -24,7 +24,7 @@ if (!in_array($export_type, ['pdf', 'excel'])) {
 $filtro_data_inicio = $_GET['data_inicio'] ?? '';
 $filtro_data_fim = $_GET['data_fim'] ?? '';
 $filtro_status = $_GET['status'] ?? '';
-$filtro_data_especifica = $_GET['data_especifica'] ?? ''; // NOVA FUNCIONALIDADE
+$filtro_data_especifica = $_GET['data_especifica'] ?? '';
 
 try {
     $conexao = conectarBanco();
@@ -32,9 +32,9 @@ try {
     $sql = "SELECT a.*, u.nome as usuario_nome FROM agendamentos a LEFT JOIN usuarios u ON a.usuario_id = u.id WHERE 1=1 ";
     $params = [];
     
-    // CORREÇÃO: Se é operador, excluir agendamentos pendentes automaticamente
+    // NOVA LÓGICA: Para operadores, só mostrar confirmados
     if ($_SESSION['tipo_usuario'] === 'operador') {
-        $sql .= " AND a.status != 'pendente'";
+        $sql .= " AND a.status = 'confirmado'";
     }
     
     // NOVA FUNCIONALIDADE: Filtro por data específica tem prioridade
@@ -54,10 +54,25 @@ try {
         }
     }
     
-    // CORREÇÃO: Se operador tentar filtrar por pendente, ignorar o filtro
-    if ($filtro_status && !($_SESSION['tipo_usuario'] === 'operador' && $filtro_status === 'pendente')) {
-        $sql .= " AND a.status = ?";
-        $params[] = $filtro_status;
+    // NOVA LÓGICA: Filtro de status ajustado para operadores
+    if ($filtro_status) {
+        if ($_SESSION['tipo_usuario'] === 'operador') {
+            // Para operadores, só aceitar 'confirmado' ou 'concluido'
+            if ($filtro_status === 'concluido') {
+                // Concluídos são confirmados com data passada
+                $sql .= " AND a.data_agendamento < CURDATE()";
+            } else if ($filtro_status === 'confirmado') {
+                // Confirmados são os futuros/hoje
+                $sql .= " AND a.data_agendamento >= CURDATE()";
+            }
+            // Outros status são ignorados para operadores
+        } else {
+            // Para admins, aplicar filtro normalmente
+            if ($filtro_status !== 'concluido') {
+                $sql .= " AND a.status = ?";
+                $params[] = $filtro_status;
+            }
+        }
     }
     
     $sql .= " ORDER BY a.data_agendamento DESC, a.hora_agendamento ASC";
@@ -68,13 +83,38 @@ try {
     
     // NOVO: Determinar status de exibição (incluindo concluído)
     $hoje = date('Y-m-d');
-    foreach ($agendamentos as &$agendamento) {
+    $agendamentos_filtrados = [];
+    
+    foreach ($agendamentos as $agendamento) {
         if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
             $agendamento['status_display'] = 'concluido';
         } else {
             $agendamento['status_display'] = $agendamento['status'];
         }
+        
+        // Para operadores: aplicar filtro adicional se especificado
+        if ($_SESSION['tipo_usuario'] === 'operador' && $filtro_status) {
+            if ($filtro_status === 'concluido' && $agendamento['status_display'] === 'concluido') {
+                $agendamentos_filtrados[] = $agendamento;
+            } else if ($filtro_status === 'confirmado' && $agendamento['data_agendamento'] >= $hoje) {
+                $agendamentos_filtrados[] = $agendamento;
+            }
+        } else if ($_SESSION['tipo_usuario'] === 'admin') {
+            // Para admins: filtro de status concluído
+            if ($filtro_status === 'concluido') {
+                if ($agendamento['status_display'] === 'concluido') {
+                    $agendamentos_filtrados[] = $agendamento;
+                }
+            } else {
+                $agendamentos_filtrados[] = $agendamento;
+            }
+        } else {
+            // Sem filtro específico
+            $agendamentos_filtrados[] = $agendamento;
+        }
     }
+    
+    $agendamentos = $agendamentos_filtrados;
     
 } catch (PDOException $e) {
     die("Erro ao buscar dados: " . $e->getMessage());
@@ -166,11 +206,11 @@ if ($export_type === 'excel') {
         $titulo = 'Agendamentos do dia ' . $data_formatada . ' - Biotério FSA';
     }
     
-    // CORREÇÃO: Adicionar nota se for operador
+    // NOVA LÓGICA: Nota específica para operador
     $nota_operador = '';
     if ($_SESSION['tipo_usuario'] === 'operador') {
         $nota_operador = '<div class="operator-note">
-            <p><strong>Nota:</strong> Como operador, este relatório exclui agendamentos pendentes. Agendamentos pendentes são visíveis apenas para administradores.</p>
+            <p><strong>Nota do Operador:</strong> Este relatório inclui apenas agendamentos <strong>confirmados</strong> e <strong>concluídos</strong>. Agendamentos pendentes, cancelados e negados são visíveis apenas para administradores.</p>
         </div>';
     }
     
@@ -208,8 +248,8 @@ if ($export_type === 'excel') {
             }
             
             .operator-note {
-                background-color: #e3f2fd;
-                border: 2px solid #2196f3;
+                background-color: #e8f5e8;
+                border: 2px solid #28a745;
                 border-radius: 5px;
                 padding: 15px;
                 margin-bottom: 20px;
@@ -218,7 +258,7 @@ if ($export_type === 'excel') {
             
             .operator-note p {
                 margin: 0;
-                color: #1976d2;
+                color: #155724;
                 font-weight: bold;
             }
             
@@ -433,11 +473,11 @@ if ($export_type === 'excel') {
                     <p><strong>Data Fim:</strong> <?php echo date('d/m/Y', strtotime($filtro_data_fim)); ?></p>
                 <?php endif; ?>
             <?php endif; ?>
-            <?php if ($filtro_status && !($_SESSION['tipo_usuario'] === 'operador' && $filtro_status === 'pendente')): ?>
+            <?php if ($filtro_status): ?>
                 <p><strong>Status:</strong> <?php echo ucfirst($filtro_status); ?></p>
             <?php endif; ?>
             <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
-                <p><strong>Política de Acesso:</strong> Agendamentos pendentes excluídos (acesso apenas para administradores)</p>
+                <p><strong>Política de Acesso:</strong> Como operador, este relatório inclui apenas agendamentos confirmados e concluídos</p>
             <?php endif; ?>
         </div>
         <?php endif; ?>
@@ -453,12 +493,17 @@ if ($export_type === 'excel') {
             </div>
             <div class="stat-item">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= date('Y-m-d'))); ?></div>
-                <div class="stat-label">Confirmados</div>
+                <div class="stat-label">Confirmados (Futuros)</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?></div>
                 <div class="stat-label">Concluídos</div>
             </div>
+            <div class="stat-item">
+                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
+                <div class="stat-label">Empresas</div>
+            </div>
+            <?php if ($_SESSION['tipo_usuario'] === 'admin'): ?>
             <div class="stat-item">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'cancelado')); ?></div>
                 <div class="stat-label">Cancelados</div>
@@ -467,10 +512,7 @@ if ($export_type === 'excel') {
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'negado')); ?></div>
                 <div class="stat-label">Negados</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
-                <div class="stat-label">Empresas</div>
-            </div>
+            <?php endif; ?>
         </div>
         
         <?php if (count($agendamentos) > 0): ?>
@@ -559,9 +601,11 @@ if ($export_type === 'excel') {
             </table>
         <?php else: ?>
             <p style="text-align: center; padding: 40px; color: #666;">
-                Nenhum agendamento encontrado com os filtros aplicados.
                 <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
-                <br><small>Lembre-se: agendamentos pendentes não são exibidos para operadores.</small>
+                    Nenhum agendamento confirmado ou concluído encontrado com os filtros aplicados.
+                    <br><small>Como operador, você só tem acesso a agendamentos confirmados e concluídos.</small>
+                <?php else: ?>
+                    Nenhum agendamento encontrado com os filtros aplicados.
                 <?php endif; ?>
             </p>
         <?php endif; ?>
@@ -570,7 +614,7 @@ if ($export_type === 'excel') {
             <p>Relatório gerado pelo Sistema de Agendamento do Biotério FSA</p>
             <p>Este documento contém informações confidenciais e deve ser tratado com sigilo.</p>
             <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
-            <p><strong>Política de Acesso:</strong> Relatório gerado por operador - agendamentos pendentes não incluídos.</p>
+            <p><strong>Política de Acesso do Operador:</strong> Relatório inclui apenas agendamentos confirmados e concluídos.</p>
             <?php endif; ?>
             <?php if (count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) > 0): ?>
             <p><strong>Nota:</strong> Este relatório inclui agendamentos concluídos (confirmados com data passada).</p>

@@ -37,7 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
             if (!$agendamento) {
                 $mensagem_erro = "Agendamento não encontrado.";
             } elseif ($acao === 'cancelar') {
-                // ATUALIZADO: Permitir cancelamento de agendamentos pendentes e confirmados
+                // Permitir cancelamento de agendamentos pendentes e confirmados
                 if ($agendamento['status'] === 'cancelado') {
                     $mensagem_erro = "Agendamento já foi cancelado.";
                 } elseif ($agendamento['status'] === 'negado') {
@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 } elseif ($agendamento['status'] === 'concluido') {
                     $mensagem_erro = "Não é possível cancelar um agendamento já concluído.";
                 } else {
-                    // Cancelar o agendamento (permite pendente e confirmado)
+                    // Cancelar o agendamento
                     $stmt = $conexao->prepare("
                         UPDATE agendamentos 
                         SET status = 'cancelado', data_cancelamento = NOW() 
@@ -64,15 +64,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                     }
                 }
             } elseif ($acao === 'excluir') {
-                // Permitir exclusão de agendamentos cancelados, negados ou concluídos
+                // Permitir exclusão de agendamentos cancelados, negados, concluídos ou confirmados do passado
+                $isConcluido = ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < date('Y-m-d')) || 
+                               $agendamento['status'] === 'concluido';
                 $statusPermitidos = ['cancelado', 'negado', 'concluido'];
-                if (!in_array($agendamento['status'], $statusPermitidos)) {
+                
+                if (!in_array($agendamento['status'], $statusPermitidos) && !$isConcluido) {
                     $mensagem_erro = "Apenas agendamentos cancelados, negados ou concluídos podem ser excluídos.";
                 } else {
                     // Excluir o agendamento
                     $stmt = $conexao->prepare("
                         DELETE FROM agendamentos 
-                        WHERE id = ? AND empresa_id = ? AND status IN ('cancelado', 'negado', 'concluido')
+                        WHERE id = ? AND empresa_id = ?
                     ");
                     $stmt->execute([$agendamento_id, $_SESSION['empresa_id']]);
                     
@@ -99,7 +102,19 @@ try {
         ORDER BY data_agendamento DESC, hora_agendamento ASC
     ");
     $stmt->execute([$_SESSION['empresa_id']]);
-    $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $agendamentos_raw = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Processar status de exibição para cada agendamento
+    $hoje = date('Y-m-d');
+    foreach ($agendamentos_raw as $agendamento) {
+        // Determinar status de exibição baseado na lógica do admin
+        if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
+            $agendamento['status_display'] = 'concluido';
+        } else {
+            $agendamento['status_display'] = $agendamento['status'];
+        }
+        $agendamentos[] = $agendamento;
+    }
 
 } catch (PDOException $e) {
     $mensagem_erro = "Erro ao buscar agendamentos: " . $e->getMessage();
@@ -256,6 +271,9 @@ try {
             font-weight: bold;
             font-size: 14px;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .alert-success {
@@ -311,7 +329,6 @@ try {
             padding-right: 5px;
         }
 
-        /* Barra de rolagem personalizada */
         .appointments-container::-webkit-scrollbar {
             width: 8px;
         }
@@ -368,13 +385,14 @@ try {
         }
 
         .appointment-card.pending-card {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
             border-left-color: #ffc107;
-            background: linear-gradient(135deg, #fffbf0 0%, #fff9e6 100%);
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+            animation: pendingGlow 3s infinite;
         }
 
-        .appointment-card.pending-card:hover {
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.25);
+        @keyframes pendingGlow {
+            0%, 100% { border-left-color: #ffc107; }
+            50% { border-left-color: #ff9800; }
         }
 
         .appointment-card.concluido-card {
@@ -383,9 +401,16 @@ try {
             opacity: 0.85;
         }
 
-        .appointment-card.concluido-card:hover {
-            border-left-color: #5a6268;
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        .appointment-card.negado-card {
+            background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+            border-left-color: #dc3545;
+            opacity: 0.9;
+        }
+
+        .appointment-card.cancelado-card {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left-color: #ff9800;
+            opacity: 0.9;
         }
 
         .appointment-header {
@@ -405,6 +430,31 @@ try {
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .appointment-id.pendente {
+            animation: pulse 2s infinite;
+        }
+
+        .appointment-id.concluido {
+            background: linear-gradient(135deg, rgba(108, 117, 125, 0.2) 0%, rgba(108, 117, 125, 0.1) 100%);
+            color: #6c757d;
+        }
+
+        .appointment-id.negado {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.2) 0%, rgba(220, 53, 69, 0.1) 100%);
+            color: #dc3545;
+        }
+
+        .appointment-id.cancelado {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 152, 0, 0.1) 100%);
+            color: #ff9800;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         .appointment-status {
@@ -431,27 +481,27 @@ try {
         }
 
         .status-cancelado {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border: 2px solid #dc3545;
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #e65100;
+            border: 2px solid #ff9800;
         }
 
         .status-pendente {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             color: #856404;
             border: 2px solid #ffc107;
-            animation: pulse 2s infinite;
+            animation: statusPulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
-            100% { transform: scale(1); opacity: 1; }
+        @keyframes statusPulse {
+            0% { transform: scale(1); box-shadow: 0 0 5px rgba(255, 193, 7, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(255, 193, 7, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 5px rgba(255, 193, 7, 0.4); }
         }
 
         .status-negado {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
+            background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+            color: #c62828;
             border: 2px solid #dc3545;
         }
 
@@ -474,21 +524,6 @@ try {
             color: #856404;
         }
 
-        .appointment-info {
-            font-size: 13px;
-            color: #856404;
-            margin-bottom: 15px;
-            opacity: 0.8;
-            line-height: 1.5;
-        }
-
-        .appointment-info p {
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
         .appointment-details {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
             padding: 12px;
@@ -505,11 +540,29 @@ try {
             color: #856404;
         }
 
+        .appointment-info {
+            font-size: 13px;
+            color: #856404;
+            margin-bottom: 15px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .appointment-info p {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .appointment-actions {
             display: flex;
             gap: 10px;
             justify-content: flex-end;
             flex-wrap: wrap;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 193, 7, 0.2);
         }
 
         .btn {
@@ -585,6 +638,18 @@ try {
         .btn-lg {
             padding: 12px 25px;
             font-size: 16px;
+        }
+
+        .status-info {
+            font-size: 11px;
+            color: #856404;
+            font-weight: bold;
+            padding: 8px 12px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         /* Pop-up personalizado */
@@ -770,7 +835,7 @@ try {
             
             <div class="welcome-message">
                 <strong><?php echo htmlspecialchars($_SESSION['empresa_nome']); ?></strong>, 
-                aqui estão todas as suas solicitações de agendamento no Biotério.
+                aqui estão todas as suas solicitações de agendamento no Espaço Biodiversidade
             </div>
 
             <?php if (isset($mensagem_sucesso)): ?>
@@ -802,7 +867,10 @@ try {
                         <div class="stat-label">Confirmados</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] < date('Y-m-d'))); ?></div>
+                        <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => 
+                            isset($a['status_display']) && $a['status_display'] === 'concluido' || 
+                            $a['status'] === 'concluido'
+                        )); ?></div>
                         <div class="stat-label">Concluídos</div>
                     </div>
                     <div class="stat-card">
@@ -818,36 +886,43 @@ try {
                 <div class="appointments-container">
                     <div class="appointments-grid">
                         <?php foreach ($agendamentos as $agendamento): 
-                            $isPendente = $agendamento['status'] === 'pendente';
-                            $isConfirmado = $agendamento['status'] === 'confirmado';
-                            $isNegado = $agendamento['status'] === 'negado';
-                            $isCancelado = $agendamento['status'] === 'cancelado';
-                            $isConcluido = $agendamento['status'] === 'concluido' || 
-                                         ($isConfirmado && $agendamento['data_agendamento'] < date('Y-m-d'));
-                            $isUpcoming = $isConfirmado && $agendamento['data_agendamento'] >= date('Y-m-d');
+                            // Usar status_display para determinar estado real
+                            $statusReal = isset($agendamento['status_display']) ? $agendamento['status_display'] : $agendamento['status'];
                             
-                            // Determinar classes do card
+                            $isPendente = $agendamento['status'] === 'pendente';
+                            $isConfirmado = $agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= date('Y-m-d');
+                            $isConcluido = $statusReal === 'concluido' || $agendamento['status'] === 'concluido';
+                            $isCancelado = $agendamento['status'] === 'cancelado';
+                            $isNegado = $agendamento['status'] === 'negado';
+                            
+                            // Determinar classe do card
                             $cardClass = '';
                             if ($isConcluido) {
                                 $cardClass = 'concluido-card';
                             } elseif ($isPendente) {
                                 $cardClass = 'pending-card';
+                            } elseif ($isNegado) {
+                                $cardClass = 'negado-card';
+                            } elseif ($isCancelado) {
+                                $cardClass = 'cancelado-card';
                             }
                             
-                            // Determinar status display
-                            $statusDisplay = $agendamento['status'];
-                            $statusClass = $agendamento['status'];
-                            if ($isConcluido) {
-                                $statusDisplay = 'concluído';
-                                $statusClass = 'concluido';
-                            }
+                            // Status para exibição
+                            $statusDisplay = $statusReal;
+                            $statusClass = $statusReal;
                         ?>
                         <div class="appointment-card <?php echo $cardClass; ?>">
                             <div class="appointment-header">
-                                <div class="appointment-id">
+                                <div class="appointment-id <?php echo $statusDisplay; ?>">
                                     <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
                                     <?php if ($isPendente): ?>
                                         <span style="color: #e67e22; font-size: 10px; font-weight: bold;">EM ANÁLISE</span>
+                                    <?php elseif ($isConcluido): ?>
+                                        <span style="color: #6c757d; font-size: 10px; font-weight: bold;">CONCLUÍDO</span>
+                                    <?php elseif ($isNegado): ?>
+                                        <span style="color: #dc3545; font-size: 10px; font-weight: bold;">NEGADO</span>
+                                    <?php elseif ($isCancelado): ?>
+                                        <span style="color: #ff9800; font-size: 10px; font-weight: bold;">CANCELADO</span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="appointment-status status-<?php echo $statusClass; ?>">
@@ -859,7 +934,7 @@ try {
                                         <i class="fa-solid fa-calendar-check"></i> Confirmado
                                     <?php elseif ($isNegado): ?>
                                         <i class="fa-solid fa-times-circle"></i> Negado
-                                    <?php else: ?>
+                                    <?php elseif ($isCancelado): ?>
                                         <i class="fa-solid fa-ban"></i> Cancelado
                                     <?php endif; ?>
                                 </div>
@@ -896,34 +971,34 @@ try {
                                     <p><i class="fa-solid fa-check-double"></i> <strong>Visita realizada em:</strong> <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></p>
                                 <?php elseif ($isNegado): ?>
                                     <p><i class="fa-solid fa-times"></i> <strong>Status:</strong> Solicitação não aprovada pela administração</p>
+                                <?php elseif ($isConfirmado): ?>
+                                    <p><i class="fa-solid fa-check-circle"></i> <strong>Status:</strong> Agendamento confirmado - compareçam no horário marcado</p>
                                 <?php endif; ?>
                             </div>
                             
                             <div class="appointment-actions">
                                 <?php if ($isPendente): ?>
-                                    <!-- NOVO: Botão para cancelar agendamentos em análise -->
+                                    <!-- Cancelar solicitações em análise -->
                                     <form method="POST" style="display: inline;" id="cancel-pending-form-<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="acao" value="cancelar">
                                         <button type="button" class="btn btn-warning" 
-                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar esta solicitação de agendamento? A solicitação será removida da análise.', () => { document.getElementById('cancel-pending-form-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar esta solicitação? A solicitação será removida da análise.', () => { document.getElementById('cancel-pending-form-<?php echo $agendamento['id']; ?>').submit(); })">
                                             <i class="fa-solid fa-ban"></i> Cancelar Solicitação
                                         </button>
                                     </form>
-                                <?php elseif ($isUpcoming && !$isCancelado): ?>
-                                    <!-- Botão para cancelar agendamentos confirmados -->
+                                <?php elseif ($isConfirmado): ?>
+                                    <!-- Cancelar agendamentos confirmados -->
                                     <form method="POST" style="display: inline;" id="cancel-form-<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="acao" value="cancelar">
                                         <button type="button" class="btn btn-danger" 
                                                 onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento confirmado?', () => { document.getElementById('cancel-form-<?php echo $agendamento['id']; ?>').submit(); })">
-                                            <i class="fa-solid fa-ban"></i> Cancelar
+                                            <i class="fa-solid fa-ban"></i> Cancelar Agendamento
                                         </button>
                                     </form>
-                                <?php endif; ?>
-                                
-                                <?php if ($isNegado || $isCancelado || $isConcluido): ?>
-                                    <!-- Botão para excluir agendamentos finalizados -->
+                                <?php elseif ($isNegado || $isCancelado || $isConcluido): ?>
+                                    <!-- Excluir agendamentos finalizados -->
                                     <form method="POST" style="display: inline;" id="delete-form-<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="acao" value="excluir">
@@ -932,6 +1007,11 @@ try {
                                             <i class="fa-solid fa-trash"></i> Excluir
                                         </button>
                                     </form>
+                                <?php else: ?>
+                                    <!-- Para outros casos, mostrar info -->
+                                    <span class="status-info">
+                                        <i class="fa-solid fa-info-circle"></i> Aguardando ação administrativa
+                                    </span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -997,6 +1077,20 @@ try {
                 }
             });
         }
+
+        // Destacar agendamentos pendentes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Scroll suave para o primeiro agendamento pendente
+            const pendenteCard = document.querySelector('.pending-card');
+            if (pendenteCard) {
+                setTimeout(() => {
+                    pendenteCard.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 1000);
+            }
+        });
     </script>
 </body>
 </html>

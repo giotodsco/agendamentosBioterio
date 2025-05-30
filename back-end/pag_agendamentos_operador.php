@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao']) && $_POST['aca
         try {
             $conexao = conectarBanco();
             
-            // Verificar se o agendamento está concluído
+            // Verificar se o agendamento está concluído (confirmado e data passou)
             $stmt = $conexao->prepare("SELECT status, data_agendamento FROM agendamentos WHERE id = ?");
             $stmt->execute([$agendamento_id]);
             $agendamento = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -45,7 +45,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao']) && $_POST['aca
     }
 }
 
-// Buscar agendamentos
+// CORRIGIDO: Buscar agendamentos com lógica melhorada
 try {
     $conexao = conectarBanco();
     
@@ -57,45 +57,96 @@ try {
     $filtro_data_fim = $_GET['data_fim'] ?? date('Y-m-d', strtotime('+30 days'));
     $filtro_status = $_GET['status'] ?? '';
     
+    // CORRIGIDO: Para operadores, sempre buscar confirmados
     $filtros = [
         'data_inicio' => $filtro_data_inicio,
         'data_fim' => $filtro_data_fim,
-        'status' => $filtro_status
     ];
     
-    // CORREÇÃO: Operador NÃO deve ver agendamentos pendentes
-    // Se não há filtro específico de status, excluir pendentes automaticamente
-    if (empty($filtro_status)) {
-        $filtros['status_excluir'] = 'pendente';
-    } elseif ($filtro_status === 'pendente') {
-        // Se operador tentar filtrar por pendente, redirecionar sem esse filtro
-        $url_redirect = $_SERVER['PHP_SELF'] . '?';
-        $params = $_GET;
-        unset($params['status']);
-        $url_redirect .= http_build_query($params);
-        header("Location: $url_redirect");
-        exit();
+    // Para operadores, sempre buscar apenas confirmados
+    if ($_SESSION['tipo_usuario'] === 'operador') {
+        $filtros['status'] = 'confirmado';
+    } else {
+        // Para admins, usar filtro selecionado
+        if (!empty($filtro_status)) {
+            if ($filtro_status === 'concluido') {
+                $filtros['status_especial'] = 'concluido';
+            } else {
+                $filtros['status'] = $filtro_status;
+            }
+        }
     }
     
     $agendamentos = buscarAgendamentosCompletos($filtros);
     
-    // Separar agendamentos por status temporal
-    $agendamentos_atuais = [];
-    $agendamentos_concluidos = [];
+    // CORRIGIDO: Processar agendamentos e determinar status de exibição
+    $agendamentos_processados = [];
     
     foreach ($agendamentos as $agendamento) {
         // Determinar se está concluído (confirmado e data passou)
         if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
             $agendamento['status_display'] = 'concluido';
-            $agendamentos_concluidos[] = $agendamento;
         } else {
             $agendamento['status_display'] = $agendamento['status'];
+        }
+        
+        // Para operadores: filtrar baseado no status_display
+        if ($_SESSION['tipo_usuario'] === 'operador') {
+            // Aplicar filtro de status se especificado
+            if (!empty($filtro_status)) {
+                if ($filtro_status === 'concluido') {
+                    // Mostrar apenas concluídos (confirmados com data passada)
+                    if ($agendamento['status_display'] === 'concluido') {
+                        $agendamentos_processados[] = $agendamento;
+                    }
+                } else if ($filtro_status === 'confirmado') {
+                    // Mostrar apenas confirmados futuros/hoje
+                    if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] >= $hoje) {
+                        $agendamentos_processados[] = $agendamento;
+                    }
+                }
+            } else {
+                // Sem filtro específico - mostrar todos os confirmados (incluindo concluídos)
+                $agendamentos_processados[] = $agendamento;
+            }
+        } else {
+            // Para admins: lógica original
+            if (!empty($filtro_status)) {
+                if ($filtro_status === 'concluido') {
+                    if ($agendamento['status_display'] === 'concluido') {
+                        $agendamentos_processados[] = $agendamento;
+                    }
+                } else {
+                    if ($agendamento['status'] === $filtro_status && $agendamento['status_display'] !== 'concluido') {
+                        $agendamentos_processados[] = $agendamento;
+                    }
+                }
+            } else {
+                $agendamentos_processados[] = $agendamento;
+            }
+        }
+    }
+    
+    $agendamentos = $agendamentos_processados;
+    
+    // Separar agendamentos atuais e concluídos para ordenação
+    $agendamentos_atuais = [];
+    $agendamentos_concluidos = [];
+    
+    foreach ($agendamentos as $agendamento) {
+        if (isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido') {
+            $agendamentos_concluidos[] = $agendamento;
+        } else {
             $agendamentos_atuais[] = $agendamento;
         }
     }
     
-    // Reorganizar: atuais primeiro, concluídos por último
-    $agendamentos = array_merge($agendamentos_atuais, $agendamentos_concluidos);
+    // Reorganizar: atuais primeiro, concluídos por último (a menos que esteja filtrando só concluídos)
+    if ($filtro_status === 'concluido') {
+        $agendamentos = $agendamentos_concluidos;
+    } else {
+        $agendamentos = array_merge($agendamentos_atuais, $agendamentos_concluidos);
+    }
     
     // Organizar agendamentos por data
     $agendamentos_por_data = [];
@@ -123,8 +174,13 @@ try {
     ksort($datas_futuras);
     krsort($datas_passadas);
     
-    // Reorganizar: futuras primeiro, passadas depois
-    $agendamentos_por_data = array_merge($datas_futuras, $datas_passadas);
+    // Reorganizar: futuras primeiro, passadas depois (exceto se filtrando só concluídos)
+    if ($filtro_status === 'concluido') {
+        // Para concluídos, mostrar mais recentes primeiro
+        $agendamentos_por_data = array_merge($datas_passadas, $datas_futuras);
+    } else {
+        $agendamentos_por_data = array_merge($datas_futuras, $datas_passadas);
+    }
     
 } catch (PDOException $e) {
     $mensagem_erro = "Erro ao buscar agendamentos: " . $e->getMessage();
@@ -166,6 +222,7 @@ function formatarDataPorExtensor($data) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Biotério - Área do Operador</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- CSS mantido igual ao original -->
     <style>
         * {
             color: rgb(60, 59, 59);
@@ -257,10 +314,9 @@ function formatarDataPorExtensor($data) {
             font-size: 16px;
         }
 
-        /* NOVO: Aviso para operador sobre pendentes */
         .operador-info {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border: 2px solid #2196f3;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 2px solid #28a745;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 25px;
@@ -268,7 +324,7 @@ function formatarDataPorExtensor($data) {
         }
 
         .operador-info h4 {
-            color: #1976d2;
+            color: #155724;
             margin-bottom: 10px;
             font-size: 18px;
             display: flex;
@@ -278,7 +334,7 @@ function formatarDataPorExtensor($data) {
         }
 
         .operador-info p {
-            color: #1976d2;
+            color: #155724;
             font-size: 14px;
             line-height: 1.5;
         }
@@ -515,7 +571,6 @@ function formatarDataPorExtensor($data) {
             padding-right: 5px;
         }
 
-        /* Barra de rolagem personalizada */
         .appointments-container::-webkit-scrollbar {
             width: 10px;
         }
@@ -550,7 +605,6 @@ function formatarDataPorExtensor($data) {
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
 
-        /* NOVO: Seção de dias passados com aparência diferente */
         .day-section.past-day {
             opacity: 0.8;
             border-left-color: #6c757d;
@@ -633,7 +687,6 @@ function formatarDataPorExtensor($data) {
             box-shadow: 0 10px 30px rgba(255, 193, 7, 0.2);
         }
 
-        /* NOVO: Cards verde claro para usuários logados */
         .appointment-card.user-logado-card {
             background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
             border-left-color: #28a745;
@@ -646,7 +699,6 @@ function formatarDataPorExtensor($data) {
             border-color: #1e7e34;
         }
 
-        /* NOVO: Cards cinza para agendamentos concluídos */
         .appointment-card.concluido-card {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-color: #6c757d;
@@ -759,19 +811,6 @@ function formatarDataPorExtensor($data) {
             border: 2px solid #28a745;
         }
 
-        .status-cancelado {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border: 2px solid #dc3545;
-        }
-
-        .status-negado {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: #721c24;
-            border: 2px solid #dc3545;
-        }
-
-        /* NOVO: Status concluído em cinza */
         .status-concluido {
             background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
             color: #495057;
@@ -863,7 +902,6 @@ function formatarDataPorExtensor($data) {
             color: white;
         }
 
-        /* NOVO: Botão de remoção para concluídos */
         .btn-remove-completed {
             background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
             color: white;
@@ -885,7 +923,6 @@ function formatarDataPorExtensor($data) {
             box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
         }
 
-        /* NOVO: Aviso sobre PDF */
         .pdf-warning {
             background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
             border: 2px solid #ffc107;
@@ -912,7 +949,6 @@ function formatarDataPorExtensor($data) {
             margin-bottom: 10px;
         }
 
-        /* Pop-up personalizado */
         .custom-popup-overlay {
             position: fixed;
             top: 0;
@@ -1063,7 +1099,6 @@ function formatarDataPorExtensor($data) {
     </style>
 </head>
 <body>
-    <!-- Pop-up personalizado -->
     <div class="custom-popup-overlay" id="popup-overlay">
         <div class="custom-popup">
             <div class="popup-icon" id="popup-icon">
@@ -1105,17 +1140,15 @@ function formatarDataPorExtensor($data) {
 
         <div class="page-title">
             <h2><i class="fa-solid fa-calendar-alt"></i> Relatórios e Agendamentos</h2>
-            <p>Visualize e analise todos os agendamentos confirmados e processados do sistema</p>
+            <p>Visualize agendamentos confirmados e concluídos do sistema</p>
         </div>
 
-        <!-- NOVO: Aviso sobre política de acesso para operadores -->
         <div class="operador-info">
-            <h4><i class="fa-solid fa-info-circle"></i> Informação para Operadores</h4>
-            <p>Como operador, você visualiza apenas agendamentos <strong>confirmados</strong>, <strong>cancelados</strong>, <strong>negados</strong> e <strong>concluídos</strong>. Agendamentos pendentes são visíveis apenas para administradores.</p>
+            <h4><i class="fa-solid fa-shield-alt"></i> Acesso Restrito do Operador</h4>
+            <p>Você tem acesso apenas a <strong>agendamentos confirmados</strong> (futuros/hoje) e <strong>concluídos</strong> (passados). Agendamentos pendentes, cancelados e negados são visíveis apenas para administradores.</p>
         </div>
 
-        <?php if (count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) > 0): ?>
-        <!-- NOVO: Aviso sobre agendamentos concluídos -->
+        <?php if (count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) > 0 && $filtro_status !== 'concluido'): ?>
         <div class="pdf-warning">
             <h5><i class="fa-solid fa-exclamation-triangle"></i> Agendamentos Concluídos Detectados</h5>
             <p>Há agendamentos concluídos na lista. <strong>Recomendamos salvar um PDF dos dados antes de removê-los</strong>, pois a remoção é permanente.</p>
@@ -1140,10 +1173,18 @@ function formatarDataPorExtensor($data) {
                     <div class="filter-group">
                         <label for="status"><i class="fa-solid fa-tags"></i> Status:</label>
                         <select id="status" name="status">
-                            <option value="">Todos os Status Visíveis</option>
-                            <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
-                            <option value="cancelado" <?php echo $filtro_status === 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
-                            <option value="negado" <?php echo $filtro_status === 'negado' ? 'selected' : ''; ?>>Negado</option>
+                            <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
+                                <option value="">Todos Disponíveis</option>
+                                <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado (Futuro/Hoje)</option>
+                                <option value="concluido" <?php echo $filtro_status === 'concluido' ? 'selected' : ''; ?>>Concluído (Passado)</option>
+                            <?php else: ?>
+                                <option value="">Todos os Status</option>
+                                <option value="pendente" <?php echo $filtro_status === 'pendente' ? 'selected' : ''; ?>>Pendente</option>
+                                <option value="confirmado" <?php echo $filtro_status === 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
+                                <option value="cancelado" <?php echo $filtro_status === 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
+                                <option value="negado" <?php echo $filtro_status === 'negado' ? 'selected' : ''; ?>>Negado</option>
+                                <option value="concluido" <?php echo $filtro_status === 'concluido' ? 'selected' : ''; ?>>Concluído</option>
+                            <?php endif; ?>
                         </select>
                     </div>
                     <div class="filter-group">
@@ -1155,7 +1196,6 @@ function formatarDataPorExtensor($data) {
             </form>
         </div>
 
-        <!-- Exportação por data específica -->
         <div class="export-specific-date">
             <h4><i class="fa-solid fa-calendar-day"></i> Exportar Agendamentos de uma Data Específica</h4>
             <div class="export-date-form">
@@ -1179,27 +1219,19 @@ function formatarDataPorExtensor($data) {
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-number"><?php echo count($agendamentos); ?></div>
-                <div class="stat-label"><i class="fa-solid fa-calendar-check"></i> Total de Agendamentos</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'confirmado' && $a['data_agendamento'] >= date('Y-m-d'))); ?></div>
-                <div class="stat-label"><i class="fa-solid fa-check-circle"></i> Confirmados</div>
+                <div class="stat-label"><i class="fa-solid fa-calendar-check"></i> Total Visível</div>
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?></div>
                 <div class="stat-label"><i class="fa-solid fa-flag-checkered"></i> Concluídos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'cancelado')); ?></div>
-                <div class="stat-label"><i class="fa-solid fa-times-circle"></i> Cancelados</div>
-            </div>
-            <div class="stat-card">
                 <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?></div>
                 <div class="stat-label"><i class="fa-solid fa-building"></i> Empresas</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number"><?php echo count(array_filter($agendamentos, fn($a) => $a['status'] === 'negado')); ?></div>
-                <div class="stat-label"><i class="fa-solid fa-ban"></i> Negados</div>
+                <div class="stat-number"><?php echo array_sum(array_map(fn($a) => $a['quantidade_pessoas'] ?? 1, $agendamentos)); ?></div>
+                <div class="stat-label"><i class="fa-solid fa-users"></i> Total Pessoas</div>
             </div>
         </div>
 
@@ -1211,6 +1243,11 @@ function formatarDataPorExtensor($data) {
                 <button type="button" class="btn btn-secondary" onclick="exportarExcel()">
                     <i class="fa-solid fa-file-excel"></i> Exportar Excel
                 </button>
+                <?php if ($filtro_status === 'concluido'): ?>
+                <button type="button" class="btn btn-warning" onclick="filtrarSemConcluidos()">
+                    <i class="fa-solid fa-eye"></i> Ver Sem Concluídos
+                </button>
+                <?php endif; ?>
             </div>
             <div>
                 <a href="../front-end/pag_inicial.html" class="btn btn-secondary">
@@ -1253,6 +1290,10 @@ function formatarDataPorExtensor($data) {
                                 <div class="day-count">
                                     <i class="fa-solid fa-flag-checkered"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')); ?> concluído<?php echo count(array_filter($agendamentos_do_dia, fn($a) => isset($a['status_display']) && $a['status_display'] === 'concluido')) != 1 ? 's' : ''; ?>
                                 </div>
+                                <?php else: ?>
+                                <div class="day-count">
+                                    <i class="fa-solid fa-check-circle"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['status'] === 'confirmado')); ?> confirmado<?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['status'] === 'confirmado')) != 1 ? 's' : ''; ?>
+                                </div>
                                 <?php endif; ?>
                                 <button type="button" class="btn btn-warning" onclick="exportarDataEspecificaDireta('<?php echo $data; ?>', 'pdf')" style="font-size: 12px; padding: 6px 12px;">
                                     <i class="fa-solid fa-download"></i> PDF
@@ -1265,7 +1306,7 @@ function formatarDataPorExtensor($data) {
                                 $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
                                 $isConcluido = isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido';
                                 
-                                // NOVO: Definir classe baseada no tipo de usuário e status
+                                // Definir classe baseada no tipo de usuário e status
                                 $cardClass = '';
                                 if ($isConcluido) {
                                     $cardClass = 'concluido-card';  // Cinza para concluídos
@@ -1320,9 +1361,6 @@ function formatarDataPorExtensor($data) {
                                     <p><i class="fa-solid fa-envelope"></i> <?php echo htmlspecialchars($agendamento['email']); ?></p>
                                     <p><i class="fa-solid fa-id-card"></i> <?php echo htmlspecialchars($agendamento['cpf']); ?></p>
                                     <p><i class="fa-solid fa-calendar-plus"></i> Criado: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_criacao'])); ?></p>
-                                    <?php if ($agendamento['data_cancelamento']): ?>
-                                    <p><i class="fa-solid fa-calendar-times"></i> Cancelado: <?php echo date('d/m/Y H:i', strtotime($agendamento['data_cancelamento'])); ?></p>
-                                    <?php endif; ?>
                                     <?php if ($isConcluido): ?>
                                     <p><i class="fa-solid fa-flag-checkered"></i> Concluído: <?php echo date('d/m/Y', strtotime($agendamento['data_agendamento'])); ?></p>
                                     <?php endif; ?>
@@ -1330,15 +1368,11 @@ function formatarDataPorExtensor($data) {
                                 
                                 <div class="card-footer">
                                     <div>
-                                        <span class="status status-<?php echo $isConcluido ? 'concluido' : $agendamento['status']; ?>">
-                                            <?php if ($isConcluido): ?>
+                                        <span class="status status-<?php echo isset($agendamento['status_display']) ? $agendamento['status_display'] : $agendamento['status']; ?>">
+                                            <?php if (isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido'): ?>
                                                 <i class="fa-solid fa-flag-checkered"></i> CONCLUÍDO
-                                            <?php elseif ($agendamento['status'] === 'confirmado'): ?>
-                                                <i class="fa-solid fa-check-circle"></i> CONFIRMADO
-                                            <?php elseif ($agendamento['status'] === 'negado'): ?>
-                                                <i class="fa-solid fa-times-circle"></i> NEGADO
                                             <?php else: ?>
-                                                <i class="fa-solid fa-ban"></i> CANCELADO
+                                                <i class="fa-solid fa-check-circle"></i> CONFIRMADO
                                             <?php endif; ?>
                                         </span>
                                         
@@ -1356,7 +1390,7 @@ function formatarDataPorExtensor($data) {
                                             </span>
                                         <?php endif; ?>
 
-                                        <?php if ($isConcluido): ?>
+                                        <?php if (isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido'): ?>
                                             <form method="POST" style="display: inline;" action="" id="form-remover-concluido-<?php echo $agendamento['id']; ?>">
                                                 <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                                 <input type="hidden" name="acao" value="remover_concluido">
@@ -1379,7 +1413,22 @@ function formatarDataPorExtensor($data) {
                 <div class="no-appointments">
                     <i class="fa-solid fa-calendar-times"></i><br>
                     <strong>Nenhum agendamento encontrado</strong><br>
-                    <small>Tente ajustar os filtros para ver mais resultados ou aguarde novos agendamentos serem confirmados</small>
+                    <small>
+                        <?php if ($_SESSION['tipo_usuario'] === 'operador'): ?>
+                            <?php if (!empty($filtro_status)): ?>
+                                Nenhum agendamento "<?php echo ucfirst($filtro_status); ?>" foi encontrado no período selecionado.
+                            <?php else: ?>
+                                Nenhum agendamento confirmado ou concluído foi encontrado no período selecionado.
+                            <?php endif; ?>
+                            <br><em>Como operador, você só tem acesso a agendamentos confirmados e concluídos.</em>
+                        <?php else: ?>
+                            <?php if (!empty($filtro_status)): ?>
+                                Nenhum agendamento com status "<?php echo ucfirst($filtro_status); ?>" foi encontrado no período selecionado.
+                            <?php else: ?>
+                                Tente ajustar os filtros para ver mais resultados ou aguarde novos agendamentos.
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </small>
                 </div>
             <?php endif; ?>
         </div>
@@ -1420,7 +1469,12 @@ function formatarDataPorExtensor($data) {
             window.open('exportar_relatorio.php?' + params.toString(), '_blank');
         }
 
-        // Sistema de pop-up personalizado
+        function filtrarSemConcluidos() {
+            const url = new URL(window.location);
+            url.searchParams.delete('status');
+            window.location.href = url.toString();
+        }
+
         function showCustomConfirm(message, onConfirm) {
             const overlay = document.getElementById('popup-overlay');
             const messageElement = document.getElementById('popup-message');
@@ -1430,11 +1484,9 @@ function formatarDataPorExtensor($data) {
             messageElement.textContent = message;
             overlay.style.display = 'flex';
             
-            // Remover listeners anteriores
             confirmBtn.onclick = null;
             cancelBtn.onclick = null;
             
-            // Adicionar novos listeners
             confirmBtn.onclick = function() {
                 overlay.style.display = 'none';
                 onConfirm();
@@ -1444,7 +1496,6 @@ function formatarDataPorExtensor($data) {
                 overlay.style.display = 'none';
             };
             
-            // Fechar com ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     overlay.style.display = 'none';
@@ -1452,7 +1503,6 @@ function formatarDataPorExtensor($data) {
             });
         }
 
-        // Scroll suave para o dia atual
         document.addEventListener('DOMContentLoaded', function() {
             const todaySection = document.querySelector('.today-highlight');
             if (todaySection) {
@@ -1464,11 +1514,9 @@ function formatarDataPorExtensor($data) {
                 }, 500);
             }
 
-            // Definir datas padrão para o filtro se não especificadas
             const dataInicio = document.getElementById('data_inicio');
             const dataFim = document.getElementById('data_fim');
             
-            // Se não há filtros, definir período padrão
             const urlParams = new URLSearchParams(window.location.search);
             if (!urlParams.has('data_inicio') && !urlParams.has('data_fim')) {
                 const hoje = new Date();
@@ -1477,6 +1525,12 @@ function formatarDataPorExtensor($data) {
                 
                 dataInicio.value = semanaPassada.toISOString().split('T')[0];
                 dataFim.value = proximoMes.toISOString().split('T')[0];
+            }
+
+            const statusSelect = document.getElementById('status');
+            if (statusSelect.value) {
+                statusSelect.style.borderColor = '#28a745';
+                statusSelect.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
             }
         });
     </script>

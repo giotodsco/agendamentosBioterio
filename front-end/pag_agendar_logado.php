@@ -13,7 +13,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <title>Biotério - Novo Agendamento</title>
+    <title>Biodiversidade - Novo Agendamento</title>
     <style>
         * {
             margin: 0;
@@ -164,7 +164,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
             font-weight: bold;
         }
 
-        /* NOVO: Estilos do calendário */
+        /* Estilos do calendário */
         .calendar-container {
             background: white;
             border-radius: 15px;
@@ -279,6 +279,25 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
 
         .calendar-day.other-month {
             opacity: 0.3;
+        }
+
+        /* NOVO: Estilo para destacar a primeira data disponível */
+        .calendar-day.min-date {
+            border: 3px solid #28a745 !important;
+            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+            animation: pulseGreen 2s infinite;
+        }
+
+        @keyframes pulseGreen {
+            0% {
+                box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(40, 167, 69, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+            }
         }
 
         .availability-info {
@@ -610,7 +629,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
         <div class="container">
             <div class="form-header">
                 <h1><i class="fa-solid fa-calendar-plus"></i> Novo Agendamento</h1>
-                <p>Sistema de Agendamento do Agendamento do Espaço de Biodiversidade FSA</p>
+                <p>Sistema de Agendamento do Espaço de Biodiversidade FSA</p>
             </div>
             
             <div class="form-container">
@@ -625,6 +644,7 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
                 <div class="availability-info">
                     <h4><i class="fa-solid fa-info-circle"></i> Informações Importantes</h4>
                     <p><strong>Horário de funcionamento:</strong> Segunda a Sexta, das 10:00 às 18:00</p>
+                    <p><strong>Antecedência mínima:</strong> Agendamentos devem ser feitos com pelo menos 2 dias de antecedência</p>
                     <p><strong>Limite diário:</strong> Máximo 10 visitas por dia</p>
                     <p><strong>Agendamento:</strong> Múltiplas pessoas podem agendar no mesmo horário</p>
                     <p><strong>Status:</strong> Seu agendamento será confirmado automaticamente</p>
@@ -744,7 +764,11 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
             }
 
             isDateAvailable(date) {
-                return date >= this.today && this.isWeekday(date);
+                // Data mínima: hoje + 2 dias
+                const minDate = new Date(this.today);
+                minDate.setDate(minDate.getDate() + 2);
+                
+                return date >= minDate && this.isWeekday(date);
             }
 
             formatDate(date) {
@@ -782,6 +806,10 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
                 const startDate = new Date(firstDay);
                 startDate.setDate(startDate.getDate() - firstDay.getDay());
 
+                // Data mínima para agendamento (hoje + 2 dias)
+                const minDate = new Date(this.today);
+                minDate.setDate(minDate.getDate() + 2);
+
                 // Gerar 42 dias (6 semanas)
                 for (let i = 0; i < 42; i++) {
                     const date = new Date(startDate);
@@ -795,14 +823,13 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
                     if (date.getMonth() !== month) {
                         dayElement.classList.add('other-month', 'disabled');
                     } else if (this.isToday(date)) {
-                        dayElement.classList.add('today');
-                        if (this.isDateAvailable(date)) {
-                            dayElement.classList.add('available');
-                        } else {
-                            dayElement.classList.add('disabled');
-                        }
+                        dayElement.classList.add('today', 'disabled');
                     } else if (this.isDateAvailable(date)) {
                         dayElement.classList.add('available');
+                        // Destacar data mínima disponível
+                        if (date.getTime() === minDate.getTime() && this.isWeekday(date)) {
+                            dayElement.classList.add('min-date');
+                        }
                     } else {
                         dayElement.classList.add('disabled');
                     }

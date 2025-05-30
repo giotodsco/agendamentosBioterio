@@ -102,6 +102,16 @@ function validarCNPJ($cnpj) {
     return intval($cnpj[13]) === $dv2;
 }
 
+// NOVA FUNÇÃO: Validar data mínima (2 dias de antecedência)
+function validarDataMinima($data) {
+    $dataAtual = new DateTime();
+    $dataAgendamento = new DateTime($data);
+    $dataMinima = clone $dataAtual;
+    $dataMinima->add(new DateInterval('P2D')); // Adiciona 2 dias
+    
+    return $dataAgendamento >= $dataMinima;
+}
+
 // ATUALIZADO: Função para gerar horários disponíveis com opção para empresas
 function gerarHorariosDisponiveis($isEmpresa = false) {
     $horarios = [];
@@ -130,13 +140,18 @@ function isDiaUtil($data) {
     return $dayOfWeek >= 1 && $dayOfWeek <= 5;
 }
 
-// Função para verificar se uma data está disponível para agendamento
+// FUNÇÃO ATUALIZADA: Verificar se uma data está disponível para agendamento
 function dataDisponivel($data) {
     try {
         $conexao = conectarBanco();
         
         // Verifica se é dia útil
         if (!isDiaUtil($data)) {
+            return false;
+        }
+        
+        // NOVA: Verifica se atende a antecedência mínima de 2 dias
+        if (!validarDataMinima($data)) {
             return false;
         }
         
@@ -196,21 +211,21 @@ function verificarPermissao($tipoNecessario) {
     }
 }
 
-// Função para gerar datas disponíveis (próximos 30 dias úteis)
+// FUNÇÃO ATUALIZADA: Gerar datas disponíveis (próximos 30 dias úteis) - agora considera 2 dias de antecedência
 function gerarDatasDisponiveis($limite = 30) {
     $datas = [];
     $dataAtual = new DateTime();
+    // ALTERADO: Começar a partir do 2º dia
+    $dataAtual->add(new DateInterval('P2D'));
     $contador = 0;
     
     while ($contador < $limite) {
-        $dataAtual->add(new DateInterval('P1D'));
-        
         // Verifica se é dia útil (segunda a sexta)
         if ($dataAtual->format('N') >= 1 && $dataAtual->format('N') <= 5) {
             $dataSql = $dataAtual->format('Y-m-d');
             
-            // Verifica se a data não está bloqueada
-            if (dataDisponivel($dataSql)) {
+            // Verifica se a data não está bloqueada (não precisa verificar dataMinima novamente, já está sendo considerada)
+            if (isDiaUtil($dataSql) && contarAgendamentosData($dataSql) < 10) {
                 $datas[] = [
                     'data' => $dataSql,
                     'data_formatada' => $dataAtual->format('d/m/Y'),
@@ -220,6 +235,8 @@ function gerarDatasDisponiveis($limite = 30) {
                 $contador++;
             }
         }
+        
+        $dataAtual->add(new DateInterval('P1D'));
     }
     
     return $datas;
@@ -394,6 +411,9 @@ function validarLogin($login, $senha) {
 }
 
 // NOVA FUNÇÃO: Buscar dados completos de agendamentos incluindo empresas - CORRIGIDA
+// FUNÇÃO CORRIGIDA para buscarAgendamentosCompletos em functions.php
+// Substitua a função existente por esta versão:
+
 function buscarAgendamentosCompletos($filtros = []) {
     try {
         $conexao = conectarBanco();
@@ -425,12 +445,17 @@ function buscarAgendamentosCompletos($filtros = []) {
             $params[] = $filtros['data_fim'];
         }
         
-        if (!empty($filtros['status'])) {
+        // CORRIGIDO: Tratamento especial para filtro de concluídos
+        if (!empty($filtros['status_especial']) && $filtros['status_especial'] === 'concluido') {
+            $hoje = date('Y-m-d');
+            $where[] = "(a.status = 'concluido' OR (a.status = 'confirmado' AND a.data_agendamento < ?))";
+            $params[] = $hoje;
+        } elseif (!empty($filtros['status'])) {
             $where[] = "a.status = ?";
             $params[] = $filtros['status'];
         }
         
-        // CORRIGIDO: Filtro para excluir status específico - Aceita string ou array
+        // Filtro para excluir status específico
         if (!empty($filtros['status_excluir'])) {
             if (is_array($filtros['status_excluir'])) {
                 $placeholders = implode(',', array_fill(0, count($filtros['status_excluir']), '?'));
@@ -447,7 +472,6 @@ function buscarAgendamentosCompletos($filtros = []) {
             $params[] = $filtros['tipo_agendamento'];
         }
         
-        // NOVO: Filtro para empresa específica
         if (!empty($filtros['empresa_id'])) {
             $where[] = "a.empresa_id = ?";
             $params[] = $filtros['empresa_id'];

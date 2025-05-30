@@ -204,7 +204,7 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             font-weight: bold;
         }
 
-        /* NOVO: Estilos do calendário */
+        /* Estilos do calendário */
         .calendar-container {
             background: white;
             border-radius: 15px;
@@ -319,6 +319,25 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
 
         .calendar-day.other-month {
             opacity: 0.3;
+        }
+
+        /* NOVO: Estilo para destacar a primeira data disponível (empresas) */
+        .calendar-day.min-date {
+            border: 3px solid #ffc107 !important;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            animation: pulseYellow 2s infinite;
+        }
+
+        @keyframes pulseYellow {
+            0% {
+                box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            }
         }
 
         input[type="number"] {
@@ -671,9 +690,10 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 <div class="availability-info">
                     <h4><i class="fa-solid fa-info-circle"></i> Informações para Empresas</h4>
                     <p><strong>Horário empresarial:</strong> Segunda a Sexta, das 08:00 às 16:00</p>
+                    <p><strong>Antecedência mínima:</strong> Agendamentos devem ser feitos com pelo menos 2 dias de antecedência</p>
                     <p><strong>Quantidade:</strong> De 1 a 45 pessoas por agendamento</p>
-                    <p><strong>Aprovação:</strong> Todas as solicitações são analisadas individualmente.</p>
-                    <p><strong>Resposta:</strong> Confirmação em até 2 dias úteis pelo site.</p>
+                    <p><strong>Aprovação:</strong> Todas as solicitações são analisadas individualmente</p>
+                    <p><strong>Resposta:</strong> Confirmação em até 2 dias úteis pelo site</p>
                 </div>
 
                 <form id="agendamento-form" method="POST" action="../back-end/agendar_empresa.php">
@@ -803,7 +823,11 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
             }
 
             isDateAvailable(date) {
-                return date >= this.today && this.isWeekday(date);
+                // Data mínima: hoje + 2 dias
+                const minDate = new Date(this.today);
+                minDate.setDate(minDate.getDate() + 2);
+                
+                return date >= minDate && this.isWeekday(date);
             }
 
             formatDate(date) {
@@ -841,6 +865,10 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                 const startDate = new Date(firstDay);
                 startDate.setDate(startDate.getDate() - firstDay.getDay());
 
+                // Data mínima para agendamento (hoje + 2 dias)
+                const minDate = new Date(this.today);
+                minDate.setDate(minDate.getDate() + 2);
+
                 // Gerar 42 dias (6 semanas)
                 for (let i = 0; i < 42; i++) {
                     const date = new Date(startDate);
@@ -854,14 +882,13 @@ if (!isset($_SESSION['empresa_logada']) || $_SESSION['empresa_logada'] !== true)
                     if (date.getMonth() !== month) {
                         dayElement.classList.add('other-month', 'disabled');
                     } else if (this.isToday(date)) {
-                        dayElement.classList.add('today');
-                        if (this.isDateAvailable(date)) {
-                            dayElement.classList.add('available');
-                        } else {
-                            dayElement.classList.add('disabled');
-                        }
+                        dayElement.classList.add('today', 'disabled');
                     } else if (this.isDateAvailable(date)) {
                         dayElement.classList.add('available');
+                        // Destacar data mínima disponível
+                        if (date.getTime() === minDate.getTime() && this.isWeekday(date)) {
+                            dayElement.classList.add('min-date');
+                        }
                     } else {
                         dayElement.classList.add('disabled');
                     }

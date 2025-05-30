@@ -22,6 +22,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 $stmt->execute();
                 $mensagem_sucesso = "Agendamento confirmado com sucesso!";
                 
+            } elseif ($acao === 'negar') {
+                $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'negado' WHERE id = :id");
+                $stmt->bindParam(':id', $agendamento_id);
+                $stmt->execute();
+                $mensagem_sucesso = "Agendamento negado com sucesso!";
+                
             } elseif ($acao === 'concluir') {
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'concluido' WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
@@ -119,7 +125,7 @@ try {
         $params[':data_fim'] = $filtro_data_fim;
     }
 
-    // Filtro por status - COM LÓGICA DE DATA
+    // CORRIGIDO: Filtro por status - COM LÓGICA DE DATA
     if (!empty($filtro_status)) {
         $hoje = date('Y-m-d');
         
@@ -139,9 +145,11 @@ try {
     }
 
     // Montar a query
-    $sql = "SELECT a.*, u.nome as usuario_nome, u.email as usuario_email 
+    $sql = "SELECT a.*, u.nome as usuario_nome, u.email as usuario_email,
+                   e.nome_instituicao as empresa_nome
             FROM agendamentos a 
-            LEFT JOIN usuarios u ON a.usuario_id = u.id";
+            LEFT JOIN usuarios u ON a.usuario_id = u.id
+            LEFT JOIN empresas e ON a.empresa_id = e.id";
     
     if (!empty($where_conditions)) {
         $sql .= " WHERE " . implode(" AND ", $where_conditions);
@@ -152,6 +160,18 @@ try {
     $stmt = $conexao->prepare($sql);
     $stmt->execute($params);
     $agendamentos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // CORRIGIDO: Processar agendamentos e determinar status de exibição
+    $hoje = date('Y-m-d');
+    foreach ($agendamentos as &$agendamento) {
+        // Determinar status de exibição
+        if ($agendamento['status'] === 'confirmado' && $agendamento['data_agendamento'] < $hoje) {
+            $agendamento['status_display'] = 'concluido';
+        } else {
+            $agendamento['status_display'] = $agendamento['status'];
+        }
+    }
+    unset($agendamento); // Limpar referência
     
     // Organizar agendamentos por data
     $agendamentos_por_data = [];
@@ -164,7 +184,6 @@ try {
     }
     
     // MODIFICAÇÃO: Organizar datas por proximidade (hoje primeiro, futuro próximo, depois passado)
-    $hoje = date('Y-m-d');
     $datas_hoje = [];
     $datas_futuras = [];
     $datas_passadas = [];
@@ -705,6 +724,18 @@ function formatarDataPorExtensor($data) {
             50% { border-color: #e67e22; }
         }
 
+        /* NOVO: Estilo para cards concluídos */
+        .appointment-card.concluido-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-color: #6c757d;
+            opacity: 0.85;
+        }
+
+        .appointment-card.concluido-card:hover {
+            border-color: #5a6268;
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.2);
+        }
+
         .appointment-header {
             display: flex;
             justify-content: space-between;
@@ -733,6 +764,11 @@ function formatarDataPorExtensor($data) {
             background-color: rgba(255, 193, 7, 0.3);
             color: #856404;
             animation: pulse 2s infinite;
+        }
+
+        .appointment-id.concluido {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
         }
 
         @keyframes pulse {
@@ -830,6 +866,14 @@ function formatarDataPorExtensor($data) {
             color: white;
             border: 2px solid #27ae60;
             box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        /* NOVO: Status específico para concluídos */
+        .status-concluido {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            border: 2px solid #6c757d;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
         }
 
         .status-cancelado {
@@ -945,6 +989,23 @@ function formatarDataPorExtensor($data) {
 
         .btn-admin.concluir:hover {
             box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        /* NOVO: Botão de excluir destacado */
+        .btn-admin.excluir {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: 2px solid #dc3545;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 130px;
+        }
+
+        .btn-admin.excluir:hover {
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.5);
+            border-color: #bd2130;
         }
 
         .btn-admin-excluir-destaque {
@@ -1226,8 +1287,8 @@ function formatarDataPorExtensor($data) {
             </div>
             <?php if ($_SESSION['tipo_usuario'] === 'admin'): ?>
             <a href="pag_usuarios.php" class="btn-header config">
-                <i class="fa-solid fa-cog"></i>
-                Usuarios
+                <i class="fa-solid fa-users-cog"></i>
+                Usuários
             </a>
             <?php endif; ?>
             <a href="../front-end/pag_inicial.html" class="btn-header">
@@ -1249,7 +1310,7 @@ function formatarDataPorExtensor($data) {
 
         <div class="admin-info">
             <h4><i class="fa-solid fa-crown"></i> Painel Administrativo</h4>
-            <p>Como administrador, você tem acesso completo: <strong>confirmar</strong>, <strong>negar</strong>, <strong>cancelar</strong> e <strong>remover</strong> agendamentos. Agendamentos pendentes em <strong style="color: #ffc107;">AMARELO</strong> requerem sua aprovação.</p>
+            <p>Como administrador, você tem acesso completo: <strong>confirmar</strong>, <strong>negar</strong>, <strong>cancelar</strong>, <strong>concluir</strong> e <strong style="color: #dc3545;">EXCLUIR PERMANENTEMENTE</strong> qualquer agendamento. Agendamentos pendentes em <strong style="color: #ffc107;">AMARELO</strong> requerem sua aprovação.</p>
         </div>
 
         <div class="alerts">
@@ -1318,8 +1379,8 @@ function formatarDataPorExtensor($data) {
             </div>
             <div class="stat-card">
                 <div class="stat-number"><?php 
-                    $hoje = date('Y-m-d');
                     echo count(array_filter($agendamentos, fn($a) => 
+                        (isset($a['status_display']) && $a['status_display'] === 'concluido') ||
                         $a['status'] === 'concluido' || 
                         ($a['status'] === 'confirmado' && $a['data_agendamento'] < $hoje)
                     )); 
@@ -1359,15 +1420,13 @@ function formatarDataPorExtensor($data) {
                                 </div>
                                 <div class="day-date"><?php echo formatarDataPorExtensor($data); ?></div>
                                 
-                                <!-- BOTÃO EXCLUIR PERMANENTEMENTE - APENAS para dias passados -->
-                                <?php if ($is_past): ?>
+                                <!-- BOTÃO EXCLUIR TODOS OS AGENDAMENTOS DO DIA -->
                                 <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #dc3545; text-align: center;">
                                     <button type="button" class="btn-admin-excluir-destaque" 
                                             onclick="excluirTodosAgendamentosDia('<?php echo $data; ?>')">
                                         <i class="fa-solid fa-trash-alt"></i> EXCLUIR TODOS AGENDAMENTOS DESTE DIA
                                     </button>
                                 </div>
-                                <?php endif; ?>
                             </div>
                             <div class="day-stats">
                                 <div class="day-count">
@@ -1381,6 +1440,17 @@ function formatarDataPorExtensor($data) {
                                 <div class="day-count">
                                     <i class="fa-solid fa-building"></i> <?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')); ?> empresa<?php echo count(array_filter($agendamentos_do_dia, fn($a) => $a['tipo_agendamento'] === 'empresa')) != 1 ? 's' : ''; ?>
                                 </div>
+                                <div class="day-count">
+                                    <i class="fa-solid fa-flag-checkered"></i> 
+                                    <?php echo count(array_filter($agendamentos_do_dia, fn($a) => 
+                                        (isset($a['status_display']) && $a['status_display'] === 'concluido') ||
+                                        $a['status'] === 'concluido'
+                                    )); ?> 
+                                    concluído<?php echo count(array_filter($agendamentos_do_dia, fn($a) => 
+                                        (isset($a['status_display']) && $a['status_display'] === 'concluido') ||
+                                        $a['status'] === 'concluido'
+                                    )) != 1 ? 's' : ''; ?>
+                                </div>
                             </div>
                         </div>
                         
@@ -1388,20 +1458,26 @@ function formatarDataPorExtensor($data) {
                             <?php foreach ($agendamentos_do_dia as $agendamento): 
                                 $isEmpresa = $agendamento['tipo_agendamento'] === 'empresa';
                                 $isPendente = $agendamento['status'] === 'pendente';
+                                $isConcluido = (isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido') || 
+                                               $agendamento['status'] === 'concluido';
                                 
                                 $cardClass = '';
                                 if ($isPendente) {
                                     $cardClass = 'pendente-card';
+                                } elseif ($isConcluido) {
+                                    $cardClass = 'concluido-card';
                                 } elseif ($isEmpresa) {
                                     $cardClass = 'empresa-card';
                                 }
                             ?>
                             <div class="appointment-card <?php echo $cardClass; ?>" id="card-<?php echo $agendamento['id']; ?>">
                                 <div class="appointment-header">
-                                    <div class="appointment-id <?php echo $isEmpresa ? 'empresa' : ''; ?> <?php echo $isPendente ? 'pendente' : ''; ?>">
+                                    <div class="appointment-id <?php echo $isEmpresa ? 'empresa' : ''; ?> <?php echo $isPendente ? 'pendente' : ''; ?> <?php echo $isConcluido ? 'concluido' : ''; ?>">
                                         <i class="fa-solid fa-hashtag"></i> <?php echo $agendamento['id']; ?>
                                         <?php if ($isPendente): ?>
                                             <span style="color: #e67e22; font-weight: bold;">REQUER AÇÃO</span>
+                                        <?php elseif ($isConcluido): ?>
+                                            <span style="color: #6c757d; font-weight: bold;">CONCLUÍDO</span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="appointment-time">
@@ -1434,15 +1510,11 @@ function formatarDataPorExtensor($data) {
                                 
                                 <div class="card-footer">
                                     <div>
-                                        <span class="status status-<?php echo $agendamento['status']; ?>">
-                                            <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                                <?php if ($is_past): ?>
-                                                    <i class="fa-solid fa-check-double"></i> CONCLUÍDO
-                                                <?php else: ?>
-                                                    <i class="fa-solid fa-check-circle"></i> CONFIRMADO
-                                                <?php endif; ?>
-                                            <?php elseif ($agendamento['status'] === 'concluido'): ?>
+                                        <span class="status status-<?php echo isset($agendamento['status_display']) ? $agendamento['status_display'] : $agendamento['status']; ?>">
+                                            <?php if (isset($agendamento['status_display']) && $agendamento['status_display'] === 'concluido'): ?>
                                                 <i class="fa-solid fa-check-double"></i> CONCLUÍDO
+                                            <?php elseif ($agendamento['status'] === 'confirmado'): ?>
+                                                <i class="fa-solid fa-check-circle"></i> CONFIRMADO
                                             <?php elseif ($agendamento['status'] === 'pendente'): ?>
                                                 <i class="fa-solid fa-clock"></i> PENDENTE
                                             <?php elseif ($agendamento['status'] === 'negado'): ?>
@@ -1470,64 +1542,45 @@ function formatarDataPorExtensor($data) {
 
                                 <!-- AÇÕES ADMINISTRATIVAS -->
                                 <div class="admin-actions">
-                                    <?php if ($is_past): ?>
-                                        <!-- Botão individual de exclusão para dias passados -->
-                                        <button type="button" class="btn-admin remover"
-                                                onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
-                                            <i class="fa-solid fa-trash"></i> Excluir Este
-                                        </button>
-                                    <?php else: ?>
-                                        <!-- Ações normais para dias atuais/futuros -->
-                                        <?php if ($agendamento['status'] === 'pendente'): ?>
-                                            <form method="POST" style="display: inline;" action="">
-                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                                <input type="hidden" name="acao" value="confirmar">
-                                                <button type="submit" class="btn-admin confirmar">
-                                                    <i class="fa-solid fa-check"></i> Confirmar
-                                                </button>
-                                            </form>
-                                            <form method="POST" style="display: inline;" action="">
-                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                                <input type="hidden" name="acao" value="negar">
-                                                <button type="submit" class="btn-admin negar">
-                                                    <i class="fa-solid fa-times"></i> Negar
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
-                                        
-                                        <?php if ($agendamento['status'] === 'confirmado'): ?>
-                                            <form method="POST" style="display: inline;" action="">
-                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                                <input type="hidden" name="acao" value="concluir">
-                                                <button type="submit" class="btn-admin concluir">
-                                                    <i class="fa-solid fa-check-double"></i> Concluir
-                                                </button>
-                                            </form>
-                                            <form method="POST" style="display: inline;" action="" id="form-cancelar-<?php echo $agendamento['id']; ?>">
-                                                <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
-                                                <input type="hidden" name="acao" value="cancelar">
-                                                <button type="button" class="btn-admin cancelar"
-                                                        onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('form-cancelar-<?php echo $agendamento['id']; ?>').submit(); })">
-                                                    <i class="fa-solid fa-ban"></i> Cancelar
-                                                </button>
-                                            </form>
-                                        <?php endif; ?>
-                                        
-                                        <!-- NOVO: Botão de excluir para agendamentos cancelados -->
-                                        <?php if ($agendamento['status'] === 'cancelado'): ?>
-                                            <button type="button" class="btn-admin remover"
-                                                    onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
-                                                <i class="fa-solid fa-trash"></i> Excluir Cancelado
+                                    <!-- BOTÃO EXCLUIR INDIVIDUAL - SEMPRE DISPONÍVEL -->
+                                    <button type="button" class="btn-admin excluir"
+                                            onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
+                                        <i class="fa-solid fa-trash"></i> EXCLUIR
+                                    </button>
+
+                                    <?php if ($agendamento['status'] === 'pendente'): ?>
+                                        <form method="POST" style="display: inline;" action="">
+                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                            <input type="hidden" name="acao" value="confirmar">
+                                            <button type="submit" class="btn-admin confirmar">
+                                                <i class="fa-solid fa-check"></i> Confirmar
                                             </button>
-                                        <?php endif; ?>
-                                        
-                                        <!-- NOVO: Botão de excluir para agendamentos negados -->
-                                        <?php if ($agendamento['status'] === 'negado'): ?>
-                                            <button type="button" class="btn-admin remover"
-                                                    onclick="excluirAgendamentoIndividual(<?php echo $agendamento['id']; ?>, '<?php echo $data; ?>')">
-                                                <i class="fa-solid fa-trash"></i> Excluir Negado
+                                        </form>
+                                        <form method="POST" style="display: inline;" action="">
+                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                            <input type="hidden" name="acao" value="negar">
+                                            <button type="submit" class="btn-admin negar">
+                                                <i class="fa-solid fa-times"></i> Negar
                                             </button>
-                                        <?php endif; ?>
+                                        </form>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($agendamento['status'] === 'confirmado' && !$isConcluido): ?>
+                                        <form method="POST" style="display: inline;" action="">
+                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                            <input type="hidden" name="acao" value="concluir">
+                                            <button type="submit" class="btn-admin concluir">
+                                                <i class="fa-solid fa-check-double"></i> Concluir
+                                            </button>
+                                        </form>
+                                        <form method="POST" style="display: inline;" action="" id="form-cancelar-<?php echo $agendamento['id']; ?>">
+                                            <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
+                                            <input type="hidden" name="acao" value="cancelar">
+                                            <button type="button" class="btn-admin cancelar"
+                                                    onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento?', () => { document.getElementById('form-cancelar-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                <i class="fa-solid fa-ban"></i> Cancelar
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -1549,7 +1602,7 @@ function formatarDataPorExtensor($data) {
         // Função para excluir agendamento individual
         function excluirAgendamentoIndividual(agendamentoId, data) {
             showCustomConfirm(
-                '⚠️ ATENÇÃO: Deseja EXCLUIR permanentemente este agendamento?\n\nEsta ação não pode ser desfeita!',
+                '⚠️ ATENÇÃO CRÍTICA: Deseja EXCLUIR PERMANENTEMENTE este agendamento?\n\nEsta ação é IRREVERSÍVEL e removerá completamente o agendamento do sistema!\n\nTem certeza absoluta?',
                 () => {
                     // Fazer requisição AJAX para excluir
                     fetch('', {
@@ -1628,7 +1681,7 @@ function formatarDataPorExtensor($data) {
             }
             
             showCustomConfirm(
-                `⚠️ ATENÇÃO CRÍTICA: Deseja EXCLUIR PERMANENTEMENTE todos os ${totalCards} agendamento(s) do dia ${formatarData(data)}?\n\nEsta ação é IRREVERSÍVEL e removerá completamente este dia da lista!`,
+                `⚠️ ATENÇÃO MÁXIMA: Deseja EXCLUIR PERMANENTEMENTE todos os ${totalCards} agendamento(s) do dia ${formatarData(data)}?\n\nEsta ação é COMPLETAMENTE IRREVERSÍVEL e removerá:\n- Todos os agendamentos desta data\n- Todos os dados associados\n- A seção completa do dia\n\nTEM CERTEZA ABSOLUTA? NÃO HÁ COMO DESFAZER!`,
                 () => {
                     let excluidos = 0;
                     const agendamentoIds = Array.from(cards).map(card => {
@@ -1666,7 +1719,7 @@ function formatarDataPorExtensor($data) {
                                         checkIfNoAppointments();
                                         
                                         // Mostrar mensagem de sucesso
-                                        showSuccessMessage(`Todos os agendamentos do dia foram excluídos permanentemente!`);
+                                        showSuccessMessage(`Todos os ${totalCards} agendamentos do dia foram excluídos permanentemente!`);
                                     }, 800);
                                 }
                             }
