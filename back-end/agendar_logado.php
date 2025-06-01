@@ -1,5 +1,5 @@
 <?php
-// acexx/back-end/agendar_logado.php - VERSÃO SEMPRE AUTOMÁTICA
+// acexx/back-end/agendar_logado.php - VERSÃO SEMPRE AUTOMÁTICA COM EMAIL
 session_start();
 require_once 'functions.php';
 
@@ -123,6 +123,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if (!$resultado) {
             throw new PDOException("Erro ao inserir agendamento");
+        }
+
+        // Obter o ID do agendamento recém-criado
+        $agendamento_id = $conexao->lastInsertId();
+
+        // NOVO: Enviar email de confirmação automática
+        $resultadoEmail = enviarEmailAgendamentoConfirmado($agendamento_id);
+        if (!$resultadoEmail['sucesso']) {
+            error_log("Falha ao enviar email de confirmação para agendamento ID: $agendamento_id");
         }
 
         // Verificar se atingiu limite de 10 agendamentos e bloquear data se necessário

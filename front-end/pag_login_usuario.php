@@ -15,9 +15,6 @@ if (isset($_SESSION['cadastro_dados'])) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="front-end-style/style_pag_login_usuario.css">
     <title>Biotério - Login de Usuário</title>
-    <style>
-        
-    </style>
 </head>
 <body>
     <!-- Pop-up personalizado -->
@@ -68,7 +65,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                     <div class="login-unificado-info">
                         <h4><i class="fa-solid fa-info-circle"></i> Login Unificado</h4>
                         <p>Pessoas físicas: Digite seu <strong>email</strong><br>
-                        Empresas: Digite seu <strong>email</strong> ou <strong>CNPJ</strong></p>
+                        Empresas: Digite seu <strong>email</strong> ou <strong>CNPJ</strong> (com ou sem formatação)</p>
                     </div>
                     
                     <div class="welcome-info">
@@ -88,7 +85,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                             </label>
                             <div class="input-container">
                                 <i class="fa-solid fa-user input-icon"></i>
-                                <input type="text" id="login_field" name="login" placeholder="Digite seu email ou CNPJ" required>
+                                <input type="text" id="login_field" name="login" placeholder="Digite seu email ou CNPJ (ex: 47960950000121)" required>
                             </div>
                         </div>
                         
@@ -281,70 +278,89 @@ if (isset($_SESSION['cadastro_dados'])) {
     </div>
 
     <script>
-        // Validação melhorada de CPF
+        // ALGORITMO OFICIAL DA RECEITA FEDERAL - Validação de CPF CORRIGIDA
         function validarCPF(cpf) {
+            // Remove caracteres não numéricos
             cpf = cpf.replace(/\D/g, '');
             
-            // Verificações básicas
+            // Verifica se tem 11 dígitos
             if (cpf.length !== 11) return false;
-            if (/^(\d)\1{10}$/.test(cpf)) return false;
             
-            // Primeiro dígito verificador
+            // CPFs inválidos conhecidos
+            const cpfsInvalidos = [
+                '00000000000', '11111111111', '22222222222', '33333333333',
+                '44444444444', '55555555555', '66666666666', '77777777777',
+                '88888888888', '99999999999'
+            ];
+            
+            if (cpfsInvalidos.includes(cpf)) return false;
+            
+            // Calcula primeiro dígito verificador
             let soma = 0;
             for (let i = 0; i < 9; i++) {
                 soma += parseInt(cpf.charAt(i)) * (10 - i);
             }
-            let resto = 11 - (soma % 11);
-            let dv1 = resto < 2 ? 0 : resto;
+            let resto = soma % 11;
+            let dv1 = resto < 2 ? 0 : 11 - resto;
             
             if (parseInt(cpf.charAt(9)) !== dv1) return false;
             
-            // Segundo dígito verificador
+            // Calcula segundo dígito verificador
             soma = 0;
             for (let i = 0; i < 10; i++) {
                 soma += parseInt(cpf.charAt(i)) * (11 - i);
             }
-            resto = 11 - (soma % 11);
-            let dv2 = resto < 2 ? 0 : resto;
+            resto = soma % 11;
+            let dv2 = resto < 2 ? 0 : 11 - resto;
             
             return parseInt(cpf.charAt(10)) === dv2;
         }
 
-        // Validação melhorada de CNPJ
+        // ALGORITMO OFICIAL DA RECEITA FEDERAL - Validação de CNPJ CORRIGIDA
         function validarCNPJ(cnpj) {
+            // Remove caracteres não numéricos
             cnpj = cnpj.replace(/\D/g, '');
             
+            // Verifica se tem 14 dígitos
             if (cnpj.length !== 14) return false;
-            if (/^(\d)\1{13}$/.test(cnpj)) return false;
             
-            let tamanho = cnpj.length - 2;
-            let numeros = cnpj.substring(0, tamanho);
-            let digitos = cnpj.substring(tamanho);
+            // CNPJs inválidos conhecidos
+            const cnpjsInvalidos = [
+                '00000000000000', '11111111111111', '22222222222222', '33333333333333',
+                '44444444444444', '55555555555555', '66666666666666', '77777777777777',
+                '88888888888888', '99999999999999'
+            ];
+            
+            if (cnpjsInvalidos.includes(cnpj)) return false;
+            
+            // Calcula primeiro dígito verificador
             let soma = 0;
-            let pos = tamanho - 7;
+            const multiplicadores1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
             
-            for (let i = tamanho; i >= 1; i--) {
-                soma += numeros.charAt(tamanho - i) * pos--;
-                if (pos < 2) pos = 9;
+            for (let i = 0; i < 12; i++) {
+                soma += parseInt(cnpj.charAt(i)) * multiplicadores1[i];
             }
             
-            let resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-            if (resultado !== parseInt(digitos.charAt(0))) return false;
+            let resto = soma % 11;
+            let dv1 = resto < 2 ? 0 : 11 - resto;
             
-            tamanho = tamanho + 1;
-            numeros = cnpj.substring(0, tamanho);
+            if (parseInt(cnpj.charAt(12)) !== dv1) return false;
+            
+            // Calcula segundo dígito verificador
             soma = 0;
-            pos = tamanho - 7;
+            const multiplicadores2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
             
-            for (let i = tamanho; i >= 1; i--) {
-                soma += numeros.charAt(tamanho - i) * pos--;
-                if (pos < 2) pos = 9;
+            for (let i = 0; i < 13; i++) {
+                soma += parseInt(cnpj.charAt(i)) * multiplicadores2[i];
             }
             
-            resultado = soma % 11 < 2 ? 0 : 11 - soma % 11;
-            return resultado === parseInt(digitos.charAt(1));
+            resto = soma % 11;
+            let dv2 = resto < 2 ? 0 : 11 - resto;
+            
+            return parseInt(cnpj.charAt(13)) === dv2;
         }
 
+        // Formatação automática de CPF
         function formatCPF(cpf) {
             cpf = cpf.replace(/\D/g, '');
             cpf = cpf.replace(/(\d{3})(\d)/, '$1.$2');
@@ -353,6 +369,7 @@ if (isset($_SESSION['cadastro_dados'])) {
             return cpf;
         }
 
+        // Formatação automática de CNPJ
         function formatCNPJ(cnpj) {
             cnpj = cnpj.replace(/\D/g, '');
             cnpj = cnpj.replace(/(\d{2})(\d)/, '$1.$2');
@@ -501,7 +518,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                 });
             }
 
-            // Validação em tempo real para formulários
+            // Validação em tempo real para formulário de cadastro pessoa física
             const cadastroForm = document.getElementById('cadastro-form');
             if (cadastroForm) {
                 cadastroForm.addEventListener('submit', function(e) {
@@ -526,6 +543,7 @@ if (isset($_SESSION['cadastro_dados'])) {
                 });
             }
 
+            // Validação em tempo real para formulário de cadastro empresa
             const empresaForm = document.getElementById('empresa-form');
             if (empresaForm) {
                 empresaForm.addEventListener('submit', function(e) {
@@ -547,6 +565,44 @@ if (isset($_SESSION['cadastro_dados'])) {
                     }
 
                     setButtonLoading(submitBtn, true);
+                });
+            }
+
+            // Validação em tempo real de CPF enquanto digita
+            if (cpfInput) {
+                cpfInput.addEventListener('blur', function() {
+                    const cpf = this.value;
+                    if (cpf && !validarCPF(cpf)) {
+                        this.style.borderColor = '#dc3545';
+                        this.style.backgroundColor = '#fff5f5';
+                    } else {
+                        this.style.borderColor = '#28a745';
+                        this.style.backgroundColor = '#f8fff8';
+                    }
+                });
+                
+                cpfInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'rgba(64, 122, 53, 0.819)';
+                    this.style.backgroundColor = 'rgb(250, 250, 250)';
+                });
+            }
+
+            // Validação em tempo real de CNPJ enquanto digita
+            if (cnpjInput) {
+                cnpjInput.addEventListener('blur', function() {
+                    const cnpj = this.value;
+                    if (cnpj && !validarCNPJ(cnpj)) {
+                        this.style.borderColor = '#dc3545';
+                        this.style.backgroundColor = '#fff5f5';
+                    } else {
+                        this.style.borderColor = '#28a745';
+                        this.style.backgroundColor = '#f8fff8';
+                    }
+                });
+                
+                cnpjInput.addEventListener('focus', function() {
+                    this.style.borderColor = 'rgba(64, 122, 53, 0.819)';
+                    this.style.backgroundColor = 'rgb(250, 250, 250)';
                 });
             }
         });

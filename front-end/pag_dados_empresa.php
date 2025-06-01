@@ -229,6 +229,6 @@ try {
         </div>
     </div>
 
-    
+    <script src="front-end-javascript\js_pag_dados_empresa.js"></script>
 </body>
 </html>

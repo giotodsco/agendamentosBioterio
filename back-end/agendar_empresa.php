@@ -1,5 +1,5 @@
 <?php
-// acexx/back-end/agendar_empresa.php - SEMPRE PENDENTE
+// acexx/back-end/agendar_empresa.php - SEMPRE PENDENTE COM EMAIL
 session_start();
 require_once 'functions.php';
 
@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Validação de quantidade (1 a 20 pessoas)
+    // Validação de quantidade (1 a 45 pessoas)
     if ($quantidade_pessoas < 1 || $quantidade_pessoas > 45)  {
         header("Location: ../front-end/pag_agendar_empresa.php?erro=" . urlencode("A quantidade de pessoas deve estar entre 1 a 45."));
         exit();
@@ -109,6 +109,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $empresa_id,
             $quantidade_pessoas
         ]);
+
+        // Obter o ID do agendamento recém-criado
+        $agendamento_id = $conexao->lastInsertId();
+
+        // NOVO: Enviar email de pendência para empresa
+        $resultadoEmail = enviarEmailAgendamentoPendente($agendamento_id);
+        if (!$resultadoEmail['sucesso']) {
+            error_log("Falha ao enviar email de pendência para agendamento ID: $agendamento_id");
+        }
 
         // Redirecionar para página de sucesso
         header("Location: ../front-end/pag_sucesso_empresa.php");

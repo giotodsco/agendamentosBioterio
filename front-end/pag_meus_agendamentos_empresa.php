@@ -54,6 +54,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                     $stmt->execute([$agendamento_id, $_SESSION['empresa_id']]);
                     
                     if ($stmt->rowCount() > 0) {
+                        // NOVO: Enviar email de cancelamento quando empresa cancela
+                        $resultadoEmail = enviarEmailAgendamentoCancelado($agendamento_id);
+                        if (!$resultadoEmail['sucesso']) {
+                            error_log("Falha ao enviar email de cancelamento para agendamento ID: $agendamento_id");
+                        }
+                        
                         if ($agendamento['status'] === 'pendente') {
                             $mensagem_sucesso = "Solicitação de agendamento cancelada com sucesso.";
                         } else {
@@ -161,7 +167,7 @@ try {
             <a href="#" class="btn-logout" onclick="showCustomConfirm('Tem certeza que deseja sair?', () => { document.getElementById('logout-form').submit(); })">
                 <i class="fa-solid fa-sign-out-alt"></i> Sair
             </a>
-            <form id="logout-form" action="../back-end/auth_empresa.php" method="POST" style="display: none;">
+            <form id="logout-form" action="../back-end/auth_unificado.php" method="POST" style="display: none;">
                 <input type="hidden" name="acao" value="logout_empresa">
             </form>
         </div>
@@ -180,6 +186,10 @@ try {
                 <div class="alert alert-success">
                     <i class="fa-solid fa-check-circle"></i>
                     <?php echo htmlspecialchars($mensagem_sucesso); ?>
+                    <!-- NOVO: Indicar que email foi enviado -->
+                    <?php if (strpos($mensagem_sucesso, 'cancelad') !== false): ?>
+                        <br><small><i class="fa-solid fa-envelope"></i> Um email de confirmação foi enviado para você.</small>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
             
@@ -321,7 +331,7 @@ try {
                                         <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="acao" value="cancelar">
                                         <button type="button" class="btn btn-warning" 
-                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar esta solicitação? A solicitação será removida da análise.', () => { document.getElementById('cancel-pending-form-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar esta solicitação? A solicitação será removida da análise e você receberá um email de confirmação.', () => { document.getElementById('cancel-pending-form-<?php echo $agendamento['id']; ?>').submit(); })">
                                             <i class="fa-solid fa-ban"></i> Cancelar Solicitação
                                         </button>
                                     </form>
@@ -331,7 +341,7 @@ try {
                                         <input type="hidden" name="agendamento_id" value="<?php echo $agendamento['id']; ?>">
                                         <input type="hidden" name="acao" value="cancelar">
                                         <button type="button" class="btn btn-danger" 
-                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento confirmado?', () => { document.getElementById('cancel-form-<?php echo $agendamento['id']; ?>').submit(); })">
+                                                onclick="showCustomConfirm('Tem certeza que deseja cancelar este agendamento confirmado? Você receberá um email de confirmação do cancelamento.', () => { document.getElementById('cancel-form-<?php echo $agendamento['id']; ?>').submit(); })">
                                             <i class="fa-solid fa-ban"></i> Cancelar Agendamento
                                         </button>
                                     </form>

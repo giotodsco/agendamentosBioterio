@@ -160,6 +160,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt = $conexao->prepare("INSERT INTO usuarios (nome, email, cpf, senha) VALUES (?, ?, ?, ?)");
             $stmt->execute([$nome, $email, $cpf_limpo, $senha_hash]);
 
+            // NOVO: Enviar email de cadastro
+            $resultadoEmail = enviarEmailCadastro($nome, $email, 'usuario');
+            if (!$resultadoEmail['sucesso']) {
+                error_log("Falha ao enviar email de cadastro para: $email");
+            }
+
             header("Location: ../front-end/pag_login_usuario.php?cadastro_sucesso=true");
             exit();
 
@@ -247,6 +253,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Insere a empresa
             $stmt = $conexao->prepare("INSERT INTO empresas (nome_instituicao, cnpj, email, senha, ativo) VALUES (?, ?, ?, ?, 1)");
             $stmt->execute([$nome_instituicao, $cnpj_limpo, $email, $senha_hash]);
+
+            // NOVO: Enviar email de cadastro para empresa
+            $resultadoEmail = enviarEmailCadastro($nome_instituicao, $email, 'empresa');
+            if (!$resultadoEmail['sucesso']) {
+                error_log("Falha ao enviar email de cadastro para empresa: $email");
+            }
 
             header("Location: ../front-end/pag_login_usuario.php?cadastro_sucesso=true&tab=empresa");
             exit();

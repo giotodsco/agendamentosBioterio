@@ -3,7 +3,7 @@ session_start();
 require_once 'functions.php';
 
 if (!isset($_SESSION['logado']) || $_SESSION['logado'] !== true) {
-    header("Location: front-end\pag_adm.php");
+    header("Location: pag_adm.php");
     exit();
 }
 
@@ -20,18 +20,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'confirmado' WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
+                
+                // NOVO: Enviar email de aprovação para empresas
+                $resultadoEmail = enviarEmailAgendamentoAprovado($agendamento_id);
+                if (!$resultadoEmail['sucesso']) {
+                    error_log("Falha ao enviar email de aprovação para agendamento ID: $agendamento_id");
+                }
+                
                 $mensagem_sucesso = "Agendamento confirmado com sucesso!";
                 
             } elseif ($acao === 'negar') {
+                // Capturar motivo da negação se fornecido
+                $motivo = $_POST['motivo'] ?? '';
+                
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'negado' WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
+                
+                // NOVO: Enviar email de negação para empresas
+                $resultadoEmail = enviarEmailAgendamentoNegado($agendamento_id, $motivo);
+                if (!$resultadoEmail['sucesso']) {
+                    error_log("Falha ao enviar email de negação para agendamento ID: $agendamento_id");
+                }
+                
                 $mensagem_sucesso = "Agendamento negado com sucesso!";
                 
             } elseif ($acao === 'concluir') {
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'concluido' WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
+                
+                // NOVO: Enviar email de conclusão
+                $resultadoEmail = enviarEmailAgendamentoConcluido($agendamento_id);
+                if (!$resultadoEmail['sucesso']) {
+                    error_log("Falha ao enviar email de conclusão para agendamento ID: $agendamento_id");
+                }
+                
                 $mensagem_sucesso = "Agendamento concluído com sucesso!";
                 
             } elseif ($acao === 'excluir') {
@@ -82,6 +106,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['acao'])) {
                 $stmt = $conexao->prepare("UPDATE agendamentos SET status = 'cancelado', data_cancelamento = NOW() WHERE id = :id");
                 $stmt->bindParam(':id', $agendamento_id);
                 $stmt->execute();
+                
+                // NOVO: Enviar email de cancelamento
+                $resultadoEmail = enviarEmailAgendamentoCancelado($agendamento_id);
+                if (!$resultadoEmail['sucesso']) {
+                    error_log("Falha ao enviar email de cancelamento para agendamento ID: $agendamento_id");
+                }
+                
                 $mensagem_sucesso = "Agendamento cancelado com sucesso!";
                 
             } elseif ($acao === 'remover') {
