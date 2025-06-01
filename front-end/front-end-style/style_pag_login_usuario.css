@@ -1,0 +1,640 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    background: radial-gradient(circle, rgba(173, 199, 205, 1) 0%, rgba(169, 189, 165, 1) 31%, rgba(64, 122, 53, 0.819) 85%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    padding: 10px;
+}
+
+/* MELHORADO: Container principal com melhor controle de altura */
+.login-container {
+    display: flex;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: rgb(225, 225, 228);
+    border-radius: 20px;
+    box-shadow: 5px 5px 50px rgba(90, 90, 90, 0.392);
+    overflow: hidden;
+    min-height: calc(100vh - 20px);
+    max-height: calc(100vh - 20px);
+}
+
+/* MELHORADO: Seção de imagem com altura responsiva */
+.login-image {
+    flex: 1;
+    min-height: 300px;
+    background-image:
+        radial-gradient(circle, rgba(121, 125, 125, 0.43) 0%, rgba(101, 113, 98, 0.626) 31%, rgba(64, 122, 53, 0.36) 85%),
+        url('https://www.fsa.br/wp-content/uploads/2019/02/d79abec1-2674-42b2-9873-431fbdaa9007.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 1px 50px 50px 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.image-overlay {
+    background-color: rgba(64, 122, 53, 0.15);
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    backdrop-filter: blur(5px);
+    max-width: 90%;
+}
+
+.image-overlay h2 {
+    color: white;
+    font-size: 24px;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.image-overlay p {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 14px;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* MELHORADO: Seção de formulário com scroll controlado */
+.login-form-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 20px);
+    max-height: calc(100vh - 20px);
+    overflow: hidden;
+}
+
+/* MELHORADO: Header fixo para manter título sempre visível */
+.form-header {
+    background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
+    padding: 20px 30px;
+    border-bottom: 1px solid rgba(64, 122, 53, 0.1);
+    flex-shrink: 0;
+}
+
+.main-title {
+    color: rgb(55, 75, 51);
+    font-size: 28px;
+    text-align: center;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.subtitle {
+    color: rgb(100, 100, 100);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* MELHORADO: Área de conteúdo com scroll suave */
+.form-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 30px 30px;
+}
+
+/* MELHORADO: Barra de rolagem personalizada */
+.form-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.form-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.form-content::-webkit-scrollbar-thumb {
+    background: rgba(64, 122, 53, 0.3);
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.form-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(64, 122, 53, 0.6);
+}
+
+/* MELHORADO: Tabs mais compactas */
+.tabs {
+    display: flex;
+    margin-bottom: 25px;
+    background-color: rgb(200, 200, 200);
+    border-radius: 10px;
+    overflow: hidden;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    background-color: transparent;
+    font-size: 14px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    transition: all 0.3s;
+    font-weight: bold;
+    color: rgb(60, 59, 59);
+}
+
+.tab.active {
+    background-color: rgba(64, 122, 53, 0.819);
+    color: white;
+}
+
+.tab:hover:not(.active) {
+    background-color: rgb(180, 180, 180);
+}
+
+.tab.empresa-tab {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+    transition: all 0.3s;
+}
+
+.tab.empresa-tab:hover {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+}
+
+.tab.empresa-tab.active {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+}
+
+.form-section {
+    display: none;
+}
+
+.form-section.active {
+    display: block;
+}
+
+/* MELHORADO: Seções com melhor espaçamento */
+.section-title {
+    color: rgba(64, 122, 53, 0.819);
+    font-size: 22px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: rgb(60, 59, 59);
+    font-weight: bold;
+}
+
+.input-container {
+    position: relative;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%;
+    padding: 12px 15px 12px 45px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background-color: rgb(240, 240, 240);
+    font-size: 14px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    transition: all 0.3s;
+}
+
+input:focus {
+    outline: none;
+    background-color: rgb(250, 250, 250);
+    border-color: rgba(64, 122, 53, 0.819);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 122, 53, 0.15);
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(64, 122, 53, 0.6);
+    font-size: 16px;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, rgba(64, 122, 53, 0.819) 0%, rgba(44, 81, 36, 0.819) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, rgba(44, 81, 36, 0.819) 0%, rgba(64, 122, 53, 0.819) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 122, 53, 0.3);
+}
+
+.btn-empresa {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: white;
+}
+
+.btn-empresa:hover {
+    background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
+}
+
+.btn-secondary {
+    background-color: rgb(200, 200, 200);
+    color: rgb(60, 59, 59);
+    font-size: 13px;
+    padding: 8px 15px;
+}
+
+.btn-secondary:hover {
+    background-color: rgb(180, 180, 180);
+    transform: translateY(-1px);
+}
+
+/* MELHORADO: Cards informativos mais compactos */
+.welcome-info {
+    background: linear-gradient(135deg, rgba(64, 122, 53, 0.1) 0%, rgba(64, 122, 53, 0.05) 100%);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid rgba(64, 122, 53, 0.819);
+}
+
+.welcome-info h3 {
+    color: rgba(64, 122, 53, 0.819);
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.welcome-info p {
+    color: rgb(60, 59, 59);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.empresa-section {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ffc107;
+}
+
+.empresa-section h3 {
+    color: #856404;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.empresa-section p {
+    color: #856404;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.login-unificado-info {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #2196f3;
+    text-align: center;
+}
+
+.login-unificado-info h4 {
+    color: #1976d2;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.login-unificado-info p {
+    color: #1976d2;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+/* MELHORADO: Links de cadastro mais organizados */
+.cadastro-links {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.cadastro-links p {
+    text-align: center;
+    margin: 15px 0;
+    color: rgb(100, 100, 100);
+    font-size: 13px;
+}
+
+.cadastro-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.link {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.link a {
+    color: rgba(64, 122, 53, 0.819);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s;
+}
+
+.link a:hover {
+    text-decoration: underline;
+    color: rgba(44, 81, 36, 0.819);
+    transform: translateX(-3px);
+}
+
+/* Pop-up personalizado */
+.custom-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(3px);
+}
+
+.custom-popup {
+    background-color: rgb(225, 225, 228);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    animation: popupSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid rgba(64, 122, 53, 0.1);
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.7) translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.popup-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+    color: #dc3545;
+}
+
+.popup-icon.success {
+    color: #28a745;
+}
+
+.popup-icon.warning {
+    color: #ffc107;
+}
+
+.popup-icon.info {
+    color: #17a2b8;
+}
+
+.popup-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: rgb(55, 75, 51);
+    margin-bottom: 12px;
+}
+
+.popup-message {
+    font-size: 14px;
+    color: rgb(60, 59, 59);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.popup-btn {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    background-color: rgba(64, 122, 53, 0.819);
+    color: white;
+}
+
+.popup-btn:hover {
+    background-color: rgba(44, 81, 36, 0.819);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 122, 53, 0.3);
+}
+
+/* RESPONSIVO MELHORADO */
+@media (max-width: 1024px) {
+    .login-container {
+        flex-direction: column;
+        max-width: 600px;
+        min-height: auto;
+        max-height: none;
+    }
+
+    .login-image {
+        min-height: 200px;
+        border-radius: 50px 50px 1px 1px;
+    }
+
+    .login-form-section {
+        height: auto;
+        max-height: none;
+    }
+
+    .form-content {
+        max-height: 70vh;
+    }
+
+    .image-overlay h2 {
+        font-size: 20px;
+    }
+
+    .image-overlay p {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+
+    .login-container {
+        min-height: calc(100vh - 10px);
+        border-radius: 15px;
+    }
+
+    .form-header,
+    .form-content {
+        padding: 15px 20px;
+    }
+
+    .main-title {
+        font-size: 24px;
+    }
+
+    .image-overlay {
+        padding: 20px;
+    }
+
+    .tabs {
+        margin-bottom: 20px;
+    }
+
+    .tab {
+        font-size: 12px;
+        padding: 10px 6px;
+    }
+
+    .cadastro-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn-secondary {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .custom-popup {
+        padding: 20px;
+        margin: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .form-header,
+    .form-content {
+        padding: 12px 15px;
+    }
+
+    .main-title {
+        font-size: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+        padding: 10px 12px 10px 38px;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px;
+        font-size: 14px;
+    }
+}
+
+/* MELHORAMENTOS VISUAIS EXTRAS */
+.form-section {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.input-container:focus-within .input-icon {
+    color: rgba(64, 122, 53, 0.819);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* Loading state para botões */
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

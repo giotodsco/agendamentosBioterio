@@ -1,0 +1,220 @@
+body {
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                margin: 20px;
+                color: #333;
+            }
+            
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+                border-bottom: 2px solid #407a35;
+                padding-bottom: 20px;
+            }
+            
+            .header h1 {
+                color: #407a35;
+                margin-bottom: 10px;
+                font-size: 24px;
+            }
+            
+            .header p {
+                margin: 5px 0;
+                color: #666;
+            }
+            
+            .operator-note {
+                background-color: #e8f5e8;
+                border: 2px solid #28a745;
+                border-radius: 5px;
+                padding: 15px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            
+            .operator-note p {
+                margin: 0;
+                color: #155724;
+                font-weight: bold;
+            }
+            
+            .filters {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }
+            
+            .filters h3 {
+                margin-top: 0;
+                color: #407a35;
+            }
+            
+            .stats {
+                display: flex;
+                justify-content: space-around;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            
+            .stat-item {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                border-left: 4px solid #407a35;
+            }
+            
+            .stat-number {
+                font-size: 24px;
+                font-weight: bold;
+                color: #407a35;
+            }
+            
+            .stat-label {
+                font-size: 12px;
+                color: #666;
+            }
+            
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 20px;
+            }
+            
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+                font-size: 11px;
+            }
+            
+            th {
+                background-color: #407a35;
+                color: white;
+                font-weight: bold;
+            }
+            
+            tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+            
+            .status-confirmado {
+                background-color: #d4edda;
+                color: #155724;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            .status-cancelado {
+                background-color: #f8d7da;
+                color: #721c24;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            .status-negado {
+                background-color: #f8d7da;
+                color: #721c24;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            /* NOVO: Status concluído */
+            .status-concluido {
+                background-color: #e9ecef;
+                color: #495057;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            .footer {
+                margin-top: 30px;
+                text-align: center;
+                font-size: 10px;
+                color: #666;
+                border-top: 1px solid #ddd;
+                padding-top: 15px;
+            }
+            
+            /* NOVO: Destaque para relatório de data específica */
+            .date-highlight {
+                background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                border: 2px solid #ffc107;
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            
+            .date-highlight h2 {
+                color: #856404;
+                margin-bottom: 10px;
+                font-size: 20px;
+            }
+            
+            /* NOVO: Destaque para empresas */
+            .empresa-row {
+                background-color: #fff3cd !important;
+                border-left: 4px solid #ffc107;
+            }
+            
+            .tipo-empresa {
+                background-color: #ffc107;
+                color: #856404;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            .tipo-usuario {
+                background-color: #e3f2fd;
+                color: #1976d2;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            .tipo-anonimo {
+                background-color: #f3e5f5;
+                color: #7b1fa2;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+                font-weight: bold;
+            }
+            
+            /* NOVO: Destaque para quantidade de pessoas */
+            .qtd-pessoas {
+                background-color: #e8f5e8;
+                color: #2e7d32;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-weight: bold;
+                display: inline-block;
+                min-width: 25px;
+                text-align: center;
+            }
+            
+            .qtd-multiplas {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 2px solid #ffc107;
+            }
+            
+            /* NOVO: Destaque para agendamentos concluídos */
+            .concluido-row {
+                background-color: #f8f9fa !important;
+                opacity: 0.85;
+                border-left: 4px solid #6c757d;
+            }
+            
+            @media print {
+                body { margin: 0; }
+                .no-print { display: none; }
+            }

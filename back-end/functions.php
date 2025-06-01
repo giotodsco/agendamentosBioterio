@@ -410,10 +410,6 @@ function validarLogin($login, $senha) {
     }
 }
 
-// NOVA FUNÇÃO: Buscar dados completos de agendamentos incluindo empresas - CORRIGIDA
-// FUNÇÃO CORRIGIDA para buscarAgendamentosCompletos em functions.php
-// Substitua a função existente por esta versão:
-
 function buscarAgendamentosCompletos($filtros = []) {
     try {
         $conexao = conectarBanco();
@@ -433,8 +429,7 @@ function buscarAgendamentosCompletos($filtros = []) {
         
         $where = [];
         $params = [];
-        
-        // Aplicar filtros se fornecidos
+
         if (!empty($filtros['data_inicio'])) {
             $where[] = "a.data_agendamento >= ?";
             $params[] = $filtros['data_inicio'];
