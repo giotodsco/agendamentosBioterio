@@ -56,9 +56,6 @@ try {
     <title>Dados da Empresa - Biotério FSA</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="front-end-style/style_pag_dados_empresa.css">
-    <style>
-        
-    </style>
 </head>
 <body>
     <!-- Pop-up personalizado -->
@@ -136,6 +133,10 @@ try {
                             <div class="data-value"><?php echo preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $empresa['cnpj']); ?></div>
                         </div>
                         <div class="data-item">
+                            <div class="data-label">Email Corporativo</div>
+                            <div class="data-value"><?php echo htmlspecialchars($empresa['email']); ?></div>
+                        </div>
+                        <div class="data-item">
                             <div class="data-label">Status da Conta</div>
                             <div class="data-value">
                                 <?php if ($empresa['ativo']): ?>
@@ -148,10 +149,6 @@ try {
                                     </span>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                        <div class="data-item email-item">
-                            <div class="data-label">Email Corporativo</div>
-                            <div class="data-value email-value"><?php echo htmlspecialchars($empresa['email']); ?></div>
                         </div>
                     </div>
                 </div>

@@ -124,9 +124,9 @@ try {
                             <div class="data-label">CPF</div>
                             <div class="data-value"><?php echo preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $usuario['cpf']); ?></div>
                         </div>
-                        <div class="data-item email-item">
+                        <div class="data-item">
                             <div class="data-label">Email</div>
-                            <div class="data-value email-value"><?php echo htmlspecialchars($usuario['email']); ?></div>
+                            <div class="data-value"><?php echo htmlspecialchars($usuario['email']); ?></div>
                         </div>
                     </div>
                 </div>

@@ -236,22 +236,22 @@
 
         .appointments-grid {
             display: grid;
-            gap: 20px;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 15px; /* Reduzido de 20px */
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Reduzido de 350px */
         }
 
         .appointment-card {
             background: linear-gradient(135deg, #ffffff 0%, #fffbf0 100%);
-            border-radius: 15px;
-            padding: 20px;
-            border-left: 5px solid #ffc107;
+            border-radius: 12px; /* Reduzido de 15px */
+            padding: 16px; /* Reduzido de 20px */
+            border-left: 4px solid #ffc107; /* Reduzido de 5px */
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.1);
+            box-shadow: 0 3px 12px rgba(255, 193, 7, 0.1); /* Reduzido */
         }
 
         .appointment-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(255, 193, 7, 0.2);
+            transform: translateY(-3px); /* Reduzido de -5px */
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.15); /* Reduzido */
         }
 
         .appointment-card.pending-card {
@@ -287,19 +287,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px; /* Reduzido de 15px */
         }
 
         .appointment-id {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
             color: #856404;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 5px 10px; /* Reduzido de 6px 12px */
+            border-radius: 10px; /* Reduzido de 12px */
+            font-size: 11px; /* Reduzido de 12px */
             font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px; /* Reduzido de 6px */
         }
 
         .appointment-id.pendente {
@@ -328,14 +328,14 @@
         }
 
         .appointment-status {
-            padding: 6px 12px;
-            border-radius: 15px;
-            font-size: 12px;
+            padding: 5px 10px; /* Reduzido de 6px 12px */
+            border-radius: 12px; /* Reduzido de 15px */
+            font-size: 11px; /* Reduzido de 12px */
             font-weight: bold;
             text-align: center;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px; /* Reduzido de 6px */
         }
 
         .status-confirmado {
@@ -378,9 +378,9 @@
         .appointment-date {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            font-size: 18px;
+            gap: 8px; /* Reduzido de 10px */
+            margin-bottom: 8px; /* Reduzido de 10px */
+            font-size: 16px; /* Reduzido de 18px */
             font-weight: bold;
             color: #856404;
         }
@@ -388,63 +388,64 @@
         .appointment-time {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 16px;
+            gap: 8px; /* Reduzido de 10px */
+            margin-bottom: 12px; /* Reduzido de 15px */
+            font-size: 14px; /* Reduzido de 16px */
             color: #856404;
         }
 
         .appointment-details {
             background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 3px solid #ffc107;
+            padding: 10px; /* Reduzido de 12px */
+            border-radius: 6px; /* Reduzido de 8px */
+            margin-bottom: 12px; /* Reduzido de 15px */
+            border-left: 2px solid #ffc107; /* Reduzido de 3px */
         }
 
         .pessoas-info {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* Reduzido de 8px */
             font-weight: bold;
             color: #856404;
+            font-size: 13px; /* Adicionado para consistência */
         }
 
         .appointment-info {
-            font-size: 13px;
+            font-size: 12px; /* Reduzido de 13px */
             color: #856404;
-            margin-bottom: 15px;
+            margin-bottom: 12px; /* Reduzido de 15px */
             opacity: 0.8;
-            line-height: 1.5;
+            line-height: 1.4; /* Reduzido de 1.5 */
         }
 
         .appointment-info p {
-            margin-bottom: 5px;
+            margin-bottom: 4px; /* Reduzido de 5px */
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* Reduzido de 8px */
         }
 
         .appointment-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px; /* Reduzido de 10px */
             justify-content: flex-end;
             flex-wrap: wrap;
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 12px; /* Reduzido de 15px */
+            padding-top: 12px; /* Reduzido de 15px */
             border-top: 1px solid rgba(255, 193, 7, 0.2);
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 6px 12px; /* Reduzido de 8px 16px */
             border: none;
-            border-radius: 8px;
-            font-size: 13px;
+            border-radius: 6px; /* Reduzido de 8px */
+            font-size: 12px; /* Reduzido de 13px */
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px; /* Reduzido de 6px */
             transition: all 0.3s;
             font-family: Georgia, 'Times New Roman', Times, serif;
             font-weight: bold;
@@ -457,8 +458,8 @@
 
         .btn-danger:hover {
             background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+            transform: translateY(-1px); /* Reduzido de -2px */
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3); /* Reduzido */
         }
 
         .btn-warning {
@@ -468,8 +469,8 @@
 
         .btn-warning:hover {
             background: linear-gradient(135deg, #e8590c 0%, #dc5000 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(253, 126, 20, 0.3);
+            transform: translateY(-1px); /* Reduzido de -2px */
+            box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3); /* Reduzido */
         }
 
         .btn-primary {
@@ -480,8 +481,8 @@
         .btn-primary:hover {
             background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.3);
+            transform: translateY(-1px); /* Reduzido de -2px */
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); /* Reduzido */
         }
 
         .btn-secondary {
@@ -492,8 +493,7 @@
         .btn-secondary:hover {
             background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
             color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3); /* Reduzido */
         }
 
         .action-buttons {
@@ -635,6 +635,19 @@
 
             .appointments-grid {
                 grid-template-columns: 1fr;
+                gap: 12px; /* Reduzido */
+            }
+
+            .appointment-card {
+                padding: 14px; /* Reduzido */
+            }
+
+            .appointment-date {
+                font-size: 15px; /* Reduzido */
+            }
+
+            .appointment-time {
+                font-size: 13px; /* Reduzido */
             }
             
             .stats {

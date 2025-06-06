@@ -121,13 +121,16 @@ if (!isset($_SESSION['usuario_logado']) || $_SESSION['usuario_logado'] !== true)
                 </form>
 
                 <div class="action-buttons">
-                    <a href="pag_inicial.html" class="btn btn-secondary">
-                        <i class="fa-solid fa-home"></i> Página Inicial
-                    </a>
-                    <a href="pag_meus_agendamentos.php" class="btn btn-secondary">
-                        <i class="fa-solid fa-list"></i> Meus Agendamentos
-                    </a>
-                </div>
+    <a href="pag_inicial.html" class="btn btn-secondary">
+        <i class="fa-solid fa-home"></i> Página Inicial
+    </a>
+    <a href="pag_meus_agendamentos.php" class="btn btn-secondary">
+        <i class="fa-solid fa-list"></i> Meus Agendamentos
+    </a>
+    <a href="pag_dados_usuario.php" class="btn btn-secondary">
+        <i class="fa-solid fa-user-circle"></i> Meus Dados
+    </a>
+</div>
             </div>
         </div>
     </div>

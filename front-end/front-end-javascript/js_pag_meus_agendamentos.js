@@ -66,8 +66,11 @@ function confirmarCancelamento(agendamentoId, tipoAcao = 'cancelar') {
     let mensagem = '';
     let formId = '';
 
-    if (tipoAcao === 'cancelar') {
-        mensagem = 'Tem certeza que deseja cancelar este agendamento? Você receberá um email de confirmação do cancelamento.';
+    if (tipoAcao === 'cancelar_pendente') {
+        mensagem = 'Tem certeza que deseja cancelar esta solicitação? A solicitação será removida da análise e você receberá um email de confirmação.';
+        formId = `cancel-pending-form-${agendamentoId}`;
+    } else if (tipoAcao === 'cancelar') {
+        mensagem = 'Tem certeza que deseja cancelar este agendamento confirmado? Você receberá um email de confirmação do cancelamento.';
         formId = `cancel-form-${agendamentoId}`;
     } else if (tipoAcao === 'excluir') {
         mensagem = 'Tem certeza que deseja excluir permanentemente este agendamento? Esta ação não pode ser desfeita!';
@@ -98,16 +101,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }, index * 100);
     });
 
-    // Adicionar efeito hover melhorado
+    // Adicionar efeito hover melhorado - MAIS SUTIL
     cards.forEach(card => {
         card.addEventListener('mouseenter', function () {
-            this.style.transform = 'translateY(-5px) scale(1.02)';
-            this.style.boxShadow = '0 15px 35px rgba(64, 122, 53, 0.15)';
+            this.style.transform = 'translateY(-3px) scale(1.01)'; // Reduzido de scale(1.02)
+            this.style.boxShadow = '0 6px 20px rgba(64, 122, 53, 0.12)'; // Reduzido
         });
 
         card.addEventListener('mouseleave', function () {
             this.style.transform = 'translateY(0) scale(1)';
-            this.style.boxShadow = '0 4px 15px rgba(64, 122, 53, 0.1)';
+            this.style.boxShadow = '0 3px 12px rgba(64, 122, 53, 0.1)'; // Reduzido
         });
     });
 
@@ -180,16 +183,29 @@ function atualizarContadores() {
     const cards = document.querySelectorAll('.appointment-card');
     const stats = {
         total: cards.length,
+        pendentes: 0,
         confirmados: 0,
         concluidos: 0,
-        cancelados: 0
+        negados: 0,
+        totalPessoas: 0
     };
     
     cards.forEach(card => {
-        if (card.classList.contains('concluido-card')) {
+        const pessoasElement = card.querySelector('.pessoas-info');
+        if (pessoasElement) {
+            const pessoasText = pessoasElement.textContent.trim();
+            const pessoasMatch = pessoasText.match(/(\d+)/);
+            if (pessoasMatch) {
+                stats.totalPessoas += parseInt(pessoasMatch[1]);
+            }
+        }
+        
+        if (card.classList.contains('pending-card')) {
+            stats.pendentes++;
+        } else if (card.classList.contains('concluido-card')) {
             stats.concluidos++;
-        } else if (card.classList.contains('cancelado-card')) {
-            stats.cancelados++;
+        } else if (card.classList.contains('negado-card')) {
+            stats.negados++;
         } else if (card.querySelector('.status-confirmado')) {
             stats.confirmados++;
         }
@@ -197,11 +213,13 @@ function atualizarContadores() {
     
     // Atualizar os números nas estatísticas
     const statElements = document.querySelectorAll('.stat-number');
-    if (statElements.length >= 4) {
+    if (statElements.length >= 6) {
         statElements[0].textContent = stats.total;
-        statElements[1].textContent = stats.confirmados;
-        statElements[2].textContent = stats.concluidos;
-        statElements[3].textContent = stats.cancelados;
+        statElements[1].textContent = stats.pendentes;
+        statElements[2].textContent = stats.confirmados;
+        statElements[3].textContent = stats.concluidos;
+        statElements[4].textContent = stats.negados;
+        statElements[5].textContent = stats.totalPessoas;
     }
 }
 
